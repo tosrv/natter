@@ -153,7 +153,7 @@ Catatan: container `backup` memakai image yang sama tetapi tidak diperbarui otom
 
 ### Rollback
 
-Set `PMESS_TAG=sha-<versi lama>` di `.env`, lalu `docker compose up -d app`. Selama `PMESS_TAG` bukan `latest`, Watchtower tidak memperbarui `app` (tag tetap sama). Kembali ke `PMESS_TAG=latest` untuk mengikuti pembaruan lagi. Rollback image **tidak** membatalkan migrasi; bila migrasi bermasalah, restore dari backup `preupdate`.
+Set `PMESS_TAG=sha-<versi lama>` di `.env`, lalu `docker compose up -d app backup`. Selama `PMESS_TAG` bukan `latest`, Watchtower tidak memperbarui `app` (tag tetap sama). Kembali ke `PMESS_TAG=latest` untuk mengikuti pembaruan lagi. Rollback image **tidak** membatalkan migrasi; bila migrasi bermasalah, restore dari backup `preupdate`.
 
 ### Backup
 

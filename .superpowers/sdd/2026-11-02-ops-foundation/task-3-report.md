@@ -9,3 +9,8 @@ Verified:
 Not run: image build / full stack up / app healthcheck / watchtower hooks / restore.sh (final image unbuildable in sandbox).
 Concerns: backup service is not auto-updated by Watchtower (documented manual pull); healthcheck uses curl (needs curl in image - Task 2 image must include it); Docker Hub 1.23.2 verified, GitHub release notes not.
 Cleanup: temp containers/network/.env removed.
+
+## Fix round 1
+- dev overlay: watchtower `profiles: ["prod-only"]`, app/backup `image: pmess:dev`.
+- PGPASSWORD entries now use `:?` guard; README rollback uses `up -d app backup`.
+- Verified: dev `config --services` lists postgres, app, backup only; images pmess:dev; prod config still valid.

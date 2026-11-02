@@ -6,15 +6,21 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
   app:
+    image: pmess:dev
     build:
       context: .
       secrets:
         - extra_ca
   backup:
+    image: pmess:dev
     build:
       context: .
       secrets:
         - extra_ca
+
+  # Jangan jalankan Watchtower di dev (akan mengganti image build lokal dan memasang docker.sock).
+  watchtower:
+    profiles: ["prod-only"]
 
 secrets:
   extra_ca:

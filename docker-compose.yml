@@ -45,7 +45,7 @@ services:
       PGHOST: postgres
       PGPORT: "5432"
       PGUSER: pmess
-      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       PGDATABASE: pmess
       BACKUP_DIR: /backups
     volumes:
@@ -75,7 +75,7 @@ services:
       PGHOST: postgres
       PGPORT: "5432"
       PGUSER: pmess
-      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       PGDATABASE: pmess
       BACKUP_DIR: /backups
       TZ: ${TZ:-UTC}
