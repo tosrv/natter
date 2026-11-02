@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test -race ./...
+
+  web-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx vitest run
+      - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pg
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:pg@localhost:5432/postgres?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+      - name: Install Playwright browser
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Build web
+        working-directory: web
+        run: npm run build
+      - name: Start server
+        env:
+          E2E_FAKE_LOGIN: "1"
+          COOKIE_SECURE: "false"
+          DEVELOPER_EMAIL: dev@e2e.test
+          STATIC_DIR: web/dist
+          LISTEN_ADDR: ":8099"
+        run: |
+          go build -o server ./cmd/server
+          nohup ./server > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8099/healthz >/dev/null 2>&1; then
+              echo "server ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "server did not become healthy" >&2
+          cat server.log >&2
+          exit 1
+      - name: Run Playwright
+        working-directory: web
+        env:
+          E2E_BASE_URL: http://localhost:8099
+        run: npx playwright test
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: web/test-results
+          if-no-files-found: ignore
+      - name: Server log
+        if: failure()
+        run: cat server.log || true
+
+  backup-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash deploy/test-backup.sh
+
+  image:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [go-test, web-test, e2e, backup-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - id: vars
+        run: echo "sha7=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build image (local)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: pmess:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Verify image tools
+        run: |
+          out="$(docker run --rm --entrypoint pg_dump pmess:ci --version)"
+          echo "$out"
+          echo "$out" | grep -Eq 'pg_dump \(PostgreSQL\) 16\.'
+          docker run --rm --entrypoint curl pmess:ci --version | head -n1
+      - name: Push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/tosrv/pmess:latest
+            ghcr.io/tosrv/pmess:sha-${{ steps.vars.outputs.sha7 }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

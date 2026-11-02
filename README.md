@@ -1,5 +1,7 @@
 # pmess — Personal Messenger
 
+[![CI](https://github.com/tosrv/pmess/actions/workflows/ci.yml/badge.svg)](https://github.com/tosrv/pmess/actions/workflows/ci.yml)
+
 Aplikasi chat pribadi sederhana: login dengan Google (atau masuk sebagai **tamu** untuk menghubungi developer), cari pengguna lewat username, lalu chat realtime lewat WebSocket (status terkirim/dibaca ✓/✓✓, indikator mengetik, notifikasi, UI Indonesia/Inggris).
 
 - Backend: Go (`cmd/server`, `internal/*`), PostgreSQL 16.
