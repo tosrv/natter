@@ -98,5 +98,27 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "displayName": "Display name",
+    "username": "Username",
+    "changesLeft": "{{count}} changes left",
+    "saved": "Saved",
+    "language": "Language",
+    "theme": "Theme",
+    "logout": "Log out",
+    "danger": "Danger zone",
+    "deleteAccount": "Delete account",
+    "deleteTitle": "Delete your account?",
+    "deleteBody": "This permanently deletes your account, conversations and messages. This cannot be undone.",
+    "deleteConfirm": "Type {{username}} to confirm",
+    "deleteAction": "Delete permanently",
+    "cancel": "Cancel",
+    "devNote": "The developer account cannot be deleted.",
+    "endSession": "End session",
+    "guestNote": "Guest sessions can only change language and theme.",
+    "guestHint": "Ending the session deletes this guest account and its chats."
   }
 }

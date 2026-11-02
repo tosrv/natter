@@ -98,5 +98,27 @@
     "light": "Terang",
     "dark": "Gelap",
     "system": "Sistem"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "profile": "Profil",
+    "displayName": "Nama tampilan",
+    "username": "Username",
+    "changesLeft": "sisa {{count}} perubahan",
+    "saved": "Tersimpan",
+    "language": "Bahasa",
+    "theme": "Tema",
+    "logout": "Keluar",
+    "danger": "Zona berbahaya",
+    "deleteAccount": "Hapus akun",
+    "deleteTitle": "Hapus akun Anda?",
+    "deleteBody": "Akun, percakapan, dan pesan Anda akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.",
+    "deleteConfirm": "Ketik {{username}} untuk konfirmasi",
+    "deleteAction": "Hapus permanen",
+    "cancel": "Batal",
+    "devNote": "Akun developer tidak bisa dihapus.",
+    "endSession": "Akhiri sesi",
+    "guestNote": "Sesi tamu hanya bisa mengubah bahasa dan tema.",
+    "guestHint": "Mengakhiri sesi menghapus akun tamu ini beserta percakapannya."
   }
 }
