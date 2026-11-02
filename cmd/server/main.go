@@ -44,6 +44,10 @@ func run() error {
 		return err
 	}
 
+	if cfg.E2EFakeLogin {
+		slog.Warn("!!! E2E_FAKE_LOGIN=1: POST /api/test/login is ENABLED — anyone can log in as anyone. NEVER use in production !!!")
+	}
+
 	now := time.Now
 	msgLim := ratelimit.New(20, 10*time.Second, now)
 	guestLim := ratelimit.New(5, time.Hour, now)

@@ -9,5 +9,38 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pmess -d pmess"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build:
+      context: .
+      secrets:
+        - extra_ca
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://pmess:pmess@postgres:5432/pmess?sslmode=disable}
+      DEVELOPER_EMAIL: ${DEVELOPER_EMAIL:-}
+      STATIC_DIR: /app/web
+      LISTEN_ADDR: ":8080"
+      TRUSTED_PROXY: ${TRUSTED_PROXY:-127.0.0.1}
+      E2E_FAKE_LOGIN: ${E2E_FAKE_LOGIN:-0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
 volumes:
   pgdata:
+
+secrets:
+  # Optional: set EXTRA_CA_FILE when building behind a TLS-intercepting proxy.
+  extra_ca:
+    file: ${EXTRA_CA_FILE:-/dev/null}

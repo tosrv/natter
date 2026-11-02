@@ -32,6 +32,9 @@ func NewRouter(d Deps) *gin.Engine {
 	api.GET("/auth/google/login", d.Auth.GoogleLogin)
 	api.GET("/auth/google/callback", d.Auth.GoogleCallback)
 	api.POST("/auth/guest", d.Auth.Guest)
+	if d.Auth.FakeLoginEnabled() {
+		api.POST("/test/login", d.Auth.FakeLogin)
+	}
 
 	authed := api.Group("", d.Auth.Middleware())
 	authed.POST("/auth/logout", d.Auth.Logout)

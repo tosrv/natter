@@ -18,6 +18,8 @@ type Config struct {
 	ListenAddr         string
 	TrustedProxy       string
 	StaticDir          string
+	// E2EFakeLogin enables POST /api/test/login. Never set in production.
+	E2EFakeLogin bool
 }
 
 func Load() (Config, error) {
@@ -31,6 +33,7 @@ func Load() (Config, error) {
 		ListenAddr:         envDefault("LISTEN_ADDR", ":8080"),
 		TrustedProxy:       envDefault("TRUSTED_PROXY", "127.0.0.1"),
 		StaticDir:          envDefault("STATIC_DIR", "web/dist"),
+		E2EFakeLogin:       os.Getenv("E2E_FAKE_LOGIN") == "1",
 	}
 	for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
 		if o = strings.TrimSpace(o); o != "" {
