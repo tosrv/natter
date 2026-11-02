@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"net/http"
 	"os"
 	"path"
@@ -29,11 +30,16 @@ type Deps struct {
 	WS             gin.HandlerFunc
 	StaticDir      string
 	AllowedOrigins []string
+	Pinger         Pinger       // optional; nil => /healthz 503
+	Logger         *slog.Logger // optional; nil => slog.Default()
 }
 
 func NewRouter(d Deps) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Recovery(), cors(d.AllowedOrigins))
+	r.Use(RequestLog(d.Logger), Recover(d.Logger))
+	// Registered before cors and outside /api: no auth, CORS rejection or rate limit.
+	r.GET("/healthz", Health(d.Pinger))
+	r.Use(cors(d.AllowedOrigins))
 	h := &handlers{chat: d.Chat, limiter: d.SearchLimiter, auth: d.Auth, notifier: d.Notifier}
 
 	api := r.Group("/api")

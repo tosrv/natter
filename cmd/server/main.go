@@ -15,6 +15,7 @@ import (
 	"github.com/tosrv/pmess/internal/chat"
 	"github.com/tosrv/pmess/internal/config"
 	"github.com/tosrv/pmess/internal/jobs"
+	"github.com/tosrv/pmess/internal/logging"
 	"github.com/tosrv/pmess/internal/ratelimit"
 	"github.com/tosrv/pmess/internal/realtime"
 	"github.com/tosrv/pmess/internal/store"
@@ -32,6 +33,8 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	logger := logging.NewLogger(os.Stdout, cfg.LogLevel)
+	slog.SetDefault(logger)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -63,6 +66,8 @@ func run() error {
 		Notifier:       hub,
 		StaticDir:      cfg.StaticDir,
 		AllowedOrigins: cfg.AllowedOrigins,
+		Pinger:         st,
+		Logger:         logger,
 	})
 
 	jobsDone := make(chan struct{})

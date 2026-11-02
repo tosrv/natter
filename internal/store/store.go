@@ -36,6 +36,9 @@ func New(ctx context.Context, url string) (*Store, error) {
 
 func (s *Store) Close() { s.pool.Close() }
 
+// Ping checks database connectivity.
+func (s *Store) Ping(ctx context.Context) error { return s.pool.Ping(ctx) }
+
 // Pool exposes the underlying pool for queries.
 func (s *Store) Pool() *pgxpool.Pool { return s.pool }
 
