@@ -1,0 +1,44 @@
+{
+  "app": { "name": "pmess", "tagline": "Pesan pribadi yang sederhana." },
+  "common": { "loading": "Memuat…", "back": "Kembali", "save": "Simpan", "language": "Bahasa" },
+  "landing": {
+    "google": "Masuk dengan Google",
+    "guest": "Lanjut sebagai tamu",
+    "info": "Privasi & informasi",
+    "guestFailed": "Tidak dapat memulai sesi tamu."
+  },
+  "onboarding": {
+    "title": "Pilih username",
+    "hint": "3–20 karakter: huruf kecil, angka, dan garis bawah.",
+    "placeholder": "username",
+    "submit": "Lanjut"
+  },
+  "chat": { "title": "Obrolan", "logout": "Keluar", "placeholder": "Obrolan segera hadir." },
+  "info": {
+    "title": "Privasi & informasi",
+    "e2e": "Pesan tidak dienkripsi end-to-end. Admin server dapat membaca pesan melalui database.",
+    "guest": "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya (atau setelah dibuat bila belum ada pesan).",
+    "retention": "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
+    "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut ikut terhapus bersama akun tamu."
+  },
+  "errors": {
+    "user_limit_reached": "Batas pengguna sudah tercapai. Coba lagi nanti.",
+    "developer_unavailable": "Developer sedang tidak tersedia.",
+    "not_found": "Tidak ditemukan.",
+    "forbidden": "Anda tidak diizinkan melakukan itu.",
+    "message_empty": "Pesan tidak boleh kosong.",
+    "message_too_long": "Pesan terlalu panjang (maks 2000 karakter).",
+    "username_invalid": "Username tidak valid. Gunakan 3–20 huruf kecil, angka, atau garis bawah.",
+    "username_taken": "Username sudah dipakai.",
+    "username_change_limit": "Batas penggantian username sudah tercapai.",
+    "username_required": "Pilih username terlebih dahulu.",
+    "query_too_short": "Ketik minimal 2 karakter.",
+    "rate_limited": "Terlalu banyak permintaan. Pelan-pelan.",
+    "unauthorized": "Silakan masuk.",
+    "invalid_state": "Sesi login kedaluwarsa. Silakan coba lagi.",
+    "bad_request": "Permintaan tidak valid.",
+    "internal": "Terjadi kesalahan. Silakan coba lagi.",
+    "oauth_failed": "Login Google gagal. Silakan coba lagi.",
+    "unknown": "Terjadi kesalahan."
+  }
+}

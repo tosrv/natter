@@ -1,0 +1,44 @@
+{
+  "app": { "name": "pmess", "tagline": "A simple personal messenger." },
+  "common": { "loading": "Loading…", "back": "Back", "save": "Save", "language": "Language" },
+  "landing": {
+    "google": "Login with Google",
+    "guest": "Continue as guest",
+    "info": "Privacy & info",
+    "guestFailed": "Could not start a guest session."
+  },
+  "onboarding": {
+    "title": "Choose a username",
+    "hint": "3–20 characters: lowercase letters, numbers and underscore.",
+    "placeholder": "username",
+    "submit": "Continue"
+  },
+  "chat": { "title": "Chat", "logout": "Log out", "placeholder": "Chat coming soon." },
+  "info": {
+    "title": "Privacy & information",
+    "e2e": "Messages are not end-to-end encrypted. Server administrators can read messages through the database.",
+    "guest": "Guest accounts are deleted 30 minutes after the last message in their conversation (or after creation if no message was sent).",
+    "retention": "Conversations are deleted after 1 month of inactivity.",
+    "contact": "Sharing contact information as a guest is voluntary. It is deleted together with the guest account."
+  },
+  "errors": {
+    "user_limit_reached": "The user limit has been reached. Please try again later.",
+    "developer_unavailable": "The developer is currently unavailable.",
+    "not_found": "Not found.",
+    "forbidden": "You are not allowed to do that.",
+    "message_empty": "Message cannot be empty.",
+    "message_too_long": "Message is too long (max 2000 characters).",
+    "username_invalid": "Invalid username. Use 3–20 lowercase letters, numbers or underscore.",
+    "username_taken": "That username is already taken.",
+    "username_change_limit": "You have reached the username change limit.",
+    "username_required": "Please choose a username first.",
+    "query_too_short": "Type at least 2 characters.",
+    "rate_limited": "Too many requests. Please slow down.",
+    "unauthorized": "Please log in.",
+    "invalid_state": "Login session expired. Please try again.",
+    "bad_request": "Invalid request.",
+    "internal": "Something went wrong. Please try again.",
+    "oauth_failed": "Google login failed. Please try again.",
+    "unknown": "Something went wrong."
+  }
+}
