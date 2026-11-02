@@ -15,6 +15,7 @@ import {
 } from "@/lib/api";
 import { Outbox, mergeMessages, type ClientMsg } from "@/lib/outbox";
 import { ChatSocket, type ServerFrame } from "@/lib/socket";
+import { fetchMissing } from "@/lib/paging";
 import { errorMessage } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,8 @@ export default function Chat() {
   const msgsRef = useRef(msgs);
   const convsRef = useRef(convs);
   const lastReadSent = useRef<Record<string, number>>({});
+  const historyLoaded = useRef<Record<string, boolean>>({});
+  const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   activeRef.current = activeId;
   msgsRef.current = msgs;
   convsRef.current = convs;
@@ -57,9 +60,9 @@ export default function Chat() {
   const refreshConvs = useCallback(() => listConversations().then((c) => { setConvs(c); return c; }), []);
 
   const loadMessages = useCallback((convId: string) => {
-    const have = msgsRef.current[convId];
-    const after = have?.length ? have[have.length - 1].seq : 0;
-    return listMessages(convId, { after_seq: after, limit: 100 }).then((r) => addMessages(convId, r.messages));
+    const state = { historyLoaded: !!historyLoaded.current[convId], messages: msgsRef.current[convId] ?? [] };
+    return fetchMissing((p) => listMessages(convId, { ...p, limit: 100 }).then((r) => r.messages), state, 100)
+      .then((ms) => { historyLoaded.current[convId] = true; addMessages(convId, ms); });
   }, [addMessages]);
 
   // Bootstrap: profile, conversations, socket.
@@ -102,7 +105,8 @@ export default function Chat() {
       s.on("typing", (f) => {
         const ty = f as Extract<ServerFrame, { type: "typing" }>;
         setTypingUntil((tu) => ({ ...tu, [ty.conversation_id]: Date.now() + TYPING_MS }));
-        setTimeout(() => tick((n) => n + 1), TYPING_MS + 50);
+        clearTimeout(typingTimers.current[ty.conversation_id]);
+        typingTimers.current[ty.conversation_id] = setTimeout(() => tick((n) => n + 1), TYPING_MS + 50);
       });
       s.on("read", (f) => {
         const r = f as Extract<ServerFrame, { type: "read" }>;
@@ -112,7 +116,14 @@ export default function Chat() {
       });
       s.on("error", (f) => {
         const e = f as Extract<ServerFrame, { type: "error" }>;
-        if (e.client_msg_id) { outbox.current.fail(e.client_msg_id); setPending(outbox.current.pending()); }
+        if (e.client_msg_id && e.code === "rate_limited") {
+          // Keep it in the outbox; retry later (also resent on reconnect).
+          const id = e.client_msg_id;
+          setTimeout(() => {
+            const m = outbox.current.pending().find((x) => x.client_msg_id === id);
+            if (m) sock.current?.send({ type: "send", ...m });
+          }, 10000);
+        } else if (e.client_msg_id) { outbox.current.fail(e.client_msg_id); setPending(outbox.current.pending()); }
         toast.error(errorMessage(e.code));
       });
       s.onReconnect(() => {
@@ -125,8 +136,10 @@ export default function Chat() {
         getMe().catch((e) => { if (e instanceof ApiError && e.status === 401) { s.close(); toLanding(); } });
       });
       s.connect();
-    }).catch(() => toLanding());
-    return () => { alive = false; sock.current?.close(); sock.current = null; };
+    }).catch((e) => {
+      if (e instanceof ApiError && e.status === 401) toLanding(); else handleErr(e);
+    });
+    return () => { alive = false; Object.values(typingTimers.current).forEach(clearTimeout); sock.current?.close(); sock.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
