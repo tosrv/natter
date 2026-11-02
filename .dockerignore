@@ -1,5 +1,6 @@
 .git
 .superpowers
+!deploy/*.sh
 .env
 web/node_modules
 web/dist
