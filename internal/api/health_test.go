@@ -87,3 +87,13 @@ func TestHealthzLoggedAtDebug(t *testing.T) {
 		t.Fatalf("healthz logged at info: %s", b.String())
 	}
 }
+
+func TestHealthzLoggedWhenDebug(t *testing.T) {
+	var b bytes.Buffer
+	l := slog.New(slog.NewJSONHandler(&b, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	h := opsRouter(t, pingFn(func(context.Context) error { return nil }), l)
+	get(h, "/healthz", nil)
+	if !strings.Contains(b.String(), `"path":"/healthz"`) {
+		t.Fatalf("not logged: %s", b.String())
+	}
+}

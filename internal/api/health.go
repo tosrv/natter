@@ -13,7 +13,7 @@ type Pinger interface{ Ping(context.Context) error }
 
 // Health serves GET /healthz: 200 when p.Ping succeeds within 2 s, else 503.
 // A nil p is reported as unavailable.
-func Health(p interface{ Ping(context.Context) error }) gin.HandlerFunc {
+func Health(p Pinger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if p != nil {
 			ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)

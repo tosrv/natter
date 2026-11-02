@@ -7,6 +7,9 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/tosrv/pmess/internal/api"
 )
 
 func logOne(t *testing.T, b *bytes.Buffer) map[string]any {
@@ -55,5 +58,26 @@ func TestRequestIDPropagation(t *testing.T) {
 	id := w.Header().Get("X-Request-Id")
 	if !regexp.MustCompile(`^[0-9a-f]{16}$`).MatchString(id) || logOne(t, &b)["request_id"] != id {
 		t.Fatalf("%q %s", id, b.String())
+	}
+}
+
+func TestPanicLogNoCookie(t *testing.T) {
+	var b bytes.Buffer
+	l := slog.New(slog.NewJSONHandler(&b, nil))
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(api.RequestLog(l), api.Recover(l))
+	r.GET("/boom", func(*gin.Context) { panic("kaboom") })
+	w := get(r, "/boom?token=abc", map[string]string{"Cookie": "pm_session=xyz", "Authorization": "Bearer secret"})
+	if w.Code != 500 || !strings.Contains(w.Body.String(), `"code":"internal"`) {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	if !strings.Contains(b.String(), `"msg":"panic"`) || !strings.Contains(b.String(), `"level":"ERROR"`) {
+		t.Fatalf("no panic log: %s", b.String())
+	}
+	for _, bad := range []string{"xyz", "secret", "abc"} {
+		if strings.Contains(b.String(), bad) {
+			t.Fatalf("leaks %q: %s", bad, b.String())
+		}
 	}
 }

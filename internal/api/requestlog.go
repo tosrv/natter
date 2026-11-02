@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -59,4 +60,30 @@ func newRequestID() string {
 	var b [8]byte
 	_, _ = rand.Read(b[:])
 	return hex.EncodeToString(b[:])
+}
+
+// Recover turns a handler panic into a 500 and logs only err, request_id,
+// method and path (gin.Recovery would dump the raw request incl. Cookie).
+func Recover(l *slog.Logger) gin.HandlerFunc {
+	if l == nil {
+		l = slog.Default()
+	}
+	return func(c *gin.Context) {
+		defer func() {
+			if r := recover(); r != nil {
+				if r == http.ErrAbortHandler {
+					panic(r)
+				}
+				l.LogAttrs(c.Request.Context(), slog.LevelError, "panic",
+					slog.Any("err", r),
+					slog.String("request_id", c.Writer.Header().Get(requestIDHeader)),
+					slog.String("method", c.Request.Method),
+					slog.String("path", c.Request.URL.Path),
+				)
+				c.AbortWithStatusJSON(http.StatusInternalServerError,
+					gin.H{"error": gin.H{"code": "internal", "message": "internal error"}})
+			}
+		}()
+		c.Next()
+	}
 }

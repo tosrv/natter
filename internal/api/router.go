@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"os"
@@ -31,13 +30,13 @@ type Deps struct {
 	WS             gin.HandlerFunc
 	StaticDir      string
 	AllowedOrigins []string
-	Pinger         interface{ Ping(context.Context) error } // optional; nil => /healthz 503
-	Logger         *slog.Logger                             // optional; nil => slog.Default()
+	Pinger         Pinger       // optional; nil => /healthz 503
+	Logger         *slog.Logger // optional; nil => slog.Default()
 }
 
 func NewRouter(d Deps) *gin.Engine {
 	r := gin.New()
-	r.Use(RequestLog(d.Logger), gin.Recovery())
+	r.Use(RequestLog(d.Logger), Recover(d.Logger))
 	// Registered before cors and outside /api: no auth, CORS rejection or rate limit.
 	r.GET("/healthz", Health(d.Pinger))
 	r.Use(cors(d.AllowedOrigins))
