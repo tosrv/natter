@@ -46,8 +46,11 @@ test("two users chat in realtime, guest contacts the developer", async ({ browse
   await B.page.getByPlaceholder("Write a message…").pressSequentially("hel");
   await expect(A.page.getByText("typing…")).toBeVisible();
 
-  // Language toggle changes UI text.
-  await A.page.getByRole("button", { name: "Language" }).click();
+  // Language switch (now in Settings) changes the chat UI text.
+  await A.page.getByRole("link", { name: "Settings" }).first().click();
+  await A.page.getByRole("button", { name: "ID", exact: true }).click();
+  await A.page.goBack();
+  await A.page.getByRole("button", { name: new RegExp(bName) }).click();
   await expect(A.page.getByRole("heading", { name: /Obrolan/ })).toBeVisible();
   await expect(A.page.getByPlaceholder("Tulis pesan…")).toBeVisible();
 
