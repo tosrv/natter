@@ -49,6 +49,13 @@ prune() {
 }
 
 prune_all() {
+  # File 0-byte = reservasi yang terputus; bukan backup, jangan dihitung.
+  local z
+  for z in "$BACKUP_DIR"/pmess-*.dump; do
+    [ -f "$z" ] && [ ! -s "$z" ] || continue
+    rm -f -- "$z"
+    log INFO "empty backup file removed" file "${z##*/}"
+  done
   prune daily "$KEEP_DAILY"
   prune weekly "$KEEP_WEEKLY"
   prune preupdate "$KEEP_PREUPDATE"

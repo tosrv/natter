@@ -28,6 +28,8 @@ services:
     labels:
       com.centurylinklabs.watchtower.enable: "true"
       com.centurylinklabs.watchtower.lifecycle.pre-update: "/app/deploy/backup.sh preupdate"
+      # Menit; default Watchtower 1 menit, terlalu pendek untuk pg_dump besar.
+      com.centurylinklabs.watchtower.lifecycle.pre-update-timeout: "10"
     env_file:
       - path: .env
         required: false

@@ -8,12 +8,17 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   go-test:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +29,7 @@ jobs:
       - run: go test -race ./...
 
   web-test:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,6 +46,7 @@ jobs:
       - run: npm run build
 
   e2e:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -111,12 +118,14 @@ jobs:
         run: cat server.log || true
 
   backup-test:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: bash deploy/test-backup.sh
 
   image:
+    timeout-minutes: 30
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [go-test, web-test, e2e, backup-test]
     runs-on: ubuntu-latest
@@ -148,13 +157,9 @@ jobs:
           echo "$out"
           echo "$out" | grep -Eq 'pg_dump \(PostgreSQL\) 16\.'
           docker run --rm --entrypoint curl pmess:ci --version | head -n1
-      - name: Push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/tosrv/pmess:latest
-            ghcr.io/tosrv/pmess:sha-${{ steps.vars.outputs.sha7 }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Tag and push verified image
+        run: |
+          for t in latest "sha-${{ steps.vars.outputs.sha7 }}"; do
+            docker tag pmess:ci "ghcr.io/tosrv/pmess:$t"
+            docker push "ghcr.io/tosrv/pmess:$t"
+          done

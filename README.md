@@ -174,13 +174,17 @@ scp 'user@vps:/var/backups/pmess/pmess-*.dump' ./backup-pmess/
 
 ### Restore
 
-Dijalankan di host dari root repo (menghentikan `app`, menimpa database `pmess`, menyalakan `app`, menunggu `/healthz` OK maks 60 detik). Service `backup` tidak disentuh.
+Dijalankan di host dari root repo. Urutan: hentikan `watchtower` (dinyalakan lagi saat skrip selesai, juga bila gagal) -> safety dump `preupdate` dari kondisi saat ini (bila `app` berjalan) -> hentikan `app` -> `pg_restore --single-transaction` (gagal = rollback penuh, database lama utuh) -> nyalakan `app` -> tunggu `/healthz` OK maks 60 detik. Service `backup` tidak disentuh.
 
 ```bash
 deploy/restore.sh /var/backups/pmess/pmess-YYYYMMDD-HHMM-daily.dump --yes
 ```
 
-Tanpa `--yes` skrip menolak jalan. Pakai `sudo` bila folder backup hanya terbaca uid 65532.
+Bila safety dump gagal, skrip berhenti sebelum menyentuh apa pun; tambahkan `--no-safety-dump` sebagai argumen ketiga (`... --yes --no-safety-dump`) untuk melewatinya. Tanpa `--yes` skrip menolak jalan. Pakai `sudo` bila folder backup hanya terbaca uid 65532.
+
+### Subnet jaringan tetap
+
+Compose memakai subnet tetap `172.28.0.0/16` (gateway `172.28.0.1`). Bila bentrok dengan jaringan yang sudah ada di VPS (`docker network ls`, `ip route`), `docker compose up` gagal dengan "Pool overlaps". Ubah blok `networks.default.ipam.config` di `docker-compose.yml` (mis. `subnet: 172.29.0.0/16`, `gateway: 172.29.0.1`) **dan** set `TRUSTED_PROXY` di `.env` ke gateway baru (`TRUSTED_PROXY=172.29.0.1`); keduanya harus cocok agar `X-Real-IP` dari Nginx dipercaya. Lalu `docker compose down && docker compose up -d`.
 
 ### Alert (UptimeRobot)
 

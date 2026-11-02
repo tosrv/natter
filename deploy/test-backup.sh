@@ -38,9 +38,9 @@ docker network create "$NET" >/dev/null
 # ---------- (a) Retensi ----------
 echo "== (a) retensi"
 R="$TMP/a"; mkdir -p "$R"
-for i in $(seq 1 10); do touch "$R/pmess-202601$(printf %02d "$i")-0200-daily.dump"; done
-for i in $(seq 1 6);  do touch "$R/pmess-202602$(printf %02d "$i")-0200-weekly.dump"; done
-for i in $(seq 1 7);  do touch "$R/pmess-202603$(printf %02d "$i")-1200-preupdate.dump"; done
+for i in $(seq 1 10); do echo x >"$R/pmess-202601$(printf %02d "$i")-0200-daily.dump"; done
+for i in $(seq 1 6);  do echo x >"$R/pmess-202602$(printf %02d "$i")-0200-weekly.dump"; done
+for i in $(seq 1 7);  do echo x >"$R/pmess-202603$(printf %02d "$i")-1200-preupdate.dump"; done
 touch "$R/notes.txt"
 if [ -f "$HERE/backup.sh" ] && PRUNE_ONLY=1 BACKUP_DIR="$R" bash "$HERE/backup.sh" daily >/dev/null; then
   want_d="$(for i in $(seq 4 10); do echo "pmess-202601$(printf %02d "$i")-0200-daily.dump"; done)"
@@ -54,6 +54,15 @@ if [ -f "$HERE/backup.sh" ] && PRUNE_ONLY=1 BACKUP_DIR="$R" bash "$HERE/backup.s
 else
   fail "backup.sh PRUNE_ONLY gagal/tidak ada"
 fi
+
+# ---------- (a2) File 0-byte ----------
+echo "== (a2) file 0-byte diabaikan"
+Z="$TMP/a2"; mkdir -p "$Z"
+for i in $(seq 1 7); do echo x >"$Z/pmess-202601$(printf %02d "$i")-0200-daily.dump"; done
+: >"$Z/pmess-20260110-0200-daily.dump"
+PRUNE_ONLY=1 BACKUP_DIR="$Z" bash "$HERE/backup.sh" daily >/dev/null
+chk "file 0-byte terhapus" "file 0-byte masih ada" [ ! -e "$Z/pmess-20260110-0200-daily.dump" ]
+chk "7 daily baik utuh" "daily baik: $(find "$Z" -type f -printf '%f ' | sort)" [ "$(find "$Z" -name '*-daily.dump' | wc -l)" -eq 7 ]
 
 # ---------- (b) Gagal ----------
 echo "== (b) kegagalan"
