@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import LanguageToggle from "@/components/LanguageToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import { ApiError, createGuest, getMe } from "@/lib/api";
 import { errorMessage } from "@/i18n";
 
@@ -14,9 +15,16 @@ export default function Landing() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (params.has("error")) window.history.replaceState(null, "", window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     let alive = true;
     getMe().then((me) => {
-      if (alive) nav(me.username ? "/chat" : "/onboarding", { replace: true });
+      if (!alive) return;
+      const needsProfile = !me.username || me.display_name === "User";
+      nav(needsProfile ? "/onboarding" : "/chat", { replace: true });
     }).catch(() => { /* not logged in */ });
     return () => { alive = false; };
   }, [nav]);
@@ -34,14 +42,26 @@ export default function Landing() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
-      <div className="absolute right-4 top-4"><LanguageToggle /></div>
-      <h1 className="text-3xl font-bold">{t("app.name")}</h1>
-      <p className="text-muted-foreground">{t("app.tagline")}</p>
-      {err && <p role="alert" className="rounded-md border border-destructive p-3 text-sm text-destructive">{errorMessage(err)}</p>}
-      <Button asChild><a href="/api/auth/google/login">{t("landing.google")}</a></Button>
-      <Button variant="outline" onClick={guest} disabled={busy}>{t("landing.guest")}</Button>
-      <Link to="/info" className="text-center text-sm underline">{t("landing.info")}</Link>
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-primary/15 via-background to-background p-6">
+      <div className="absolute right-3 top-3 flex items-center gap-1"><ThemeToggle /><LanguageToggle /></div>
+      <div className="flex w-full max-w-sm flex-col items-center gap-5 text-center">
+        <div aria-hidden className="flex w-full flex-col gap-3 py-2">
+          <div className="max-w-[75%] self-start rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3 text-left text-sm shadow-sm">
+            {t("landing.bubbleIn")}
+          </div>
+          <div className="max-w-[75%] self-end rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-left text-sm text-primary-foreground shadow-sm">
+            {t("landing.bubbleOut")}
+          </div>
+        </div>
+        <h1 className="text-4xl font-extrabold tracking-tight">{t("app.name")}</h1>
+        <p className="text-muted-foreground">{t("app.tagline")}</p>
+        {err && <p role="alert" className="w-full rounded-2xl border border-destructive bg-card p-3 text-sm text-destructive">{errorMessage(err)}</p>}
+        <div className="flex w-full flex-col gap-3">
+          <Button asChild size="lg" className="rounded-full"><a href="/api/auth/google/login">{t("landing.google")}</a></Button>
+          <Button variant="outline" size="lg" className="rounded-full" onClick={guest} disabled={busy}>{t("landing.guest")}</Button>
+        </div>
+        <Link to="/info" className="text-sm text-muted-foreground underline">{t("landing.info")}</Link>
+      </div>
     </main>
   );
 }

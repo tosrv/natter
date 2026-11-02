@@ -14,13 +14,19 @@
     "google": "Login with Google",
     "guest": "Continue as guest",
     "info": "Privacy & info",
-    "guestFailed": "Could not start a guest session."
+    "guestFailed": "Could not start a guest session.",
+    "bubbleIn": "Hey! Want to chat?",
+    "bubbleOut": "Sure, just a username away."
   },
   "onboarding": {
     "title": "Choose a username",
     "hint": "3–20 characters: lowercase letters, numbers and underscore.",
     "placeholder": "username",
-    "submit": "Continue"
+    "submit": "Continue",
+    "heading": "Set up your profile",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "Your name",
+    "displayNameHint": "1–40 characters. Letters, numbers, spaces and . - ' _"
   },
   "chat": {
     "title": "Chat",
@@ -75,7 +81,8 @@
     "bad_request": "Invalid request.",
     "internal": "Something went wrong. Please try again.",
     "oauth_failed": "Google login failed. Please try again.",
-    "unknown": "Something went wrong."
+    "unknown": "Something went wrong.",
+    "display_name_invalid": "Invalid display name. Use 1–40 letters, numbers, spaces or . - ' _ (no emoji)."
   },
   "status": {
     "sending": "Sending",
@@ -85,5 +92,11 @@
   "date": {
     "today": "Today",
     "yesterday": "Yesterday"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

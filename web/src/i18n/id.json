@@ -14,13 +14,19 @@
     "google": "Masuk dengan Google",
     "guest": "Lanjut sebagai tamu",
     "info": "Privasi & informasi",
-    "guestFailed": "Tidak dapat memulai sesi tamu."
+    "guestFailed": "Tidak dapat memulai sesi tamu.",
+    "bubbleIn": "Hai! Mau ngobrol?",
+    "bubbleOut": "Boleh, cukup pakai username."
   },
   "onboarding": {
     "title": "Pilih username",
     "hint": "3–20 karakter: huruf kecil, angka, dan garis bawah.",
     "placeholder": "username",
-    "submit": "Lanjut"
+    "submit": "Lanjut",
+    "heading": "Atur profilmu",
+    "displayName": "Nama tampilan",
+    "displayNamePlaceholder": "Namamu",
+    "displayNameHint": "1–40 karakter. Huruf, angka, spasi, dan . - ' _"
   },
   "chat": {
     "title": "Obrolan",
@@ -75,7 +81,8 @@
     "bad_request": "Permintaan tidak valid.",
     "internal": "Terjadi kesalahan. Silakan coba lagi.",
     "oauth_failed": "Login Google gagal. Silakan coba lagi.",
-    "unknown": "Terjadi kesalahan."
+    "unknown": "Terjadi kesalahan.",
+    "display_name_invalid": "Nama tampilan tidak valid. Pakai 1–40 huruf, angka, spasi, atau . - ' _ (tanpa emoji)."
   },
   "status": {
     "sending": "Mengirim",
@@ -85,5 +92,11 @@
   "date": {
     "today": "Hari ini",
     "yesterday": "Kemarin"
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Sistem"
   }
 }
