@@ -140,6 +140,10 @@ export function useChat() {
         setConvs(next.convs); setMsgs(next.msgs); setActiveId(next.activeId);
         convsRef.current = next.convs; msgsRef.current = next.msgs; activeRef.current = next.activeId;
         delete historyLoaded.current[id]; delete lastReadSent.current[id];
+        for (const cid of outbox.current.dropConversation(id)) delete rateRetries.current[cid];
+        setPending(outbox.current.pending());
+        clearTimeout(typingTimers.current[id]); delete typingTimers.current[id];
+        setTypingUntil((tu) => { const n = { ...tu }; delete n[id]; return n; });
         if (wasActive) toast(t("chat.conversationDeleted"));
       });
       s.on("error", (f) => {

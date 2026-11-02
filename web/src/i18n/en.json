@@ -32,6 +32,7 @@
     "title": "Chat",
     "logout": "Log out",
     "conversations": "Conversations",
+    "unread": "Unread messages",
     "empty": "No conversations yet. Search for a username to start chatting.",
     "select": "Select a conversation.",
     "searchPlaceholder": "Search username…",

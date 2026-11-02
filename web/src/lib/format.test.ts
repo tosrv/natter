@@ -42,10 +42,11 @@ describe("validateDisplayName", () => {
   it("accepts and normalizes", () => {
     expect(validateDisplayName("  Budi   Santoso ")).toEqual({ ok: true, value: "Budi Santoso" });
     expect(validateDisplayName("O'Neil-Jr._1")).toEqual({ ok: true, value: "O'Neil-Jr._1" });
+    expect(validateDisplayName("Users").ok).toBe(true);
     expect(validateDisplayName("Zoë 李")).toEqual({ ok: true, value: "Zoë 李" });
   });
   it("rejects", () => {
-    for (const s of ["", "   ", "Hi 😀", "a@b", "a<b>", "a\tb\u0000", "x".repeat(41)]) expect(validateDisplayName(s).ok).toBe(false);
+    for (const s of ["", "   ", "Hi 😀", "a@b", "a<b>", "a\tb\u0000", "x".repeat(41), "User", "user", "USER"]) expect(validateDisplayName(s).ok).toBe(false);
   });
   it("counts code points", () => {
     expect(validateDisplayName("𝐀".repeat(40)).ok).toBe(true);

@@ -27,5 +27,6 @@ export function validateDisplayName(s: string): { ok: true; value: string } | { 
   const v = s.trim().replace(/\s+/g, " ");
   const n = [...v].length;
   if (n < 1 || n > 40 || !/^[\p{L}\p{M}\p{N} .\-'_]+$/u.test(v)) return { ok: false };
+  if (v.toLowerCase() === "user") return { ok: false }; // server placeholder for "not set"
   return { ok: true, value: v };
 }

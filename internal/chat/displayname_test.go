@@ -14,6 +14,7 @@ func TestValidateDisplayName(t *testing.T) {
 	ok := map[string]string{
 		"Rahmat Tomy":           "Rahmat Tomy",
 		"José":                  "José",
+		"Users":                 "Users",
 		"  a   b ":              "a b",
 		"O'Neil-Jr_2.":          "O'Neil-Jr_2.",
 		strings.Repeat("é", 40): strings.Repeat("é", 40),
@@ -24,7 +25,7 @@ func TestValidateDisplayName(t *testing.T) {
 			t.Errorf("%q: got %q, %v", in, got, err)
 		}
 	}
-	for _, in := range []string{"😀", "a★b", "<img>", "   ", "", strings.Repeat("a", 41)} {
+	for _, in := range []string{"😀", "a★b", "User", "user", "USER", "<img>", "   ", "", strings.Repeat("a", 41)} {
 		_, err := chat.ValidateDisplayName(in)
 		wantCode(t, err, "display_name_invalid")
 	}

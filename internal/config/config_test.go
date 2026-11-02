@@ -56,3 +56,12 @@ func TestLoadRefusesFakeLoginWithSecureCookie(t *testing.T) {
 		t.Fatalf("fake login with insecure cookie should load: %v", err)
 	}
 }
+
+func TestGuestLimitPerHour(t *testing.T) {
+	if got := (config.Config{}).GuestLimitPerHour(); got != 5 {
+		t.Fatalf("default = %d, want 5", got)
+	}
+	if got := (config.Config{E2EFakeLogin: true}).GuestLimitPerHour(); got != 1000 {
+		t.Fatalf("e2e = %d, want 1000", got)
+	}
+}

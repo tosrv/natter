@@ -32,6 +32,7 @@
     "title": "Obrolan",
     "logout": "Keluar",
     "conversations": "Percakapan",
+    "unread": "Pesan belum dibaca",
     "empty": "Belum ada percakapan. Cari username untuk mulai mengobrol.",
     "select": "Pilih percakapan.",
     "searchPlaceholder": "Cari username…",

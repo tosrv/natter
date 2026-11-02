@@ -66,7 +66,7 @@ export default function Onboarding() {
         <div className="flex flex-col gap-1.5">
           <label htmlFor="display-name" className="text-sm font-semibold">{t("onboarding.displayName")}</label>
           <Input id="display-name" value={display} onChange={(e) => setDisplay(e.target.value)} autoFocus autoComplete="off"
-            maxLength={60} placeholder={t("onboarding.displayNamePlaceholder")} aria-invalid={dnShown || !!errs.display}
+            maxLength={40} placeholder={t("onboarding.displayNamePlaceholder")} aria-invalid={dnShown || !!errs.display}
             aria-describedby="display-name-msg" className="rounded-full" />
           <p id="display-name-msg" role={errs.display || dnShown ? "alert" : undefined}
             className={`text-xs ${errs.display || dnShown ? "text-destructive" : "text-muted-foreground"}`}>

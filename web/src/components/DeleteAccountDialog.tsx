@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,10 @@ interface Props {
 export default function DeleteAccountDialog({ open, onOpenChange, username, busy, error, onConfirm }: Props) {
   const { t } = useTranslation();
   const [typed, setTyped] = useState("");
+  useEffect(() => { if (open) setTyped(""); }, [open]);
+  const close = (o: boolean) => { if (!o) setTyped(""); onOpenChange(o); };
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) setTyped(""); onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={close}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("settings.deleteTitle")}</DialogTitle>
@@ -30,7 +32,7 @@ export default function DeleteAccountDialog({ open, onOpenChange, username, busy
           <p id="delete-confirm-msg" role={error ? "alert" : undefined} className="min-h-4 text-xs text-destructive">{error}</p>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("settings.cancel")}</Button>
+          <Button variant="ghost" onClick={() => close(false)}>{t("settings.cancel")}</Button>
           <Button variant="destructive" disabled={busy || typed !== username} onClick={onConfirm}>{t("settings.deleteAction")}</Button>
         </DialogFooter>
       </DialogContent>

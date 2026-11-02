@@ -22,6 +22,16 @@ type Config struct {
 	E2EFakeLogin bool
 }
 
+// GuestLimitPerHour is the per-IP guest creation limit. It is raised only when
+// E2E fake login is on (which Load refuses together with COOKIE_SECURE=true),
+// so repeated E2E runs do not hit the production limit.
+func (c Config) GuestLimitPerHour() int {
+	if c.E2EFakeLogin {
+		return 1000
+	}
+	return 5
+}
+
 func Load() (Config, error) {
 	c := Config{
 		DatabaseURL:        os.Getenv("DATABASE_URL"),

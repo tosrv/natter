@@ -50,7 +50,7 @@ func run() error {
 
 	now := time.Now
 	msgLim := ratelimit.New(20, 10*time.Second, now)
-	guestLim := ratelimit.New(5, time.Hour, now)
+	guestLim := ratelimit.New(cfg.GuestLimitPerHour(), time.Hour, now)
 	searchLim := ratelimit.New(30, time.Minute, now)
 
 	svc := chat.New(st, cfg.DeveloperEmail)

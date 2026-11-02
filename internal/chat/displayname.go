@@ -18,5 +18,10 @@ func ValidateDisplayName(raw string) (string, error) {
 	if n < 1 || n > maxDisplayNameRunes || !displayNameRe.MatchString(name) {
 		return "", ErrDisplayNameInvalid
 	}
+	// "User" is the server-side placeholder for "not set"; allowing it would
+	// send the user back to onboarding forever.
+	if strings.EqualFold(name, "User") {
+		return "", ErrDisplayNameInvalid
+	}
 	return name, nil
 }

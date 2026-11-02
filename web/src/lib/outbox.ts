@@ -25,6 +25,13 @@ export class Outbox {
     this.items.delete(clientMsgId);
   }
 
+  /** Drop every pending message of a conversation; returns the dropped ids. */
+  dropConversation(convId: string): string[] {
+    const ids: string[] = [];
+    for (const [id, m] of this.items) if (m.conversation_id === convId) { ids.push(id); this.items.delete(id); }
+    return ids;
+  }
+
   pending(): ClientMsg[] {
     return [...this.items.values()];
   }

@@ -7,6 +7,12 @@ const msg = (id: string, seq: number): Message => ({
 });
 
 describe("Outbox", () => {
+  it("dropConversation removes only that conversation's pending and returns ids", () => {
+    const o = new Outbox();
+    const a = o.add("c1", "x"); const b = o.add("c2", "y"); const c = o.add("c1", "z");
+    expect(o.dropConversation("c1").sort()).toEqual([a.client_msg_id, c.client_msg_id].sort());
+    expect(o.pending()).toEqual([b]);
+  });
   it("add twice yields distinct ids, both pending", () => {
     const o = new Outbox();
     const a = o.add("c", "hi");
