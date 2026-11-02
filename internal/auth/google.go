@@ -43,7 +43,7 @@ func (a *Auth) GoogleCallback(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/?error=oauth_failed")
 		return
 	}
-	u, err := a.svc.LoginGoogle(ctx, sub, email)
+	u, err := a.svc.LoginGoogle(ctx, sub, email, "")
 	if errors.Is(err, chat.ErrUserLimitReached) {
 		c.Redirect(http.StatusFound, "/?error=user_limit_reached")
 		return

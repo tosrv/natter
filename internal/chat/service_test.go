@@ -25,7 +25,7 @@ func wantCode(t *testing.T, err error, code string) {
 func googleUser(t *testing.T, svc *chat.Service, sub, email, username string) store.User {
 	t.Helper()
 	ctx := context.Background()
-	u, err := svc.LoginGoogle(ctx, sub, email)
+	u, err := svc.LoginGoogle(ctx, sub, email, "")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -29,9 +29,13 @@ func New(st *store.Store, developerEmail string) *Service {
 	return &Service{st: st, developerEmail: developerEmail}
 }
 
-func (s *Service) LoginGoogle(ctx context.Context, sub, email string) (store.User, error) {
+func (s *Service) LoginGoogle(ctx context.Context, sub, email, name string) (store.User, error) {
+	display, err := ValidateDisplayName(name)
+	if err != nil {
+		display = "User"
+	}
 	isDev := s.developerEmail != "" && strings.EqualFold(email, s.developerEmail)
-	u, _, err := s.st.UpsertGoogleUser(ctx, sub, email, "", isDev)
+	u, _, err := s.st.UpsertGoogleUser(ctx, sub, email, display, isDev)
 	return u, mapErr(err)
 }
 
@@ -165,4 +169,25 @@ func (s *Service) Conversations(ctx context.Context, u store.User) ([]store.Conv
 
 func (s *Service) PeerOf(ctx context.Context, u store.User, convID uuid.UUID) (uuid.UUID, error) {
 	return s.peer(ctx, u, convID)
+}
+
+func (s *Service) SetDisplayName(ctx context.Context, u store.User, raw string) (store.User, error) {
+	if u.Kind == kindGuest {
+		return store.User{}, ErrForbidden
+	}
+	name, err := ValidateDisplayName(raw)
+	if err != nil {
+		return store.User{}, err
+	}
+	nu, err := s.st.SetDisplayName(ctx, u.ID, name)
+	return nu, mapErr(err)
+}
+
+// DeleteAccount removes the user (guests included); the developer is protected.
+func (s *Service) DeleteAccount(ctx context.Context, u store.User) ([]store.DeletedConversation, error) {
+	if u.IsDeveloper {
+		return nil, ErrForbidden
+	}
+	d, err := s.st.DeleteAccount(ctx, u.ID)
+	return d, mapErr(err)
 }

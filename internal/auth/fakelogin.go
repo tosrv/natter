@@ -24,7 +24,7 @@ func (a *Auth) FakeLogin(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	u, err := a.svc.LoginGoogle(ctx, in.Sub, in.Email)
+	u, err := a.svc.LoginGoogle(ctx, in.Sub, in.Email, "")
 	if err != nil {
 		WriteError(c, err)
 		return

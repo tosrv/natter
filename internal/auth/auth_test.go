@@ -59,7 +59,7 @@ func do(r http.Handler, req *http.Request) *httptest.ResponseRecorder {
 }
 
 func devUser(t *testing.T, e *env) store.User {
-	u, err := e.svc.LoginGoogle(context.Background(), "devsub", devEmail)
+	u, err := e.svc.LoginGoogle(context.Background(), "devsub", devEmail, "")
 	if err != nil {
 		t.Fatal(err)
 	}

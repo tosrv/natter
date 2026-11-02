@@ -51,7 +51,7 @@ func setup(t *testing.T, msgLimit int, tweak func(*Hub)) *env {
 func (e *env) user(t *testing.T, sub, username string) (store.User, string) {
 	t.Helper()
 	ctx := context.Background()
-	u, err := e.svc.LoginGoogle(ctx, sub, sub+"@x.com")
+	u, err := e.svc.LoginGoogle(ctx, sub, sub+"@x.com", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,7 +317,7 @@ func TestRateLimitedFrame(t *testing.T) {
 func TestDisconnectDeletedGuest(t *testing.T) {
 	e := setup(t, 20, nil)
 	ctx := context.Background()
-	if _, err := e.svc.LoginGoogle(ctx, "devsub", devEmail); err != nil {
+	if _, err := e.svc.LoginGoogle(ctx, "devsub", devEmail, ""); err != nil {
 		t.Fatal(err)
 	}
 	g, _, err := e.svc.CreateGuest(ctx)

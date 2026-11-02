@@ -27,6 +27,7 @@ var (
 	ErrUsernameTaken        = &Error{"username_taken", http.StatusConflict}
 	ErrUsernameChangeLimit  = &Error{"username_change_limit", http.StatusConflict}
 	ErrUsernameRequired     = &Error{"username_required", http.StatusForbidden}
+	ErrDisplayNameInvalid   = &Error{"display_name_invalid", http.StatusBadRequest}
 	ErrQueryTooShort        = &Error{"query_too_short", http.StatusBadRequest}
 	ErrRateLimited          = &Error{"rate_limited", http.StatusTooManyRequests}
 	ErrUnauthorized         = &Error{"unauthorized", http.StatusUnauthorized}

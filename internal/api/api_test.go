@@ -44,7 +44,7 @@ func setup(t *testing.T, static string) *env {
 func (e *env) user(t *testing.T, sub, email, username string) (store.User, string) {
 	t.Helper()
 	ctx := context.Background()
-	u, err := e.svc.LoginGoogle(ctx, sub, email)
+	u, err := e.svc.LoginGoogle(ctx, sub, email, "")
 	if err != nil {
 		t.Fatal(err)
 	}
