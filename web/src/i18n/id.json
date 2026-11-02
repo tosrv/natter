@@ -13,7 +13,7 @@
   "landing": {
     "google": "Masuk dengan Google",
     "guest": "Lanjut sebagai tamu",
-    "info": "Privasi & informasi",
+    "info": "Kebijakan Privasi",
     "guestFailed": "Tidak dapat memulai sesi tamu.",
     "bubbleIn": "Hai! Mau ngobrol?",
     "bubbleOut": "Boleh, cukup pakai username.",
@@ -110,11 +110,62 @@
     "selectHint": "Pilih percakapan atau cari seseorang."
   },
   "info": {
-    "title": "Privasi & informasi",
+    "title": "Kebijakan Privasi",
     "e2e": "Pesan tidak dienkripsi end-to-end. Admin server dapat membaca pesan melalui database.",
     "guest": "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya (atau setelah dibuat bila belum ada pesan).",
     "retention": "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
-    "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut ikut terhapus bersama akun tamu."
+    "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut ikut terhapus bersama akun tamu.",
+    "intro": "Kebijakan ini menjelaskan data apa yang dikumpulkan pmess, bagaimana data itu digunakan, dan berapa lama disimpan. pmess adalah proyek perpesanan kecil yang dikelola secara independen, jadi kami berusaha membuatnya singkat dan jelas.",
+    "updated": "Terakhir diperbarui: 2 November 2026",
+    "sections": [
+      {
+        "h": "1. Informasi yang kami kumpulkan",
+        "p": [
+          "Jika kamu masuk dengan Google, kami menerima ID akun Google, alamat email, dan namamu. Nama hanya dipakai sebagai nama tampilan awal.",
+          "Saat menyiapkan profil, kami menyimpan username dan nama tampilan yang kamu pilih.",
+          "Saat mengobrol, kami menyimpan pesan yang kamu kirim, percakapan yang kamu ikuti, dan pesan mana yang sudah dibaca.",
+          "Jika kamu lanjut sebagai tamu, kami membuat akun sementara tanpa informasi pribadi apa pun."
+        ]
+      },
+      {
+        "h": "2. Cara kami menggunakan informasimu",
+        "p": [
+          "Datamu hanya dipakai untuk menjalankan layanan: memproses login, memungkinkan orang lain menemukanmu lewat username, dan mengirimkan pesanmu. Kami tidak menjual datamu, tidak menampilkan iklan, dan tidak membagikannya ke pihak ketiga."
+        ]
+      },
+      {
+        "h": "3. Keamanan pesan",
+        "p": [
+          "Pesan tidak terenkripsi end-to-end. Pesan disimpan di server kami, dan admin server dapat membacanya melalui database. Jangan bagikan kata sandi, data keuangan, atau informasi sensitif lainnya di pmess."
+        ]
+      },
+      {
+        "h": "4. Penyimpanan data",
+        "p": [
+          "Percakapan dihapus setelah 1 bulan tidak aktif.",
+          "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya, atau 30 menit setelah dibuat jika belum ada pesan.",
+          "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut dihapus bersama akun tamu."
+        ]
+      },
+      {
+        "h": "5. Cookie dan penyimpanan lokal",
+        "p": [
+          "Kami memakai cookie hanya untuk proses login dan menjaga sesi login. Preferensi tema dan bahasa disimpan di browsermu. Kami tidak memakai cookie pelacak atau analitik."
+        ]
+      },
+      {
+        "h": "6. Pilihanmu",
+        "p": [
+          "Kamu bisa mengubah nama tampilan di Pengaturan dan menghapus akun kapan saja. Menghapus akun akan menghapus profil, percakapan, dan pesanmu."
+        ]
+      },
+      {
+        "h": "7. Perubahan kebijakan",
+        "p": [
+          "Jika kebijakan ini berubah, kami akan memperbarui tanggal di bagian atas halaman ini."
+        ]
+      }
+    ]
   },
   "errors": {
     "user_limit_reached": "Batas pengguna sudah tercapai. Coba lagi nanti.",

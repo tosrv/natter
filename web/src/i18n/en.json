@@ -13,7 +13,7 @@
   "landing": {
     "google": "Login with Google",
     "guest": "Continue as guest",
-    "info": "Privacy & info",
+    "info": "Privacy Policy",
     "guestFailed": "Could not start a guest session.",
     "bubbleIn": "Hey! Want to chat?",
     "bubbleOut": "Sure, just a username away.",
@@ -110,11 +110,62 @@
     "selectHint": "Pick a conversation or search for someone."
   },
   "info": {
-    "title": "Privacy & information",
+    "title": "Privacy Policy",
     "e2e": "Messages are not end-to-end encrypted. Server administrators can read messages through the database.",
     "guest": "Guest accounts are deleted 30 minutes after the last message in their conversation (or after creation if no message was sent).",
     "retention": "Conversations are deleted after 1 month of inactivity.",
-    "contact": "Sharing contact information as a guest is voluntary. It is deleted together with the guest account."
+    "contact": "Sharing contact information as a guest is voluntary. It is deleted together with the guest account.",
+    "intro": "This policy explains what data pmess collects, how it is used, and how long it is kept. pmess is a small, independently run messaging project, so we aim to keep this short and plain.",
+    "updated": "Last updated: November 2, 2026",
+    "sections": [
+      {
+        "h": "1. Information we collect",
+        "p": [
+          "If you sign in with Google, we receive your Google account identifier, email address and name. We use the name only as your initial display name.",
+          "When you set up your profile, we store the username and display name you choose.",
+          "When you chat, we store the messages you send, the conversations you are part of, and which messages have been read.",
+          "If you continue as a guest, we create a temporary account without any personal information."
+        ]
+      },
+      {
+        "h": "2. How we use your information",
+        "p": [
+          "Your data is used only to run the service: signing you in, letting other people find you by username, and delivering your messages. We do not sell your data, show ads, or share it with third parties."
+        ]
+      },
+      {
+        "h": "3. Message security",
+        "p": [
+          "Messages are not end-to-end encrypted. They are stored on our server, and server administrators can read them through the database. Please do not share passwords, financial details or other sensitive information on pmess."
+        ]
+      },
+      {
+        "h": "4. Data retention",
+        "p": [
+          "Conversations are deleted after 1 month of inactivity.",
+          "Guest accounts are deleted 30 minutes after the last message in their conversation, or 30 minutes after creation if no message was sent.",
+          "Sharing contact information as a guest is voluntary. It is deleted together with the guest account."
+        ]
+      },
+      {
+        "h": "5. Cookies and local storage",
+        "p": [
+          "We use cookies only to sign you in and keep you signed in. Your theme and language preferences are stored in your browser. We do not use tracking or analytics cookies."
+        ]
+      },
+      {
+        "h": "6. Your choices",
+        "p": [
+          "You can change your display name in Settings, and you can delete your account at any time. Deleting your account removes your profile, conversations and messages."
+        ]
+      },
+      {
+        "h": "7. Changes to this policy",
+        "p": [
+          "If we change this policy, we will update the date at the top of this page."
+        ]
+      }
+    ]
   },
   "errors": {
     "user_limit_reached": "The user limit has been reached. Please try again later.",
