@@ -7,6 +7,12 @@ services:
       - "127.0.0.1:5432:5432"
   app:
     build:
+      context: .
+      secrets:
+        - extra_ca
+  backup:
+    build:
+      context: .
       secrets:
         - extra_ca
 

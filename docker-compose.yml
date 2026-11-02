@@ -1,5 +1,11 @@
 # Produksi: app hanya di 127.0.0.1:8080 (di belakang Nginx host), Postgres tidak
 # dipublikasikan ke host. Butuh .env berisi minimal POSTGRES_PASSWORD dan DEVELOPER_EMAIL.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   postgres:
     image: postgres:16
@@ -14,11 +20,14 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+    logging: *logging
     restart: unless-stopped
 
   app:
-    build:
-      context: .
+    image: ghcr.io/tosrv/pmess:${PMESS_TAG:-latest}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      com.centurylinklabs.watchtower.lifecycle.pre-update: "/app/deploy/backup.sh preupdate"
     env_file:
       - path: .env
         required: false
@@ -30,11 +39,60 @@ services:
       # Nginx di host terlihat dari container sebagai gateway jaringan compose.
       TRUSTED_PROXY: ${TRUSTED_PROXY:-172.28.0.1}
       E2E_FAKE_LOGIN: ${E2E_FAKE_LOGIN:-0}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TZ: ${TZ:-UTC}
+      # Untuk pre-update hook (backup.sh -> pg_dump).
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: pmess
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: pmess
+      BACKUP_DIR: /backups
+    volumes:
+      - ${BACKUP_DIR:-/var/backups/pmess}:/backups
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging: *logging
+    restart: unless-stopped
+
+  # Backup harian 02:00 waktu TZ. Memakai image app yang sama (berisi pg_dump),
+  # tetapi TIDAK dipantau Watchtower.
+  backup:
+    image: ghcr.io/tosrv/pmess:${PMESS_TAG:-latest}
+    entrypoint: ["/app/deploy/backup-cron.sh"]
+    labels:
+      com.centurylinklabs.watchtower.enable: "false"
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: pmess
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: pmess
+      BACKUP_DIR: /backups
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ${BACKUP_DIR:-/var/backups/pmess}:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *logging
+    restart: unless-stopped
+
+  watchtower:
+    image: nickfedor/watchtower:1.23.2
+    command: --interval 300 --label-enable --cleanup --enable-lifecycle-hooks
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    logging: *logging
     restart: unless-stopped
 
 networks:

@@ -68,12 +68,12 @@ Buka URL yang dicetak Vite (proxy `/api` diarahkan ke `:8080`), atau jalankan `n
 
 ```bash
 cp .env.example .env   # isi nilainya; wajib POSTGRES_PASSWORD (DATABASE_URL dibangun darinya)
-docker compose up --build -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d   # build lokal; compose prod menarik image dari GHCR
 # aplikasi di http://127.0.0.1:8080 (hanya localhost; publik lewat Nginx). Postgres tidak dipublikasikan ke host.
 docker compose logs -f app
 ```
 
-Image dibangun multi-stage (Node 22 → Go 1.24 `CGO_ENABLED=0` → `gcr.io/distroless/static`), berisi binary dan file statis di `/app/web`.
+Image dibangun multi-stage (Node 22 → Go 1.24 `CGO_ENABLED=0` → `debian:bookworm-slim` + `postgresql-client-16`, user non-root uid 65532), berisi binary dan file statis di `/app/web`.
 
 **Hanya dev/sandbox:** `docker-compose.dev.yml` mempublikasikan Postgres ke `127.0.0.1:5432` dan menambah build secret `extra_ca` (CA bundle untuk proxy TLS-intercepting). Pakai `EXTRA_CA_FILE=./ca.pem docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d`. Jangan dipakai di produksi; tanpa secret, mount di Dockerfile tidak berefek.
 
@@ -123,6 +123,69 @@ cd .. && docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v 
 ## Nginx (produksi)
 
 Contoh server block lengkap ada di [`deploy/nginx.conf.example`](deploy/nginx.conf.example): redirect HTTP→HTTPS, TLS (ganti path sertifikat), `location /api/ws` dengan header `Upgrade`/`Connection`, `proxy_read_timeout 75s` (ping WS tiap 25 s), dan `X-Real-IP $remote_addr` (dipakai rate limit; pastikan `TRUSTED_PROXY` sesuai). Di produksi set juga `COOKIE_SECURE=true` dan `ALLOWED_ORIGINS=https://domain-anda`.
+
+## Operasional
+
+Alur: push ke `main` -> CI (test + backup-test) -> image `ghcr.io/tosrv/pmess` (`latest` dan `sha-<7 karakter>`) -> Watchtower di VPS menariknya otomatis. `docker-compose.yml` adalah compose produksi (image dari GHCR, tanpa `build`).
+
+### Setup GHCR (sekali)
+
+Setelah job `image` pertama sukses: GitHub -> profil/organisasi -> **Packages** -> `pmess` -> **Package settings** -> **Change visibility** -> **Public**. Setelah itu VPS menarik image tanpa login. Image tidak berisi secret (semua config lewat `.env`).
+
+### Deploy pertama di VPS
+
+```bash
+git clone https://github.com/tosrv/pmess.git && cd pmess
+cp .env.example .env            # isi POSTGRES_PASSWORD, GOOGLE_*, DEVELOPER_EMAIL, dst.
+sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess   # uid 65532 = user di dalam container
+docker compose up -d
+docker compose ps               # app harus healthy
+curl -fsS http://127.0.0.1:8080/healthz
+```
+
+Pasang Nginx dari `deploy/nginx.conf.example` (sudah meneruskan `/healthz`).
+
+### Cara kerja Watchtower
+
+Service `watchtower` (`nickfedor/watchtower`, versi terkunci di compose; fork aktif dari `containrrr/watchtower` yang sudah diarsip) memeriksa registry tiap 300 detik. Hanya container berlabel `com.centurylinklabs.watchtower.enable=true` yang diperbarui, yaitu `app`. `postgres` dan `backup` tidak diperbarui. Sebelum `app` diganti, Watchtower menjalankan hook `/app/deploy/backup.sh preupdate` di dalam container `app` (backup `preupdate`). Lihat log: `docker compose logs -f watchtower`. Migrasi DB berjalan otomatis saat `app` start.
+
+Catatan: container `backup` memakai image yang sama tetapi tidak diperbarui otomatis; ia ikut versi baru saat `docker compose pull && docker compose up -d backup` dijalankan manual (mis. sesekali).
+
+### Rollback
+
+Set `PMESS_TAG=sha-<versi lama>` di `.env`, lalu `docker compose up -d app`. Selama `PMESS_TAG` bukan `latest`, Watchtower tidak memperbarui `app` (tag tetap sama). Kembali ke `PMESS_TAG=latest` untuk mengikuti pembaruan lagi. Rollback image **tidak** membatalkan migrasi; bila migrasi bermasalah, restore dari backup `preupdate`.
+
+### Backup
+
+- **Lokasi:** `/var/backups/pmess` di host (ubah dengan `BACKUP_DIR`), terpasang di container sebagai `/backups`. Folder harus dibuat dengan `sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess`.
+- **Jadwal:** service `backup` menjalankan `pg_dump -Fc` tiap hari pukul 02:00 waktu `TZ` (default `UTC`); hari Minggu diberi label `weekly`. Backup `preupdate` dibuat Watchtower sebelum tiap update.
+- **Nama file:** `pmess-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump`.
+- **Retensi:** 7 `daily`, 4 `weekly`, 5 `preupdate`; yang lebih lama dihapus hanya setelah backup baru sukses.
+- **Gagal backup:** tercatat sebagai log JSON `level=ERROR` (`docker compose logs backup`); tidak ada alert terpisah.
+- **Salin ke komputer sendiri (manual, disarankan rutin):**
+
+```bash
+scp 'user@vps:/var/backups/pmess/pmess-*.dump' ./backup-pmess/
+```
+
+> **Risiko:** backup hanya ada di VPS. Bila VPS hilang atau diretas, backup ikut hilang. Salin berkala dengan `scp` di atas.
+
+### Restore
+
+Dijalankan di host dari root repo (menghentikan `app`, menimpa database `pmess`, menyalakan `app`, menunggu `/healthz` OK maks 60 detik). Service `backup` tidak disentuh.
+
+```bash
+deploy/restore.sh /var/backups/pmess/pmess-YYYYMMDD-HHMM-daily.dump --yes
+```
+
+Tanpa `--yes` skrip menolak jalan. Pakai `sudo` bila folder backup hanya terbaca uid 65532.
+
+### Alert (UptimeRobot)
+
+1. Buat akun gratis di uptimerobot.com.
+2. **Add New Monitor** -> tipe **HTTP(s)**, URL `https://<domain>/healthz`, interval **5 menit**.
+3. **Alert Contacts**: tambahkan email Anda; atur notifikasi setelah 2 kali gagal berturut-turut dan saat pulih.
+4. Uji sekali: `docker compose stop app`, tunggu email (maks ~10 menit), lalu `docker compose start app` dan pastikan email pulih masuk.
 
 ## Privasi
 
