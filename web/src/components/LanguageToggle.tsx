@@ -4,10 +4,11 @@ import { setLang, type Lang } from "@/i18n";
 
 export default function LanguageToggle() {
   const { i18n } = useTranslation();
-  const next: Lang = i18n.language === "id" ? "en" : "id";
+  const current: Lang = i18n.language === "id" ? "id" : "en";
+  const next: Lang = current === "id" ? "en" : "id";
   return (
-    <Button variant="ghost" size="sm" onClick={() => setLang(next)} aria-label="Language">
-      {i18n.language === "id" ? "ID" : "EN"} → {next.toUpperCase()}
+    <Button variant="ghost" size="sm" onClick={() => setLang(next)} aria-label="Language" title={next.toUpperCase()}>
+      {current.toUpperCase()}
     </Button>
   );
 }
