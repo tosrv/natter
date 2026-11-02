@@ -86,7 +86,7 @@ func run(url, dsn string, n, msgs int, interval, grace time.Duration) int {
 	cs := make([]*client, n)
 	for i := range cs {
 		sub := fmt.Sprintf("%s%d", prefix, i)
-		u, _, err := st.UpsertGoogleUser(ctx, sub, sub+"@loadtest.invalid", false)
+		u, _, err := st.UpsertGoogleUser(ctx, sub, sub+"@loadtest.invalid", "", false)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "create user %d: %v\n", i, err)
 			return 1

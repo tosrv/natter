@@ -31,7 +31,7 @@ func New(st *store.Store, developerEmail string) *Service {
 
 func (s *Service) LoginGoogle(ctx context.Context, sub, email string) (store.User, error) {
 	isDev := s.developerEmail != "" && strings.EqualFold(email, s.developerEmail)
-	u, _, err := s.st.UpsertGoogleUser(ctx, sub, email, isDev)
+	u, _, err := s.st.UpsertGoogleUser(ctx, sub, email, "", isDev)
 	return u, mapErr(err)
 }
 

@@ -15,7 +15,7 @@ func mkUsers(t *testing.T, s *store.Store, n int) []uuid.UUID {
 	t.Helper()
 	ids := make([]uuid.UUID, n)
 	for i := range ids {
-		u, _, err := s.UpsertGoogleUser(context.Background(), fmt.Sprintf("sub-%d", i), fmt.Sprintf("u%d@x.io", i), false)
+		u, _, err := s.UpsertGoogleUser(context.Background(), fmt.Sprintf("sub-%d", i), fmt.Sprintf("u%d@x.io", i), "", false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -193,7 +193,7 @@ func mkUsersFrom(t *testing.T, s *store.Store, off, n int) []uuid.UUID {
 	t.Helper()
 	ids := make([]uuid.UUID, n)
 	for i := range ids {
-		u, _, err := s.UpsertGoogleUser(context.Background(), fmt.Sprintf("sub-%d", off+i), "e@x.io", false)
+		u, _, err := s.UpsertGoogleUser(context.Background(), fmt.Sprintf("sub-%d", off+i), "e@x.io", "", false)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -19,10 +19,10 @@ func TestMigrateCreatesSchema(t *testing.T) {
 		t.Fatal("expected check violation")
 	}
 	var uid, cid string
-	if err := s.Pool().QueryRow(ctx, `INSERT INTO users(kind,email) VALUES('guest','a@b.c') RETURNING id`).Scan(&uid); err != nil {
+	if err := s.Pool().QueryRow(ctx, `INSERT INTO users(kind,email,display_name) VALUES('guest','a@b.c','G1') RETURNING id`).Scan(&uid); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Pool().QueryRow(ctx, `INSERT INTO users(kind) VALUES('guest') RETURNING id`).Scan(&cid); err != nil {
+	if err := s.Pool().QueryRow(ctx, `INSERT INTO users(kind,display_name) VALUES('guest','G2') RETURNING id`).Scan(&cid); err != nil {
 		t.Fatal(err)
 	}
 	a, b := uid, cid

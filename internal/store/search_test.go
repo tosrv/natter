@@ -14,7 +14,7 @@ import (
 
 func mkUser(t *testing.T, s *store.Store, sub string) store.User {
 	t.Helper()
-	u, _, err := s.UpsertGoogleUser(context.Background(), sub, sub+"@x.com", false)
+	u, _, err := s.UpsertGoogleUser(context.Background(), sub, sub+"@x.com", "", false)
 	if err != nil {
 		t.Fatal(err)
 	}

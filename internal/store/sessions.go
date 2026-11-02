@@ -36,7 +36,7 @@ func (s *Store) CreateSession(ctx context.Context, userID uuid.UUID, ttl time.Du
 // unknown or expired.
 func (s *Store) UserBySession(ctx context.Context, token string) (User, error) {
 	return scanUser(s.pool.QueryRow(ctx,
-		`SELECT u.id, u.kind, u.google_sub, u.email, u.username, u.username_changes, u.is_developer, u.created_at
+		`SELECT u.id, u.kind, u.google_sub, u.email, u.username, u.display_name, u.username_changes, u.is_developer, u.created_at
 		 FROM sessions s JOIN users u ON u.id = s.user_id
 		 WHERE s.token_hash = $1 AND s.expires_at > now()`, hashToken(token)))
 }

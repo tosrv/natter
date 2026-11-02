@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,16 +19,17 @@ type User struct {
 	GoogleSub       *string
 	Email           *string
 	Username        *string
+	DisplayName     string
 	UsernameChanges int
 	IsDeveloper     bool
 	CreatedAt       time.Time
 }
 
-const userCols = `id, kind, google_sub, email, username, username_changes, is_developer, created_at`
+const userCols = `id, kind, google_sub, email, username, display_name, username_changes, is_developer, created_at`
 
 func scanUser(row pgx.Row) (User, error) {
 	var u User
-	err := row.Scan(&u.ID, &u.Kind, &u.GoogleSub, &u.Email, &u.Username,
+	err := row.Scan(&u.ID, &u.Kind, &u.GoogleSub, &u.Email, &u.Username, &u.DisplayName,
 		&u.UsernameChanges, &u.IsDeveloper, &u.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
@@ -55,7 +57,10 @@ func takeSlot(ctx context.Context, tx pgx.Tx) error {
 
 // UpsertGoogleUser logs in an existing Google user (no slot used) or creates
 // a new one, taking a slot.
-func (s *Store) UpsertGoogleUser(ctx context.Context, sub, email string, isDeveloper bool) (User, bool, error) {
+func (s *Store) UpsertGoogleUser(ctx context.Context, sub, email, displayName string, isDeveloper bool) (User, bool, error) {
+	if displayName == "" {
+		displayName = "User"
+	}
 	var (
 		u       User
 		created bool
@@ -80,9 +85,9 @@ func (s *Store) UpsertGoogleUser(ctx context.Context, sub, email string, isDevel
 				return err
 			}
 			u, err = scanUser(tx.QueryRow(ctx,
-				`INSERT INTO users (kind, google_sub, email, is_developer) VALUES ('google',$1,$2,$3)
+				`INSERT INTO users (kind, google_sub, email, display_name, is_developer) VALUES ('google',$1,$2,$4,$3)
 				 ON CONFLICT (google_sub) DO NOTHING RETURNING `+userCols,
-				sub, email, isDeveloper))
+				sub, email, isDeveloper, displayName))
 			if errors.Is(err, ErrNotFound) {
 				return errRetry // lost a race; roll back the slot and retry
 			}
@@ -143,10 +148,11 @@ func (s *Store) CreateGuest(ctx context.Context, developerID uuid.UUID) (User, u
 			if _, err := rand.Read(b); err != nil {
 				return err
 			}
+			suffix := hex.EncodeToString(b)
 			var err error
 			u, err = scanUser(tx.QueryRow(ctx,
-				`INSERT INTO users (kind, username) VALUES ('guest',$1) RETURNING `+userCols,
-				"guest-"+hex.EncodeToString(b)))
+				`INSERT INTO users (kind, username, display_name) VALUES ('guest',$1,$2) RETURNING `+userCols,
+				"guest-"+suffix, "Guest "+strings.ToUpper(suffix)))
 			if err != nil {
 				return err
 			}
@@ -184,4 +190,58 @@ func (s *Store) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 func (s *Store) GetDeveloper(ctx context.Context) (User, error) {
 	return scanUser(s.pool.QueryRow(ctx,
 		`SELECT `+userCols+` FROM users WHERE is_developer ORDER BY created_at LIMIT 1`))
+}
+
+// SetDisplayName sets the display name (validated by the caller).
+func (s *Store) SetDisplayName(ctx context.Context, userID uuid.UUID, name string) (User, error) {
+	return scanUser(s.pool.QueryRow(ctx,
+		`UPDATE users SET display_name=$2 WHERE id=$1 RETURNING `+userCols, userID, name))
+}
+
+// DeletedConversation is a conversation removed along with an account, and
+// the peer who was in it.
+type DeletedConversation struct {
+	ConversationID uuid.UUID
+	PeerID         uuid.UUID
+}
+
+// DeleteAccount deletes the user (cascading sessions, conversations and
+// messages) and frees its slot, in one transaction. It returns the removed
+// conversations with their peers; ErrNotFound if the user does not exist.
+func (s *Store) DeleteAccount(ctx context.Context, userID uuid.UUID) ([]DeletedConversation, error) {
+	var peers []DeletedConversation
+	err := s.WithTx(ctx, func(tx pgx.Tx) error {
+		peers = nil
+		rows, err := tx.Query(ctx,
+			`SELECT id, CASE WHEN user_a=$1 THEN user_b ELSE user_a END
+			 FROM conversations WHERE user_a=$1 OR user_b=$1`, userID)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			var d DeletedConversation
+			if err := rows.Scan(&d.ConversationID, &d.PeerID); err != nil {
+				rows.Close()
+				return err
+			}
+			peers = append(peers, d)
+		}
+		rows.Close()
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		tag, err := tx.Exec(ctx, `DELETE FROM users WHERE id=$1`, userID)
+		if err != nil {
+			return err
+		}
+		if tag.RowsAffected() == 0 {
+			return ErrNotFound
+		}
+		_, err = tx.Exec(ctx, `UPDATE user_slots SET used = used - 1 WHERE id = 1`)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return peers, nil
 }

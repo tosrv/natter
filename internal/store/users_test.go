@@ -39,7 +39,7 @@ func TestSlotRace(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			<-start
-			_, _, errs[i] = s.UpsertGoogleUser(ctx, sub, sub+"@x.com", false)
+			_, _, errs[i] = s.UpsertGoogleUser(ctx, sub, sub+"@x.com", "", false)
 		}()
 	}
 	close(start)
@@ -66,12 +66,12 @@ func TestSlotRace(t *testing.T) {
 func TestExistingUserLoginWhenFull(t *testing.T) {
 	s := storetest.New(t)
 	ctx := context.Background()
-	u1, created, err := s.UpsertGoogleUser(ctx, "sub-1", "a@x.com", false)
+	u1, created, err := s.UpsertGoogleUser(ctx, "sub-1", "a@x.com", "", false)
 	if err != nil || !created {
 		t.Fatalf("first upsert: created=%v err=%v", created, err)
 	}
 	setUsed(t, s, 300)
-	u2, created, err := s.UpsertGoogleUser(ctx, "sub-1", "b@x.com", true)
+	u2, created, err := s.UpsertGoogleUser(ctx, "sub-1", "b@x.com", "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestExistingUserLoginWhenFull(t *testing.T) {
 func TestDeleteGuestFreesSlot(t *testing.T) {
 	s := storetest.New(t)
 	ctx := context.Background()
-	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.com", true)
+	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.com", "", true)
 	if err != nil {
 		t.Fatal(err)
 	}

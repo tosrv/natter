@@ -45,6 +45,7 @@ type ConversationSummary struct {
 	ID              uuid.UUID `json:"id"`
 	PeerID          uuid.UUID `json:"peer_id"`
 	PeerUsername    string    `json:"peer_username"`
+	PeerDisplayName string    `json:"peer_display_name"`
 	PeerKind        string    `json:"peer_kind"`
 	LastMessage     *Message  `json:"last_message"`
 	Unread          int64     `json:"unread"`
@@ -56,7 +57,7 @@ type ConversationSummary struct {
 // LastActivityAt falls back to created_at for conversations without messages.
 func (s *Store) ListConversations(ctx context.Context, userID uuid.UUID) ([]ConversationSummary, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT c.id, p.id, coalesce(p.username,''), p.kind,
+		SELECT c.id, p.id, coalesce(p.username,''), p.display_name, p.kind,
 		       c.last_seq - me.last_read_seq, pm.last_read_seq,
 		       coalesce(c.last_activity_at, c.created_at),
 		       m.id, m.seq, m.sender_id, m.body, m.created_at, m.client_msg_id
@@ -80,7 +81,7 @@ func (s *Store) ListConversations(ctx context.Context, userID uuid.UUID) ([]Conv
 			mBody              *string
 			mAt                *time.Time
 		)
-		if err := rows.Scan(&cs.ID, &cs.PeerID, &cs.PeerUsername, &cs.PeerKind,
+		if err := rows.Scan(&cs.ID, &cs.PeerID, &cs.PeerUsername, &cs.PeerDisplayName, &cs.PeerKind,
 			&cs.Unread, &cs.PeerLastReadSeq, &cs.LastActivityAt,
 			&mID, &mSeq, &mSender, &mBody, &mAt, &mCli); err != nil {
 			return nil, err

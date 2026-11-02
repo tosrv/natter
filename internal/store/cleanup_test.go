@@ -13,7 +13,7 @@ import (
 func TestExpiredGuests(t *testing.T) {
 	ctx := context.Background()
 	s := storetest.New(t)
-	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.io", true)
+	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.io", "", true)
 	if err != nil {
 		t.Fatal(err)
 	}

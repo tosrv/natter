@@ -39,7 +39,7 @@ func TestNextDailyRun(t *testing.T) {
 func TestCleanupGuests(t *testing.T) {
 	ctx := context.Background()
 	s := storetest.New(t)
-	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.io", true)
+	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.io", "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,11 +71,11 @@ func TestCleanupGuests(t *testing.T) {
 func TestRetention(t *testing.T) {
 	ctx := context.Background()
 	s := storetest.New(t)
-	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.io", true)
+	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.io", "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, _, err := s.UpsertGoogleUser(ctx, "a", "a@x.io", false)
+	a, _, err := s.UpsertGoogleUser(ctx, "a", "a@x.io", "", false)
 	if err != nil {
 		t.Fatal(err)
 	}

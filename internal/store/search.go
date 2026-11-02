@@ -32,8 +32,9 @@ func (s *Store) SetUsername(ctx context.Context, userID uuid.UUID, username stri
 }
 
 type UserBrief struct {
-	ID       uuid.UUID
-	Username string
+	ID          uuid.UUID `json:"id"`
+	Username    string    `json:"username"`
+	DisplayName string    `json:"display_name"`
 }
 
 var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
@@ -43,7 +44,7 @@ var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 func (s *Store) SearchUsers(ctx context.Context, prefix string, excludeID uuid.UUID, limit int) ([]UserBrief, error) {
 	pat := likeEscaper.Replace(strings.ToLower(prefix)) + "%"
 	rows, err := s.pool.Query(ctx,
-		`SELECT id, username FROM users
+		`SELECT id, username, display_name FROM users
 		 WHERE kind='google' AND username IS NOT NULL AND id <> $2
 		   AND lower(username) LIKE $1 ESCAPE '\'
 		 ORDER BY username LIMIT $3`, pat, excludeID, limit)
@@ -54,7 +55,7 @@ func (s *Store) SearchUsers(ctx context.Context, prefix string, excludeID uuid.U
 	out := []UserBrief{}
 	for rows.Next() {
 		var b UserBrief
-		if err := rows.Scan(&b.ID, &b.Username); err != nil {
+		if err := rows.Scan(&b.ID, &b.Username, &b.DisplayName); err != nil {
 			return nil, err
 		}
 		out = append(out, b)

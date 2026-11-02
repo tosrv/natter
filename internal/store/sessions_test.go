@@ -14,7 +14,7 @@ import (
 func TestSessionRoundTrip(t *testing.T) {
 	s := storetest.New(t)
 	ctx := context.Background()
-	u, _, err := s.UpsertGoogleUser(ctx, "sub-s", "s@example.com", false)
+	u, _, err := s.UpsertGoogleUser(ctx, "sub-s", "s@example.com", "", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestSessionRoundTrip(t *testing.T) {
 func TestSessionExpired(t *testing.T) {
 	s := storetest.New(t)
 	ctx := context.Background()
-	u, _, _ := s.UpsertGoogleUser(ctx, "sub-e", "e@example.com", false)
+	u, _, _ := s.UpsertGoogleUser(ctx, "sub-e", "e@example.com", "", false)
 	tok, err := s.CreateSession(ctx, u.ID, -time.Minute)
 	if err != nil {
 		t.Fatal(err)
@@ -69,7 +69,7 @@ func TestSessionExpired(t *testing.T) {
 func TestSessionGoneAfterGuestDeleted(t *testing.T) {
 	s := storetest.New(t)
 	ctx := context.Background()
-	dev, _, _ := s.UpsertGoogleUser(ctx, "sub-d", "d@example.com", true)
+	dev, _, _ := s.UpsertGoogleUser(ctx, "sub-d", "d@example.com", "", true)
 	g, _, err := s.CreateGuest(ctx, dev.ID)
 	if err != nil {
 		t.Fatal(err)
