@@ -1,6 +1,14 @@
 {
-  "app": { "name": "pmess", "tagline": "Pesan pribadi yang sederhana." },
-  "common": { "loading": "Memuat…", "back": "Kembali", "save": "Simpan", "language": "Bahasa" },
+  "app": {
+    "name": "pmess",
+    "tagline": "Pesan pribadi yang sederhana."
+  },
+  "common": {
+    "loading": "Memuat…",
+    "back": "Kembali",
+    "save": "Simpan",
+    "language": "Bahasa"
+  },
   "landing": {
     "google": "Masuk dengan Google",
     "guest": "Lanjut sebagai tamu",
@@ -13,7 +21,29 @@
     "placeholder": "username",
     "submit": "Lanjut"
   },
-  "chat": { "title": "Obrolan", "logout": "Keluar", "placeholder": "Obrolan segera hadir." },
+  "chat": {
+    "title": "Obrolan",
+    "logout": "Keluar",
+    "conversations": "Percakapan",
+    "empty": "Belum ada percakapan. Cari username untuk mulai mengobrol.",
+    "select": "Pilih percakapan.",
+    "searchPlaceholder": "Cari username…",
+    "noResults": "Pengguna tidak ditemukan.",
+    "typing": "sedang mengetik…",
+    "sending": "mengirim…",
+    "sent": "terkirim",
+    "read": "dibaca",
+    "placeholder": "Tulis pesan…",
+    "send": "Kirim",
+    "noMessages": "Belum ada pesan.",
+    "newMessage": "Pesan baru dari {{name}}",
+    "back": "Kembali",
+    "connecting": "Menyambung ulang…",
+    "contactTitle": "Bagaimana developer bisa menghubungi Anda?",
+    "contactHint": "Opsional. Jawaban Anda dikirim sebagai pesan biasa dan ikut terhapus bersama akun tamu.",
+    "contactPlaceholder": "Email, telepon, atau lainnya",
+    "skip": "Lewati"
+  },
   "info": {
     "title": "Privasi & informasi",
     "e2e": "Pesan tidak dienkripsi end-to-end. Admin server dapat membaca pesan melalui database.",

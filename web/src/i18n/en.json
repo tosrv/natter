@@ -1,6 +1,14 @@
 {
-  "app": { "name": "pmess", "tagline": "A simple personal messenger." },
-  "common": { "loading": "Loading…", "back": "Back", "save": "Save", "language": "Language" },
+  "app": {
+    "name": "pmess",
+    "tagline": "A simple personal messenger."
+  },
+  "common": {
+    "loading": "Loading…",
+    "back": "Back",
+    "save": "Save",
+    "language": "Language"
+  },
   "landing": {
     "google": "Login with Google",
     "guest": "Continue as guest",
@@ -13,7 +21,29 @@
     "placeholder": "username",
     "submit": "Continue"
   },
-  "chat": { "title": "Chat", "logout": "Log out", "placeholder": "Chat coming soon." },
+  "chat": {
+    "title": "Chat",
+    "logout": "Log out",
+    "conversations": "Conversations",
+    "empty": "No conversations yet. Search for a username to start chatting.",
+    "select": "Select a conversation.",
+    "searchPlaceholder": "Search username…",
+    "noResults": "No users found.",
+    "typing": "typing…",
+    "sending": "sending…",
+    "sent": "sent",
+    "read": "read",
+    "placeholder": "Write a message…",
+    "send": "Send",
+    "noMessages": "No messages yet.",
+    "newMessage": "New message from {{name}}",
+    "back": "Back",
+    "connecting": "Reconnecting…",
+    "contactTitle": "How can the developer reach you?",
+    "contactHint": "Optional. Your answer is sent as a normal message and is deleted with your guest account.",
+    "contactPlaceholder": "Email, phone, or anything else",
+    "skip": "Skip"
+  },
   "info": {
     "title": "Privacy & information",
     "e2e": "Messages are not end-to-end encrypted. Server administrators can read messages through the database.",
