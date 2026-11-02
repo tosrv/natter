@@ -18,6 +18,10 @@ if [ "$confirm" != "--yes" ]; then
   echo "refusing: pass --yes as second argument to proceed" >&2; exit 2
 fi
 
+echo "verifying dump" >&2
+if ! docker compose exec -T postgres pg_restore -l <"$file" >/dev/null; then
+  echo "error: not a valid pg_dump custom-format file: $file (app untouched)" >&2; exit 1
+fi
 echo "stopping app" >&2
 docker compose stop app
 echo "restoring $file" >&2

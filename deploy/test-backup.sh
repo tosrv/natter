@@ -58,17 +58,34 @@ fi
 # ---------- (b) Gagal ----------
 echo "== (b) kegagalan"
 mkdir -p "$TMP/b"
-echo old > "$TMP/b/pmess-20260101-0200-daily.dump"
+for i in $(seq 1 8); do echo "old$i" >"$TMP/b/pmess-202601$(printf %02d "$i")-0200-daily.dump"; done
+for i in 1 2; do echo "w$i" >"$TMP/b/pmess-202602$(printf %02d "$i")-0200-weekly.dump"; done
+for i in 1 2; do echo "p$i" >"$TMP/b/pmess-202603$(printf %02d "$i")-1200-preupdate.dump"; done
+(cd "$TMP/b" && sha256sum ./* | sort) >"$TMP/b.before"
 set +e
 PGHOST=nonexistent.invalid PGPORT=5432 PGUSER=x PGPASSWORD=x PGDATABASE=x BACKUP_DIR=/work/b TZ=UTC PRUNE_ONLY="" \
   runpg bash /deploy/backup.sh daily >"$TMP/b.out" 2>"$TMP/b.err"
 rc=$?
 set -e
 chk "exit $rc != 0" "exit 0 saat PGHOST tak terjangkau" [ "$rc" -ne 0 ]
-n="$(find "$TMP/b" -type f | wc -l)"
-chk "tidak ada file baru" "file baru: $(find "$TMP/b" -type f -printf '%f ')" [ "$n" -eq 1 ]
-chk "file lama utuh" "file lama berubah" [ "$(cat "$TMP/b/pmess-20260101-0200-daily.dump")" = old ]
+after="$(cd "$TMP/b" && sha256sum ./* | sort)"
+chk "12 file lama utuh, tak ada file baru" "isi dir berubah: $(find "$TMP/b" -type f -printf '%f ')" [ "$after" = "$(cat "$TMP/b.before")" ]
+chk 'stderr berisi "msg":"backup failed"' "stderr: $(cat "$TMP/b.err")" grep -q '"msg":"backup failed"' "$TMP/b.err"
 chk 'stderr berisi "level":"ERROR"' "stderr: $(cat "$TMP/b.err")" grep -q '"level":"ERROR"' "$TMP/b.err"
+
+# ---------- (d) Jadwal cron & DST ----------
+echo "== (d) next_run lintas DST"
+dst_check() { # <tz> <now-lokal> <harapan-lokal>
+  local got
+  got="$(TZ=$1 bash -c 'source "$0"; t=$(next_run "$(date -d "$1" +%s)"); date -d "@$t" "+%F %H:%M"' "$HERE/backup-cron.sh" "$2" 2>&1)" || true
+  chk "$1 $2 -> $3" "$1 $2 -> '$got' (harap $3)" [ "$got" = "$3" ]
+}
+dst_check Europe/Berlin    "2026-03-28 23:00" "2026-03-29 03:00"
+dst_check America/New_York "2026-03-07 23:00" "2026-03-08 03:00"
+dst_check Europe/Berlin    "2026-03-29 01:30" "2026-03-29 03:00"
+dst_check Europe/Berlin    "2026-10-24 23:00" "2026-10-25 02:00"
+dst_check UTC              "2026-11-02 02:00" "2026-11-03 02:00"
+dst_check UTC              "2026-11-02 01:59" "2026-11-02 02:00"
 
 # ---------- (c) Siklus ----------
 echo "== (c) siklus"

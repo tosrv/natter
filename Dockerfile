@@ -33,6 +33,7 @@ RUN --mount=type=secret,id=extra_ca \
     curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg; \
     echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list; \
     apt-get update; \
+    mkdir -p /usr/share/man/man1; \
     apt-get install -y --no-install-recommends postgresql-client-16; \
     apt-get purge -y --auto-remove gnupg; \
     if [ -s /run/secrets/extra_ca ]; then \
@@ -40,7 +41,8 @@ RUN --mount=type=secret,id=extra_ca \
       update-ca-certificates --fresh >/dev/null; \
     fi; \
     rm -rf /var/lib/apt/lists/*; \
-    useradd --system --uid 65532 --create-home --home-dir /home/nonroot nonroot
+    groupadd --system --gid 65532 nonroot; \
+    useradd --system --uid 65532 --gid 65532 --create-home --home-dir /home/nonroot nonroot
 WORKDIR /app
 COPY --from=go /out/server /app/server
 COPY --from=web /src/web/dist /app/web

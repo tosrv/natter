@@ -74,12 +74,17 @@ if [ "$mode" = daily ] && [ "$(date +%u)" = 7 ]; then kind=weekly; fi
 
 stamp="$(date +%Y%m%d-%H%M)"
 base="pmess-$stamp-$kind"
+# Reservasi atomik (noclobber = O_EXCL): aman bila dua proses jalan di menit yang sama.
 target="$BACKUP_DIR/$base.dump"
 n=2
-while [ -e "$target" ]; do target="$BACKUP_DIR/$base-$n.dump"; n=$((n + 1)); done
+while ! (set -o noclobber; : >"$target") 2>/dev/null; do
+  if [ "$n" -gt 100 ]; then log ERROR "cannot reserve backup file" file "${target##*/}"; exit 1; fi
+  target="$BACKUP_DIR/$base-$n.dump"; n=$((n + 1))
+done
 partial="$target.partial"
 
-cleanup_partial() { rm -f -- "$partial"; }
+# Bila gagal: hapus file parsial dan file reservasi kosong.
+cleanup_partial() { rm -f -- "$partial" "$target"; }
 trap cleanup_partial EXIT
 
 start=$(date +%s)
