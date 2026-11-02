@@ -3,6 +3,7 @@ module github.com/tosrv/pmess
 go 1.24.0
 
 require (
+	github.com/coder/websocket v1.8.13
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
