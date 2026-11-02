@@ -3,6 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 // Run against a server started with E2E_FAKE_LOGIN=1 and DEVELOPER_EMAIL=dev@e2e.test:
 //   E2E_FAKE_LOGIN=1 DEVELOPER_EMAIL=dev@e2e.test docker compose up --build -d
 //   E2E_BASE_URL=http://localhost:8080 npm run e2e
+// Note: guest creation is limited to 5/hour per IP (in-memory); the suite
+// creates 2 guests per run, so restart the server after two runs.
+// Screenshots: SCREENSHOTS=1 npx playwright test screenshots (writes docs/screenshots/).
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
