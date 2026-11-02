@@ -17,6 +17,7 @@ type Config struct {
 	CookieSecure       bool
 	ListenAddr         string
 	TrustedProxy       string
+	StaticDir          string
 }
 
 func Load() (Config, error) {
@@ -29,6 +30,7 @@ func Load() (Config, error) {
 		CookieSecure:       os.Getenv("COOKIE_SECURE") == "true",
 		ListenAddr:         envDefault("LISTEN_ADDR", ":8080"),
 		TrustedProxy:       envDefault("TRUSTED_PROXY", "127.0.0.1"),
+		StaticDir:          envDefault("STATIC_DIR", "web/dist"),
 	}
 	for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
 		if o = strings.TrimSpace(o); o != "" {

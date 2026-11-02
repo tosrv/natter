@@ -29,11 +29,12 @@ func TestLoadDefaults(t *testing.T) {
 	t.Setenv("COOKIE_SECURE", "true")
 	t.Setenv("LISTEN_ADDR", "")
 	t.Setenv("TRUSTED_PROXY", "")
+	t.Setenv("STATIC_DIR", "")
 	c, err := config.Load()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.ListenAddr != ":8080" || c.TrustedProxy != "127.0.0.1" || !c.CookieSecure {
+	if c.ListenAddr != ":8080" || c.TrustedProxy != "127.0.0.1" || !c.CookieSecure || c.StaticDir != "web/dist" {
 		t.Fatalf("bad defaults: %+v", c)
 	}
 	if len(c.AllowedOrigins) != 2 || c.AllowedOrigins[1] != "http://b.com" {
