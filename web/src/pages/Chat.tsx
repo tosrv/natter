@@ -48,7 +48,7 @@ export default function Chat() {
             </Button>
           </header>
           {!isGuest && <UserSearch onPick={(u) => void c.openPeer(u.id)} onUnauthorized={c.toLanding} />}
-          <h2 className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("chat.conversations")}</h2>
+          <h2 className={cn("px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground", isGuest && "pt-4")}>{t("chat.conversations")}</h2>
           <div className="min-h-0 flex-1 overflow-y-auto">
             <ConversationList items={c.convs} activeId={c.activeId} onSelect={c.setActiveId} />
           </div>

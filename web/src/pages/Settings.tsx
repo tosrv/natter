@@ -125,7 +125,7 @@ export default function Settings() {
                   <label htmlFor="settings-display-name" className="text-sm font-semibold">{t("settings.displayName")}</label>
                   <div className="flex max-w-md gap-2">
                     <Input id="settings-display-name" value={display} onChange={(e) => setDisplay(e.target.value)} autoComplete="off" maxLength={60}
-                      aria-invalid={dnShown || !!errs.display} aria-describedby="settings-display-name-msg" className="rounded-full" />
+                      aria-invalid={dnShown || !!errs.display} aria-describedby="settings-display-name-msg" className="rounded-full border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
                     <Button type="submit" className="rounded-full" disabled={busy || !dn.ok || (dn.ok && dn.value === me.display_name)}>{t("common.save")}</Button>
                   </div>
                   {fieldMsg("settings-display-name-msg", errs.display, dnShown, undefined, errorMessage("display_name_invalid"))}
@@ -134,7 +134,7 @@ export default function Settings() {
                   <label htmlFor="settings-username" className="text-sm font-semibold">{t("settings.username")}</label>
                   <div className="flex max-w-md gap-2">
                     <Input id="settings-username" value={username} onChange={(e) => setUser(e.target.value)} autoCapitalize="none" autoComplete="off" maxLength={20}
-                      disabled={noLeft} aria-invalid={unShown || !!errs.username} aria-describedby="settings-username-msg" className="rounded-full" />
+                      disabled={noLeft} aria-invalid={unShown || !!errs.username} aria-describedby="settings-username-msg" className="rounded-full border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
                     <Button type="submit" className="rounded-full" disabled={busy || noLeft || !USERNAME_RE.test(uname) || uname === me.username}>{t("common.save")}</Button>
                   </div>
                   {fieldMsg("settings-username-msg", errs.username, unShown, t("settings.changesLeft", { count: me.username_changes_left }), errorMessage("username_invalid"))}
