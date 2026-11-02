@@ -1,0 +1,267 @@
+package auth_test
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/tosrv/pmess/internal/auth"
+	"github.com/tosrv/pmess/internal/chat"
+	"github.com/tosrv/pmess/internal/config"
+	"github.com/tosrv/pmess/internal/ratelimit"
+	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/pmess/internal/store/storetest"
+)
+
+const devEmail = "dev@example.com"
+
+func init() { gin.SetMode(gin.TestMode) }
+
+type env struct {
+	st  *store.Store
+	svc *chat.Service
+	a   *auth.Auth
+	r   *gin.Engine
+}
+
+func setup(t *testing.T) *env {
+	t.Helper()
+	st := storetest.New(t)
+	svc := chat.New(st, devEmail)
+	cfg := config.Config{DeveloperEmail: devEmail, TrustedProxy: "127.0.0.1",
+		GoogleClientID: "cid", GoogleClientSecret: "sec", OAuthRedirectURL: "http://app/api/auth/google/callback"}
+	a := auth.New(st, svc, cfg, ratelimit.New(5, time.Hour, nil))
+	r := gin.New()
+	r.GET("/api/auth/google/login", a.GoogleLogin)
+	r.GET("/api/auth/google/callback", a.GoogleCallback)
+	r.POST("/api/auth/guest", a.Guest)
+	r.POST("/api/auth/logout", a.Middleware(), a.Logout)
+	r.GET("/api/whoami", a.Middleware(), func(c *gin.Context) {
+		c.String(200, auth.CurrentUser(c).ID.String())
+	})
+	return &env{st, svc, a, r}
+}
+
+func do(r http.Handler, req *http.Request) *httptest.ResponseRecorder {
+	if req.RemoteAddr == "" || req.RemoteAddr == "192.0.2.1:1234" {
+		req.RemoteAddr = "10.0.0.1:5555"
+	}
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func devUser(t *testing.T, e *env) store.User {
+	u, err := e.svc.LoginGoogle(context.Background(), "devsub", devEmail)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return u
+}
+
+func TestMiddlewareCookieAndBearer(t *testing.T) {
+	e := setup(t)
+	u := devUser(t, e)
+	tok, err := e.st.CreateSession(context.Background(), u.ID, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest("GET", "/api/whoami", nil)
+	req.AddCookie(&http.Cookie{Name: "pm_session", Value: tok})
+	if w := do(e.r, req); w.Code != 200 || w.Body.String() != u.ID.String() {
+		t.Fatalf("cookie: %d %s", w.Code, w.Body)
+	}
+	req = httptest.NewRequest("GET", "/api/whoami", nil)
+	req.Header.Set("Authorization", "Bearer "+tok)
+	if w := do(e.r, req); w.Code != 200 || w.Body.String() != u.ID.String() {
+		t.Fatalf("bearer: %d %s", w.Code, w.Body)
+	}
+}
+
+func wantErr(t *testing.T, w *httptest.ResponseRecorder, status int, code string) {
+	t.Helper()
+	if w.Code != status {
+		t.Fatalf("status %d want %d: %s", w.Code, status, w.Body)
+	}
+	var b struct {
+		Error struct{ Code, Message string } `json:"error"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &b); err != nil || b.Error.Code != code || b.Error.Message == "" {
+		t.Fatalf("body %s", w.Body)
+	}
+}
+
+func TestMiddlewareRejectsMissing(t *testing.T) {
+	e := setup(t)
+	wantErr(t, do(e.r, httptest.NewRequest("GET", "/api/whoami", nil)), 401, "unauthorized")
+	req := httptest.NewRequest("GET", "/api/whoami", nil)
+	req.Header.Set("Authorization", "Bearer bogus")
+	wantErr(t, do(e.r, req), 401, "unauthorized")
+}
+
+func TestCallbackBadState(t *testing.T) {
+	e := setup(t)
+	req := httptest.NewRequest("GET", "/api/auth/google/callback?state=a&code=x", nil)
+	req.AddCookie(&http.Cookie{Name: "pm_oauth_state", Value: "b"})
+	wantErr(t, do(e.r, req), 400, "invalid_state")
+	req = httptest.NewRequest("GET", "/api/auth/google/callback?state=a&code=x", nil)
+	wantErr(t, do(e.r, req), 400, "invalid_state")
+}
+
+func TestCallbackCreatesSession(t *testing.T) {
+	e := setup(t)
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/token":
+			_ = r.ParseForm()
+			if r.Form.Get("code") != "thecode" {
+				w.WriteHeader(400)
+				return
+			}
+			w.Write([]byte(`{"access_token":"at","token_type":"Bearer","expires_in":3600}`))
+		case "/userinfo":
+			if r.Header.Get("Authorization") != "Bearer at" {
+				w.WriteHeader(401)
+				return
+			}
+			w.Write([]byte(`{"sub":"g123","email":"Dev@example.com"}`))
+		}
+	}))
+	defer fake.Close()
+	e.a.OAuth.Endpoint.TokenURL = fake.URL + "/token"
+	e.a.UserInfoURL = fake.URL + "/userinfo"
+
+	// login sets state cookie and redirects
+	w := do(e.r, httptest.NewRequest("GET", "/api/auth/google/login", nil))
+	if w.Code != http.StatusFound {
+		t.Fatalf("login %d", w.Code)
+	}
+	var state *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "pm_oauth_state" {
+			state = c
+		}
+	}
+	if state == nil || state.MaxAge != 600 || !state.HttpOnly {
+		t.Fatalf("state cookie %+v", state)
+	}
+	loc, _ := url.Parse(w.Header().Get("Location"))
+	if loc.Query().Get("state") != state.Value {
+		t.Fatal("state mismatch in redirect")
+	}
+
+	req := httptest.NewRequest("GET", "/api/auth/google/callback?code=thecode&state="+state.Value, nil)
+	req.AddCookie(state)
+	w = do(e.r, req)
+	if w.Code != http.StatusFound || w.Header().Get("Location") != "/" {
+		t.Fatalf("callback %d %s %s", w.Code, w.Header().Get("Location"), w.Body)
+	}
+	var sess *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "pm_session" {
+			sess = c
+		}
+	}
+	if sess == nil || !sess.HttpOnly || sess.SameSite != http.SameSiteLaxMode || sess.MaxAge != 30*24*3600 {
+		t.Fatalf("session cookie %+v", sess)
+	}
+	u, err := e.st.UserBySession(context.Background(), sess.Value)
+	if err != nil || !u.IsDeveloper || *u.GoogleSub != "g123" {
+		t.Fatalf("user %+v %v", u, err)
+	}
+}
+
+func guest(e *env, ip string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest("POST", "/api/auth/guest", nil)
+	req.RemoteAddr = ip + ":1000"
+	return do(e.r, req)
+}
+
+func TestGuestRateLimit(t *testing.T) {
+	e := setup(t)
+	devUser(t, e)
+	for i := 0; i < 5; i++ {
+		if w := guest(e, "10.1.1.1"); w.Code != 201 {
+			t.Fatalf("guest %d: %d %s", i, w.Code, w.Body)
+		}
+	}
+	wantErr(t, guest(e, "10.1.1.1"), 429, "rate_limited")
+	if w := guest(e, "10.1.1.2"); w.Code != 201 {
+		t.Fatalf("other ip %d", w.Code)
+	}
+}
+
+func TestGuestLogoutDeletesAccount(t *testing.T) {
+	e := setup(t)
+	devUser(t, e)
+	w := guest(e, "10.2.2.2")
+	if w.Code != 201 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	var b struct {
+		ID             uuid.UUID `json:"id"`
+		Username       string    `json:"username"`
+		ConversationID uuid.UUID `json:"conversation_id"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &b); err != nil || b.ConversationID == uuid.Nil || !strings.HasPrefix(b.Username, "guest-") {
+		t.Fatalf("body %s", w.Body)
+	}
+	var sess *http.Cookie
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "pm_session" {
+			sess = c
+		}
+	}
+	if sess == nil || sess.MaxAge != 24*3600 {
+		t.Fatalf("cookie %+v", sess)
+	}
+	req := httptest.NewRequest("POST", "/api/auth/logout", nil)
+	req.AddCookie(sess)
+	w = do(e.r, req)
+	if w.Code != 204 {
+		t.Fatalf("logout %d %s", w.Code, w.Body)
+	}
+	cleared := false
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "pm_session" && c.MaxAge < 0 {
+			cleared = true
+		}
+	}
+	if !cleared {
+		t.Fatal("cookie not cleared")
+	}
+	if _, err := e.st.GetUser(context.Background(), b.ID); err == nil {
+		t.Fatal("guest still exists")
+	}
+	if _, err := e.st.UserBySession(context.Background(), sess.Value); err == nil {
+		t.Fatal("session still valid")
+	}
+}
+
+func TestClientIPIgnoresSpoofedHeader(t *testing.T) {
+	e := setup(t)
+	r := gin.New()
+	r.GET("/ip", func(c *gin.Context) { c.String(200, auth.ClientIP(c)) })
+	_ = e
+	req := httptest.NewRequest("GET", "/ip", nil)
+	req.RemoteAddr = "203.0.113.9:4444"
+	req.Header.Set("X-Real-IP", "1.2.3.4")
+	req.Header.Set("X-Forwarded-For", "1.2.3.4")
+	if w := do(r, req); w.Body.String() != "203.0.113.9" {
+		t.Fatalf("spoofed: %s", w.Body)
+	}
+	req = httptest.NewRequest("GET", "/ip", nil)
+	req.RemoteAddr = "127.0.0.1:4444"
+	req.Header.Set("X-Real-IP", "1.2.3.4")
+	if w := do(r, req); w.Body.String() != "1.2.3.4" {
+		t.Fatalf("proxy: %s", w.Body)
+	}
+}
