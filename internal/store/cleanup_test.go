@@ -90,3 +90,30 @@ func TestRetention(t *testing.T) {
 		t.Fatalf("convs=%d msgs=%d, want 1/1", convs, msgs)
 	}
 }
+
+func TestRetentionEmptyConversation(t *testing.T) {
+	ctx := context.Background()
+	s := storetest.New(t)
+	ids := mkUsers(t, s, 4)
+	old, err := s.GetOrCreateConversation(ctx, ids[0], ids[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	recent, err := s.GetOrCreateConversation(ctx, ids[2], ids[3])
+	if err != nil {
+		t.Fatal(err)
+	}
+	for c, days := range map[uuid.UUID]int{old: 32, recent: 20} {
+		if _, err := s.Pool().Exec(ctx, `UPDATE conversations SET created_at = now() - make_interval(days => $1) WHERE id=$2`, days, c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	n, err := s.DeleteInactiveConversations(ctx, time.Now().AddDate(0, -1, 0))
+	if err != nil || n != 1 {
+		t.Fatalf("n=%d err=%v", n, err)
+	}
+	var left uuid.UUID
+	if err := s.Pool().QueryRow(ctx, `SELECT id FROM conversations`).Scan(&left); err != nil || left != recent {
+		t.Fatalf("left=%v err=%v want %v", left, err, recent)
+	}
+}

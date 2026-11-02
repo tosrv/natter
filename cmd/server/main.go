@@ -81,9 +81,11 @@ func run() error {
 	slog.Info("shutting down")
 	sctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	var shutErr error
 	if err := srv.Shutdown(sctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return err
+		shutErr = err
+		_ = srv.Close()
 	}
 	<-jobsDone
-	return nil
+	return shutErr
 }

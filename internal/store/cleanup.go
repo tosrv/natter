@@ -34,7 +34,7 @@ func (s *Store) ExpiredGuests(ctx context.Context, olderThan time.Time) ([]uuid.
 // DeleteInactiveConversations removes conversations (and their messages via
 // CASCADE) whose last activity is older than olderThan.
 func (s *Store) DeleteInactiveConversations(ctx context.Context, olderThan time.Time) (int64, error) {
-	tag, err := s.pool.Exec(ctx, `DELETE FROM conversations WHERE last_activity_at < $1`, olderThan)
+	tag, err := s.pool.Exec(ctx, `DELETE FROM conversations WHERE COALESCE(last_activity_at, created_at) < $1`, olderThan)
 	if err != nil {
 		return 0, err
 	}
