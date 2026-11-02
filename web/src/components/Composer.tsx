@@ -20,10 +20,10 @@ export default function Composer({ onSend, onTyping }: { onSend: (body: string) 
   }
 
   return (
-    <form className="flex items-end gap-2 border-t p-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+    <form className="flex items-end gap-2 border-t bg-card p-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
       <div className="flex-1">
         <textarea value={body} rows={2} placeholder={t("chat.placeholder")} aria-label={t("chat.placeholder")}
-          className="w-full resize-none rounded-md border bg-background p-2 text-sm"
+          className="w-full resize-none rounded-2xl border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           onChange={(e) => {
             setBody(e.target.value);
             const now = Date.now();
@@ -32,7 +32,7 @@ export default function Composer({ onSend, onTyping }: { onSend: (body: string) 
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }} />
         <p className={cn("text-right text-xs text-muted-foreground", len > MAX_BODY && "text-destructive")}>{len}/{MAX_BODY}</p>
       </div>
-      <Button type="submit" disabled={disabled}>{t("chat.send")}</Button>
+      <Button type="submit" className="rounded-full" disabled={disabled}>{t("chat.send")}</Button>
     </form>
   );
 }

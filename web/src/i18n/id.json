@@ -45,7 +45,10 @@
     "contactPlaceholder": "Email, telepon, atau lainnya",
     "skip": "Lewati",
     "loadFailed": "Gagal memuat obrolan.",
-    "sendFailed": "Pesan gagal dikirim (terlalu sering). Coba lagi nanti."
+    "sendFailed": "Pesan gagal dikirim (terlalu sering). Coba lagi nanti.",
+    "conversationDeleted": "Percakapan ini telah dihapus.",
+    "settings": "Pengaturan",
+    "selectHint": "Pilih percakapan atau cari seseorang."
   },
   "info": {
     "title": "Privasi & informasi",

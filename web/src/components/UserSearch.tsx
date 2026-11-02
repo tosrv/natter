@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { ApiError, search, type UserHit } from "@/lib/api";
 import { errorMessage } from "@/i18n";
+import Avatar from "@/components/Avatar";
 
 export default function UserSearch({ onPick, onUnauthorized }: {
   onPick: (u: UserHit) => void; onUnauthorized: () => void;
@@ -32,11 +33,17 @@ export default function UserSearch({ onPick, onUnauthorized }: {
       {err && <p className="text-sm text-destructive">{errorMessage(err)}</p>}
       {hits && hits.length === 0 && <p className="text-sm text-muted-foreground">{t("chat.noResults")}</p>}
       {hits && hits.length > 0 && (
-        <ul className="rounded-md border">
+        <ul className="rounded-md border bg-card">
           {hits.map((u) => (
             <li key={u.id}>
-              <button type="button" className="w-full p-2 text-left text-sm hover:bg-muted"
-                onClick={() => { setQ(""); setHits(null); onPick(u); }}>{u.username}</button>
+              <button type="button" className="flex w-full items-center gap-2 p-2 text-left text-sm hover:bg-muted"
+                onClick={() => { setQ(""); setHits(null); onPick(u); }}>
+                <Avatar id={u.id} name={u.display_name || u.username} className="size-7 text-xs" />
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">{u.display_name || u.username}</span>
+                  <span className="block truncate text-xs text-muted-foreground">@{u.username}</span>
+                </span>
+              </button>
             </li>
           ))}
         </ul>

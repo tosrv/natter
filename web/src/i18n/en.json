@@ -45,7 +45,10 @@
     "contactPlaceholder": "Email, phone, or anything else",
     "skip": "Skip",
     "loadFailed": "Could not load your chats.",
-    "sendFailed": "Message could not be sent (rate limited). Try again later."
+    "sendFailed": "Message could not be sent (rate limited). Try again later.",
+    "conversationDeleted": "This conversation was deleted.",
+    "settings": "Settings",
+    "selectHint": "Pick a conversation or search for someone."
   },
   "info": {
     "title": "Privacy & information",

@@ -25,13 +25,13 @@ test("two users chat in realtime, guest contacts the developer", async ({ browse
 
   // A searches B and opens the conversation.
   await A.page.getByPlaceholder("Search username…").fill(bName);
-  await A.page.getByRole("button", { name: bName, exact: true }).click();
+  await A.page.getByRole("button", { name: new RegExp(`@${bName}`) }).click();
 
   // A sends HTML-looking text; B sees it literally, without reload, plus a toast.
   const html = "<b>hi</b>";
   await A.page.getByPlaceholder("Write a message…").fill(html);
   await A.page.getByRole("button", { name: "Send", exact: true }).click();
-  await expect(A.page.getByLabel("sent", { exact: true })).toBeVisible();
+  await expect(A.page.getByRole("img", { name: "Sent", exact: true })).toBeVisible();
 
   await expect(B.page.getByText(/New message from/)).toBeVisible();
   await expect(B.page.getByText(html, { exact: true }).first()).toBeVisible();
@@ -40,7 +40,7 @@ test("two users chat in realtime, guest contacts the developer", async ({ browse
   // B opens the conversation → A sees the double check (read).
   await B.page.getByRole("button", { name: new RegExp(aName) }).click();
   await expect(B.page.locator("p.whitespace-pre-wrap", { hasText: html })).toBeVisible();
-  await expect(A.page.getByLabel("read", { exact: true })).toHaveText("✓✓");
+  await expect(A.page.getByRole("img", { name: "Read", exact: true })).toBeVisible();
 
   // Typing indicator.
   await B.page.getByPlaceholder("Write a message…").pressSequentially("hel");
@@ -62,7 +62,7 @@ test("two users chat in realtime, guest contacts the developer", async ({ browse
   await dialog.getByRole("textbox").fill(contact);
   await dialog.getByRole("button", { name: "Send" }).click();
   await expect(dialog).toBeHidden();
-  await expect(g.getByText(contact, { exact: true })).toBeVisible();
+  await expect(g.locator("p.whitespace-pre-wrap", { hasText: contact })).toBeVisible();
   await expect(g.getByPlaceholder("Search username…")).toHaveCount(0);
 
   await expect(dev.page.getByText(contact).first()).toBeVisible();
