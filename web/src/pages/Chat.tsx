@@ -155,7 +155,9 @@ export default function Chat() {
       s.connect();
     }).catch((e) => {
       if (!alive) return;
-      if (e instanceof ApiError && e.status === 401) toLanding(); else setBootError(true);
+      // A failure after getMe (e.g. loading conversations) must still show the
+      // retry screen, so clear the half-loaded profile too.
+      if (e instanceof ApiError && e.status === 401) toLanding(); else { setMe(null); setBootError(true); }
     });
     return () => { alive = false; Object.values(typingTimers.current).forEach(clearTimeout); sock.current?.close(); sock.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,7 +207,7 @@ export default function Chat() {
     toLanding();
   }
 
-  if (!me && bootError) {
+  if (bootError) {
     return (
       <div className="flex flex-col items-start gap-3 p-6" role="alert">
         <p className="text-muted-foreground">{t("chat.loadFailed")}</p>
