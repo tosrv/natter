@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { LogOut, Settings, WifiOff } from "lucide-react";
+import { Settings, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import LanguageToggle from "@/components/LanguageToggle";
 import ConversationList from "@/components/ConversationList";
 import MessageList from "@/components/MessageList";
 import ChatHeader from "@/components/ChatHeader";
@@ -44,17 +43,9 @@ export default function Chat() {
             <h1 className="min-w-0 truncate text-lg font-extrabold text-primary">
               {t("chat.title")} <span className="text-sm font-normal text-muted-foreground">· {me.username}</span>
             </h1>
-            <div className="flex items-center gap-1">
-              <LanguageToggle />
-              {!isGuest && (
-                <Button asChild variant="ghost" size="icon" aria-label={t("chat.settings")}>
-                  <Link to="/settings"><Settings /></Link>
-                </Button>
-              )}
-              <Button variant="ghost" size="icon" onClick={c.logout} aria-label={t("chat.logout")} title={t("chat.logout")}>
-                <LogOut />
-              </Button>
-            </div>
+            <Button asChild variant="ghost" size="icon" aria-label={t("chat.settings")}>
+              <Link to="/settings"><Settings /></Link>
+            </Button>
           </header>
           {!isGuest && <UserSearch onPick={(u) => void c.openPeer(u.id)} onUnauthorized={c.toLanding} />}
           <h2 className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("chat.conversations")}</h2>
@@ -66,10 +57,9 @@ export default function Chat() {
           {isGuest && (
             <div className="flex items-center justify-between border-b bg-card px-3 py-1 md:hidden">
               <span className="text-sm font-bold text-primary">{t("chat.title")} · {me.username}</span>
-              <div className="flex items-center gap-1">
-                <LanguageToggle />
-                <Button variant="ghost" size="icon" onClick={c.logout} aria-label={t("chat.logout")}><LogOut /></Button>
-              </div>
+              <Button asChild variant="ghost" size="icon" aria-label={t("chat.settings")}>
+                <Link to="/settings"><Settings /></Link>
+              </Button>
             </div>
           )}
           {active ? (
