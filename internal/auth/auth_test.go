@@ -352,3 +352,16 @@ func TestCallbackProviderErrorRedirects(t *testing.T) {
 		})
 	}
 }
+
+func TestCallbackStoresGoogleName(t *testing.T) {
+	e := setup(t)
+	fakeGoogle(t, e, 200, 200, `{"sub":"g9","email":"b@x.com","email_verified":true,"name":"Budi Santoso"}`)
+	w := callback(e, "&code=c")
+	if w.Code != http.StatusFound || w.Header().Get("Location") != "/" {
+		t.Fatalf("callback %d %s", w.Code, w.Header().Get("Location"))
+	}
+	var n string
+	if err := e.st.Pool().QueryRow(context.Background(), `SELECT display_name FROM users WHERE google_sub='g9'`).Scan(&n); err != nil || n != "Budi Santoso" {
+		t.Fatalf("display_name %q %v", n, err)
+	}
+}

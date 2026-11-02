@@ -17,8 +17,10 @@ const maxUsernameChanges = 3
 var errBadRequest = &chat.Error{Code: "bad_request", Status: http.StatusBadRequest}
 
 type handlers struct {
-	chat    *chat.Service
-	limiter *ratelimit.Limiter
+	chat     *chat.Service
+	limiter  *ratelimit.Limiter
+	auth     *auth.Auth
+	notifier Notifier
 }
 
 func meJSON(u store.User) gin.H {
@@ -26,7 +28,7 @@ func meJSON(u store.User) gin.H {
 	if left < 0 {
 		left = 0
 	}
-	h := gin.H{"id": u.ID, "kind": u.Kind, "username": deref(u.Username),
+	h := gin.H{"id": u.ID, "kind": u.Kind, "username": deref(u.Username), "display_name": u.DisplayName,
 		"is_developer": u.IsDeveloper, "username_changes_left": left}
 	if u.Email != nil {
 		h["email"] = *u.Email
@@ -59,6 +61,36 @@ func (h *handlers) setUsername(c *gin.Context) {
 	c.JSON(http.StatusOK, meJSON(u))
 }
 
+func (h *handlers) setDisplayName(c *gin.Context) {
+	var in struct {
+		DisplayName string `json:"display_name"`
+	}
+	if err := c.ShouldBindJSON(&in); err != nil {
+		WriteError(c, errBadRequest)
+		return
+	}
+	u, err := h.chat.SetDisplayName(c.Request.Context(), auth.CurrentUser(c), in.DisplayName)
+	if err != nil {
+		WriteError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, meJSON(u))
+}
+
+func (h *handlers) deleteMe(c *gin.Context) {
+	u := auth.CurrentUser(c)
+	peers, err := h.chat.DeleteAccount(c.Request.Context(), u)
+	if err != nil {
+		WriteError(c, err)
+		return
+	}
+	h.auth.ClearSession(c)
+	if h.notifier != nil {
+		h.notifier.NotifyConversationDeleted(peers, u.ID)
+	}
+	c.Status(http.StatusNoContent)
+}
+
 func (h *handlers) search(c *gin.Context) {
 	u := auth.CurrentUser(c)
 	if h.limiter != nil && !h.limiter.Allow("search:"+u.ID.String()) {
@@ -72,7 +104,7 @@ func (h *handlers) search(c *gin.Context) {
 	}
 	out := make([]gin.H, 0, len(res))
 	for _, b := range res {
-		out = append(out, gin.H{"id": b.ID, "username": b.Username})
+		out = append(out, gin.H{"id": b.ID, "username": b.Username, "display_name": b.DisplayName})
 	}
 	c.JSON(http.StatusOK, out)
 }

@@ -265,3 +265,113 @@ func TestCORSAndStatic(t *testing.T) {
 }
 
 var _ = http.StatusOK
+
+type fakeNotifier struct {
+	peers []store.DeletedConversation
+	user  uuid.UUID
+	calls int
+}
+
+func (f *fakeNotifier) NotifyConversationDeleted(p []store.DeletedConversation, u uuid.UUID) {
+	f.peers, f.user = p, u
+	f.calls++
+}
+
+func setupN(t *testing.T) (*env, *fakeNotifier) {
+	t.Helper()
+	st := storetest.New(t)
+	svc := chat.New(st, devEmail)
+	cfg := config.Config{DeveloperEmail: devEmail, TrustedProxy: "127.0.0.1"}
+	a := auth.New(st, svc, cfg, ratelimit.New(5, time.Hour, nil))
+	n := &fakeNotifier{}
+	r := api.NewRouter(api.Deps{Auth: a, Chat: svc, SearchLimiter: ratelimit.New(30, time.Minute, nil), Notifier: n})
+	return &env{st, svc, r}, n
+}
+
+func usedSlots(t *testing.T, e *env) int {
+	var n int
+	if err := e.st.Pool().QueryRow(context.Background(), `SELECT used FROM user_slots WHERE id=1`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n
+}
+
+func TestSetDisplayNameAPI(t *testing.T) {
+	e := setup(t, "")
+	_, tok := e.user(t, "a", "a@x.com", "alice")
+	w := e.do("PUT", "/api/me/display-name", tok, `{"display_name":"  Alice   W "}`)
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"display_name":"Alice W"`) {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	w = e.do("PUT", "/api/me/display-name", tok, `{"display_name":"😀"}`)
+	if w.Code != 400 || errCode(t, w) != "display_name_invalid" {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+}
+
+func TestDeleteMeAPI(t *testing.T) {
+	e, n := setupN(t)
+	a, atok := e.user(t, "a", "a@x.com", "alice")
+	b, _ := e.user(t, "b", "b@x.com", "bob")
+	cid, err := e.svc.OpenConversation(context.Background(), a, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := usedSlots(t, e)
+	w := e.do("DELETE", "/api/me", atok, "")
+	if w.Code != 204 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	cleared := false
+	for _, c := range w.Result().Cookies() {
+		if c.Name == auth.SessionCookie && c.MaxAge < 0 {
+			cleared = true
+		}
+	}
+	if !cleared {
+		t.Fatal("cookie not cleared")
+	}
+	if w := e.do("GET", "/api/me", atok, ""); w.Code != 401 {
+		t.Fatalf("after delete %d", w.Code)
+	}
+	if n.calls != 1 || n.user != a.ID || len(n.peers) != 1 || n.peers[0].ConversationID != cid || n.peers[0].PeerID != b.ID {
+		t.Fatalf("notifier %+v", n)
+	}
+	if usedSlots(t, e) != before-1 {
+		t.Fatal("slot not released")
+	}
+}
+
+func TestDeleteMeTwice(t *testing.T) {
+	e, n := setupN(t)
+	_, tok := e.user(t, "a", "a@x.com", "alice")
+	before := usedSlots(t, e)
+	if w := e.do("DELETE", "/api/me", tok, ""); w.Code != 204 {
+		t.Fatalf("%d", w.Code)
+	}
+	if w := e.do("DELETE", "/api/me", tok, ""); w.Code != 401 {
+		t.Fatalf("second %d", w.Code)
+	}
+	if usedSlots(t, e) != before-1 || n.calls != 1 {
+		t.Fatalf("used %d calls %d", usedSlots(t, e), n.calls)
+	}
+}
+
+func TestDeleteMeDeveloper(t *testing.T) {
+	e, n := setupN(t)
+	_, tok := e.user(t, "d", devEmail, "devuser")
+	w := e.do("DELETE", "/api/me", tok, "")
+	if w.Code != 403 || errCode(t, w) != "forbidden" || n.calls != 0 {
+		t.Fatalf("%d %s calls %d", w.Code, w.Body, n.calls)
+	}
+}
+
+func TestSearchIncludesDisplayNameNoEmail(t *testing.T) {
+	e := setup(t, "")
+	_, tok := e.user(t, "a", "a@x.com", "alice")
+	e.user(t, "b", "bob@secret.com", "bobby")
+	w := e.do("GET", "/api/users/search?q=bobby", tok, "")
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"display_name":"User"`) || strings.Contains(w.Body.String(), "secret.com") {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+}

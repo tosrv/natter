@@ -145,6 +145,9 @@ func (a *Auth) startSession(c *gin.Context, u store.User, ttl time.Duration) boo
 	return true
 }
 
+// ClearSession expires the session cookie.
+func (a *Auth) ClearSession(c *gin.Context) { a.setCookie(c, SessionCookie, "", -1) }
+
 // Logout deletes the session; a guest account is deleted entirely.
 func (a *Auth) Logout(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -158,7 +161,7 @@ func (a *Auth) Logout(c *gin.Context) {
 			return
 		}
 	}
-	a.setCookie(c, SessionCookie, "", -1)
+	a.ClearSession(c)
 	c.Status(http.StatusNoContent)
 }
 

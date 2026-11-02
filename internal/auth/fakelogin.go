@@ -15,16 +15,17 @@ func (a *Auth) FakeLoginEnabled() bool { return a.cfg.E2EFakeLogin }
 // arbitrary Google identity without OAuth. Only for end-to-end tests.
 func (a *Auth) FakeLogin(c *gin.Context) {
 	var in struct {
-		Sub      string `json:"sub"`
-		Email    string `json:"email"`
-		Username string `json:"username"`
+		Sub         string `json:"sub"`
+		Email       string `json:"email"`
+		Username    string `json:"username"`
+		DisplayName string `json:"display_name"`
 	}
 	if err := c.ShouldBindJSON(&in); err != nil || in.Sub == "" || in.Email == "" {
 		WriteError(c, &chat.Error{Code: "bad_request", Status: http.StatusBadRequest})
 		return
 	}
 	ctx := c.Request.Context()
-	u, err := a.svc.LoginGoogle(ctx, in.Sub, in.Email, "")
+	u, err := a.svc.LoginGoogle(ctx, in.Sub, in.Email, in.DisplayName)
 	if err != nil {
 		WriteError(c, err)
 		return
