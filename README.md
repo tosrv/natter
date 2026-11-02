@@ -28,7 +28,8 @@ Salin `.env.example` ke `.env` lalu isi. `.env` tidak boleh di-commit.
 
 | Variabel | Wajib | Default | Keterangan |
 |---|---|---|---|
-| `DATABASE_URL` | ya | – | URL Postgres, mis. `postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable` |
+| `DATABASE_URL` | ya | – | URL Postgres, mis. `postgres://pmess:PASSWORD@localhost:5432/pmess?sslmode=disable`. Di `docker compose` dibangun otomatis dari `POSTGRES_PASSWORD` |
+| `POSTGRES_PASSWORD` | ya (compose) | – | Password Postgres untuk `docker compose`; compose menolak jalan bila kosong |
 | `GOOGLE_CLIENT_ID` | ya (login Google) | – | Dari Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | ya (login Google) | – | Rahasia — jangan di-commit |
 | `OAUTH_REDIRECT_URL` | ya (login Google) | – | Harus sama dengan Authorized redirect URI |
@@ -36,20 +37,22 @@ Salin `.env.example` ke `.env` lalu isi. `.env` tidak boleh di-commit.
 | `ALLOWED_ORIGINS` | tidak | kosong | Daftar origin dipisah koma untuk CORS/WebSocket, mis. `https://chat.example.com` |
 | `COOKIE_SECURE` | tidak | `false` | Set `true` di produksi (HTTPS) |
 | `LISTEN_ADDR` | tidak | `:8080` | Alamat listen HTTP |
-| `TRUSTED_PROXY` | tidak | `127.0.0.1` | IP peer yang dipercaya untuk header `X-Real-IP` (alamat Nginx). Bila app berjalan di Docker dan Nginx di host, isi IP gateway bridge Docker (cek: `docker network inspect pmess_default -f '{{(index .IPAM.Config 0).Gateway}}'`) |
+| `TRUSTED_PROXY` | tidak | `127.0.0.1` (`172.28.0.1` di compose) | IP peer yang dipercaya untuk header `X-Real-IP` (alamat Nginx). Compose memberi jaringan default subnet tetap `172.28.0.0/16` dengan gateway `172.28.0.1`, sehingga Nginx di host terlihat sebagai `172.28.0.1` — default compose sudah benar. Server mencatat WARN sekali bila `X-Real-IP` datang dari peer tak dipercaya |
 | `STATIC_DIR` | tidak | `web/dist` | Folder build frontend (`/app/web` di image Docker) |
 | `E2E_FAKE_LOGIN` | tidak | `0` | **Hanya untuk test E2E.** `1` mengaktifkan `POST /api/test/login` |
 
-> ⚠️ **Jangan pernah set `E2E_FAKE_LOGIN=1` di produksi.** Route itu memungkinkan siapa pun login sebagai siapa pun. Server mencetak peringatan keras di log saat aktif.
+> ⚠️ **Jangan pernah set `E2E_FAKE_LOGIN=1` di produksi.** Route itu memungkinkan siapa pun login sebagai siapa pun. Server mencetak peringatan keras di log saat aktif, dan **menolak start** bila `E2E_FAKE_LOGIN=1` bersamaan dengan `COOKIE_SECURE=true`.
 
 ## Menjalankan lokal (mode dev)
 
 ```bash
-# 1. Postgres
-docker compose up -d postgres
+# 1. Postgres (file dev mempublikasikan 127.0.0.1:5432)
+echo POSTGRES_PASSWORD=pmess >> .env
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres
 
 # 2. Backend (terminal 1)
 export DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable'
+export TRUSTED_PROXY=127.0.0.1
 export DEVELOPER_EMAIL=you@example.com
 export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...
 export OAUTH_REDIRECT_URL=http://localhost:8080/api/auth/google/callback
@@ -64,15 +67,15 @@ Buka URL yang dicetak Vite (proxy `/api` diarahkan ke `:8080`), atau jalankan `n
 ## Menjalankan dengan Docker
 
 ```bash
-cp .env.example .env   # isi nilainya; DATABASE_URL default sudah menunjuk service postgres
+cp .env.example .env   # isi nilainya; wajib POSTGRES_PASSWORD (DATABASE_URL dibangun darinya)
 docker compose up --build -d
-# aplikasi di http://localhost:8080
+# aplikasi di http://127.0.0.1:8080 (hanya localhost; publik lewat Nginx). Postgres tidak dipublikasikan ke host.
 docker compose logs -f app
 ```
 
 Image dibangun multi-stage (Node 22 → Go 1.24 `CGO_ENABLED=0` → `gcr.io/distroless/static`), berisi binary dan file statis di `/app/web`.
 
-Bila build berjalan di belakang proxy TLS yang memakai CA sendiri, letakkan CA bundle di dalam folder project dan jalankan `EXTRA_CA_FILE=./ca.pem docker compose up --build -d` (opsional; tidak dipakai di build normal).
+**Hanya dev/sandbox:** `docker-compose.dev.yml` mempublikasikan Postgres ke `127.0.0.1:5432` dan menambah build secret `extra_ca` (CA bundle untuk proxy TLS-intercepting). Pakai `EXTRA_CA_FILE=./ca.pem docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d`. Jangan dipakai di produksi; tanpa secret, mount di Dockerfile tidak berefek.
 
 ## Verifikasi (spec §10)
 
@@ -83,37 +86,38 @@ Semua bisa dijalankan sendiri. Docker harus berjalan untuk test `store` (testcon
 go test -race ./...
 
 # Per kriteria
-go test ./internal/chat/...
-go test ./internal/store/...
+go test -race ./internal/chat/...
+go test -race ./internal/store/...
 go test -race -run TestConcurrentSend ./...     # 11: 50 pengirim bersamaan
 go test -race -run TestResend ./...             # 12: reconnect / kirim ulang
 go test -race -run TestSlotRace ./...           # 13: slot ke-300
-go test -run TestAuthz ./internal/api/...       # 16: otorisasi (404)
-go test ./internal/api/...                      # 14, 15, 17
-go test -run TestRetention ./internal/jobs/...  # 8: retensi
+go test -race -run TestAuthz ./internal/api/... # 16: otorisasi (404)
+go test -race ./internal/api/...                # 14, 15, 17
+go test -race -run TestRetention ./internal/jobs/... # 8: retensi
 
 # Frontend unit test
 cd web && npm test
 ```
 
-**Load test (kriteria 2, latensi < 1 detik)** — butuh server berjalan:
+**Load test (kriteria 2, latensi < 1 detik)** — butuh server berjalan dan Postgres terjangkau dari host (stack dev, lihat di atas):
 
 ```bash
 DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable' go run ./cmd/loadtest
 # mencetak p50/p95/max; exit 0 + "OK" bila tidak ada pesan hilang/duplikat
 ```
 
-Load test memakai header `X-Real-IP` berbeda per klien agar tidak terkena rate limit per IP; server harus memercayai peer-nya (`TRUSTED_PROXY`). Untuk `go run ./cmd/server` lokal default `127.0.0.1` sudah cukup; untuk Docker set `TRUSTED_PROXY` ke IP gateway bridge (lihat tabel env).
+Load test memakai header `X-Real-IP` berbeda per klien agar tidak terkena rate limit per IP; server harus memercayai peer-nya (`TRUSTED_PROXY`). Untuk `go run ./cmd/server` lokal default `127.0.0.1` sudah cukup; untuk Docker default compose `172.28.0.1` (gateway) sudah cocok.
 
 **E2E Playwright (kriteria 1, 4, 5, 6, 9, 10)** — dua browser saling chat, alur tamu, notifikasi, toggle bahasa:
 
 ```bash
-E2E_FAKE_LOGIN=1 DEVELOPER_EMAIL=dev@e2e.test docker compose up --build -d
+printf 'E2E_FAKE_LOGIN=1\nCOOKIE_SECURE=false\nDEVELOPER_EMAIL=dev@e2e.test\nPOSTGRES_PASSWORD=test\n' > .env
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 cd web
 npm install
 npx playwright install chromium   # sekali saja
 E2E_BASE_URL=http://localhost:8080 npm run e2e
-cd .. && docker compose down -v    # hapus stack + data test
+cd .. && docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v && rm .env
 ```
 
 ## Nginx (produksi)

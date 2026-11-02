@@ -41,3 +41,18 @@ func TestLoadDefaults(t *testing.T) {
 		t.Fatalf("bad origins: %v", c.AllowedOrigins)
 	}
 }
+
+func TestLoadRefusesFakeLoginWithSecureCookie(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x")
+	t.Setenv("DEVELOPER_EMAIL", "a@b.c")
+	t.Setenv("E2E_FAKE_LOGIN", "1")
+	t.Setenv("COOKIE_SECURE", "true")
+	if _, err := config.Load(); err == nil {
+		t.Fatal("expected error with E2E_FAKE_LOGIN=1 and COOKIE_SECURE=true")
+	}
+	t.Setenv("COOKIE_SECURE", "false")
+	c, err := config.Load()
+	if err != nil || !c.E2EFakeLogin {
+		t.Fatalf("fake login with insecure cookie should load: %v", err)
+	}
+}

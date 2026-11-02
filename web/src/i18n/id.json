@@ -7,7 +7,8 @@
     "loading": "Memuat…",
     "back": "Kembali",
     "save": "Simpan",
-    "language": "Bahasa"
+    "language": "Bahasa",
+    "retry": "Coba lagi"
   },
   "landing": {
     "google": "Masuk dengan Google",
@@ -42,7 +43,9 @@
     "contactTitle": "Bagaimana developer bisa menghubungi Anda?",
     "contactHint": "Opsional. Jawaban Anda dikirim sebagai pesan biasa dan ikut terhapus bersama akun tamu.",
     "contactPlaceholder": "Email, telepon, atau lainnya",
-    "skip": "Lewati"
+    "skip": "Lewati",
+    "loadFailed": "Gagal memuat obrolan.",
+    "sendFailed": "Pesan gagal dikirim (terlalu sering). Coba lagi nanti."
   },
   "info": {
     "title": "Privasi & informasi",

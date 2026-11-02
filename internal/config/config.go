@@ -46,6 +46,9 @@ func Load() (Config, error) {
 	if c.DeveloperEmail == "" {
 		return Config{}, errors.New("DEVELOPER_EMAIL is required")
 	}
+	if c.E2EFakeLogin && c.CookieSecure {
+		return Config{}, errors.New("refusing to start: E2E_FAKE_LOGIN=1 is not allowed with COOKIE_SECURE=true (production); unset E2E_FAKE_LOGIN")
+	}
 	return c, nil
 }
 

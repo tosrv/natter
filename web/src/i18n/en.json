@@ -7,7 +7,8 @@
     "loading": "Loading…",
     "back": "Back",
     "save": "Save",
-    "language": "Language"
+    "language": "Language",
+    "retry": "Retry"
   },
   "landing": {
     "google": "Login with Google",
@@ -42,7 +43,9 @@
     "contactTitle": "How can the developer reach you?",
     "contactHint": "Optional. Your answer is sent as a normal message and is deleted with your guest account.",
     "contactPlaceholder": "Email, phone, or anything else",
-    "skip": "Skip"
+    "skip": "Skip",
+    "loadFailed": "Could not load your chats.",
+    "sendFailed": "Message could not be sent (rate limited). Try again later."
   },
   "info": {
     "title": "Privacy & information",

@@ -1,12 +1,12 @@
+# Produksi: app hanya di 127.0.0.1:8080 (di belakang Nginx host), Postgres tidak
+# dipublikasikan ke host. Butuh .env berisi minimal POSTGRES_PASSWORD dan DEVELOPER_EMAIL.
 services:
   postgres:
     image: postgres:16
     environment:
       POSTGRES_USER: pmess
-      POSTGRES_PASSWORD: pmess
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: pmess
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -14,33 +14,35 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+    restart: unless-stopped
 
   app:
     build:
       context: .
-      secrets:
-        - extra_ca
     env_file:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://pmess:pmess@postgres:5432/pmess?sslmode=disable}
+      DATABASE_URL: postgres://pmess:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/pmess?sslmode=disable
       DEVELOPER_EMAIL: ${DEVELOPER_EMAIL:-}
       STATIC_DIR: /app/web
       LISTEN_ADDR: ":8080"
-      TRUSTED_PROXY: ${TRUSTED_PROXY:-127.0.0.1}
+      # Nginx di host terlihat dari container sebagai gateway jaringan compose.
+      TRUSTED_PROXY: ${TRUSTED_PROXY:-172.28.0.1}
       E2E_FAKE_LOGIN: ${E2E_FAKE_LOGIN:-0}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     restart: unless-stopped
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1
 
 volumes:
   pgdata:
-
-secrets:
-  # Optional: set EXTRA_CA_FILE when building behind a TLS-intercepting proxy.
-  extra_ca:
-    file: ${EXTRA_CA_FILE:-/dev/null}

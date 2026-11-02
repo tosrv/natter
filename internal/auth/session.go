@@ -3,9 +3,11 @@ package auth
 
 import (
 	"errors"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -87,7 +89,9 @@ func WriteError(c *gin.Context, err error) {
 
 func token(c *gin.Context) string {
 	if h := c.GetHeader("Authorization"); strings.HasPrefix(h, "Bearer ") {
-		return strings.TrimSpace(h[len("Bearer "):])
+		if t := strings.TrimSpace(h[len("Bearer "):]); t != "" {
+			return t
+		}
 	}
 	if v, err := c.Cookie(SessionCookie); err == nil {
 		return v
@@ -161,6 +165,8 @@ func (a *Auth) Logout(c *gin.Context) {
 // ClientIP trusts X-Real-IP only when the peer is the trusted proxy.
 // The trusted proxy address is process-global: it is set by New from
 // cfg.TrustedProxy (default 127.0.0.1), so one Auth per process is assumed.
+var untrustedXRIOnce sync.Once
+
 func ClientIP(c *gin.Context) string {
 	host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
 	if err != nil {
@@ -170,6 +176,11 @@ func ClientIP(c *gin.Context) string {
 		if x := strings.TrimSpace(c.GetHeader("X-Real-IP")); x != "" {
 			return x
 		}
+	} else if c.GetHeader("X-Real-IP") != "" {
+		untrustedXRIOnce.Do(func() {
+			slog.Warn("X-Real-IP header ignored: peer is not TRUSTED_PROXY (check TRUSTED_PROXY setting)",
+				"peer", host, "trusted_proxy", trustedProxy.Load().(string))
+		})
 	}
 	return host
 }

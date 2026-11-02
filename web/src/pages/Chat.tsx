@@ -20,6 +20,8 @@ import { errorMessage } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 const TYPING_MS = 5000;
+const RATE_RETRY_BASE_MS = 10000;
+const MAX_RATE_RETRIES = 3;
 
 export default function Chat() {
   const { t } = useTranslation();
@@ -34,6 +36,9 @@ export default function Chat() {
   const [online, setOnline] = useState(true);
   const [contactOpen, setContactOpen] = useState(false);
   const [, tick] = useState(0);
+  const [bootError, setBootError] = useState(false);
+  const [bootAttempt, setBootAttempt] = useState(0);
+  const rateRetries = useRef<Record<string, number>>({});
 
   const outbox = useRef(new Outbox());
   const sock = useRef<ChatSocket | null>(null);
@@ -69,6 +74,7 @@ export default function Chat() {
   useEffect(() => {
     let alive = true;
     const newGuest = (location.state as { newGuest?: boolean } | null)?.newGuest === true;
+    setBootError(false);
     getMe().then(async (m) => {
       if (!alive) return;
       if (!m.username) { nav("/onboarding", { replace: true }); return; }
@@ -85,6 +91,7 @@ export default function Chat() {
       s.on("ack", (f) => {
         const a = f as Extract<ServerFrame, { type: "ack" }>;
         outbox.current.ack(a.client_msg_id, a.message);
+        delete rateRetries.current[a.client_msg_id];
         setPending(outbox.current.pending());
         addMessages(a.message.conversation_id, [a.message]);
         setConvs((cs) => cs.map((x) => x.id === a.message.conversation_id ? { ...x, last_message: a.message } : x));
@@ -117,12 +124,22 @@ export default function Chat() {
       s.on("error", (f) => {
         const e = f as Extract<ServerFrame, { type: "error" }>;
         if (e.client_msg_id && e.code === "rate_limited") {
-          // Keep it in the outbox; retry later (also resent on reconnect).
+          // Keep it in the outbox; retry with backoff 10s, 20s, 40s (also resent
+          // on reconnect), then give up and mark it failed.
           const id = e.client_msg_id;
+          const n = rateRetries.current[id] ?? 0;
+          if (n >= MAX_RATE_RETRIES) {
+            delete rateRetries.current[id];
+            outbox.current.fail(id);
+            setPending(outbox.current.pending());
+            toast.error(t("chat.sendFailed"));
+            return;
+          }
+          rateRetries.current[id] = n + 1;
           setTimeout(() => {
             const m = outbox.current.pending().find((x) => x.client_msg_id === id);
             if (m) sock.current?.send({ type: "send", ...m });
-          }, 10000);
+          }, RATE_RETRY_BASE_MS * 2 ** n);
         } else if (e.client_msg_id) { outbox.current.fail(e.client_msg_id); setPending(outbox.current.pending()); }
         toast.error(errorMessage(e.code));
       });
@@ -137,11 +154,12 @@ export default function Chat() {
       });
       s.connect();
     }).catch((e) => {
-      if (e instanceof ApiError && e.status === 401) toLanding(); else handleErr(e);
+      if (!alive) return;
+      if (e instanceof ApiError && e.status === 401) toLanding(); else setBootError(true);
     });
     return () => { alive = false; Object.values(typingTimers.current).forEach(clearTimeout); sock.current?.close(); sock.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [bootAttempt]);
 
   // Load history when a conversation opens.
   useEffect(() => {
@@ -187,6 +205,14 @@ export default function Chat() {
     toLanding();
   }
 
+  if (!me && bootError) {
+    return (
+      <div className="flex flex-col items-start gap-3 p-6" role="alert">
+        <p className="text-muted-foreground">{t("chat.loadFailed")}</p>
+        <Button onClick={() => setBootAttempt((n) => n + 1)}>{t("common.retry")}</Button>
+      </div>
+    );
+  }
   if (!me) return <p className="p-6 text-muted-foreground">{t("common.loading")}</p>;
 
   const isGuest = me.kind === "guest";

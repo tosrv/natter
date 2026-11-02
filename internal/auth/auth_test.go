@@ -85,6 +85,23 @@ func TestMiddlewareCookieAndBearer(t *testing.T) {
 	}
 }
 
+func TestMiddlewareEmptyBearerFallsBackToCookie(t *testing.T) {
+	e := setup(t)
+	u := devUser(t, e)
+	tok, err := e.st.CreateSession(context.Background(), u.ID, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, h := range []string{"Bearer ", "Bearer    "} {
+		req := httptest.NewRequest("GET", "/api/whoami", nil)
+		req.Header.Set("Authorization", h)
+		req.AddCookie(&http.Cookie{Name: "pm_session", Value: tok})
+		if w := do(e.r, req); w.Code != 200 || w.Body.String() != u.ID.String() {
+			t.Fatalf("%q: %d %s", h, w.Code, w.Body)
+		}
+	}
+}
+
 func wantErr(t *testing.T, w *httptest.ResponseRecorder, status int, code string) {
 	t.Helper()
 	if w.Code != status {

@@ -1,0 +1,15 @@
+# HANYA dev/sandbox. Pakai: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+# - publikasikan Postgres ke localhost:5432 (untuk go test / go run lokal)
+# - build secret extra_ca: CA bundle proxy TLS-intercepting (EXTRA_CA_FILE=./ca.pem)
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+  app:
+    build:
+      secrets:
+        - extra_ca
+
+secrets:
+  extra_ca:
+    file: ${EXTRA_CA_FILE:-/dev/null}
