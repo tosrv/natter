@@ -97,7 +97,8 @@ func (s *Store) UpsertGoogleUser(ctx context.Context, sub, email string, isDevel
 	return User{}, false, errors.New("upsert google user: too much contention")
 }
 
-// createConversationTx inserts a conversation between a and b plus both
+// createConversationTx returns the conversation between a and b, creating it
+// (ON CONFLICT DO NOTHING, then SELECT) if needed. It inserts a conversation between a and b plus both
 // membership rows, normalizing the user_a < user_b ordering.
 func createConversationTx(ctx context.Context, tx pgx.Tx, a, b uuid.UUID) (uuid.UUID, error) {
 	if a.String() > b.String() {
@@ -105,11 +106,22 @@ func createConversationTx(ctx context.Context, tx pgx.Tx, a, b uuid.UUID) (uuid.
 	}
 	var id uuid.UUID
 	if err := tx.QueryRow(ctx,
-		`INSERT INTO conversations (user_a, user_b) VALUES ($1,$2) RETURNING id`, a, b).Scan(&id); err != nil {
-		return uuid.Nil, err
+		`INSERT INTO conversations (user_a, user_b) VALUES ($1,$2)
+		 ON CONFLICT (user_a, user_b) DO NOTHING RETURNING id`, a, b).Scan(&id); err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, err
+		}
+		// Already exists (possibly just committed by a concurrent caller,
+		// which inserted the member rows in the same transaction).
+		if err := tx.QueryRow(ctx,
+			`SELECT id FROM conversations WHERE user_a=$1 AND user_b=$2`, a, b).Scan(&id); err != nil {
+			return uuid.Nil, err
+		}
+		return id, nil
 	}
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1,$2),($1,$3)`, id, a, b); err != nil {
+		`INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1,$2),($1,$3)
+		 ON CONFLICT DO NOTHING`, id, a, b); err != nil {
 		return uuid.Nil, err
 	}
 	return id, nil
