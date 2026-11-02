@@ -62,8 +62,8 @@ export default function Landing() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/15 via-background to-background text-foreground">
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/15 via-background dark:from-primary/10 to-background text-foreground">
+      <header className="sticky top-0 z-20 bg-background/50 backdrop-blur-md">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <a href="#top" className="flex items-center gap-2 text-lg font-extrabold text-primary">
             <MessageCircle className="size-5" aria-hidden /> {t("app.name")}

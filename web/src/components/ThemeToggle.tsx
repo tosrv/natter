@@ -1,25 +1,24 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { applyTheme, getThemePref, setThemePref, type ThemePref } from "@/lib/theme";
+import { applyTheme, setThemePref } from "@/lib/theme";
 
-const ORDER: ThemePref[] = ["light", "dark", "system"];
-const ICON = { light: Sun, dark: Moon, system: Monitor } as const;
+const isDark = () => document.documentElement.classList.contains("dark");
 
 export default function ThemeToggle() {
   const { t } = useTranslation();
-  const [pref, setPref] = useState<ThemePref>(getThemePref);
-  const Icon = ICON[pref];
-  function cycle() {
-    const next = ORDER[(ORDER.indexOf(pref) + 1) % ORDER.length];
+  const [dark, setDark] = useState(isDark);
+  function toggle() {
+    const next = dark ? "light" : "dark";
     setThemePref(next);
     applyTheme(next);
-    setPref(next);
+    setDark(!dark);
   }
+  const target = dark ? "light" : "dark";
   return (
-    <Button variant="ghost" size="sm" onClick={cycle} aria-label={`${t("theme.label")}: ${t(`theme.${pref}`)}`} title={t(`theme.${pref}`)}>
-      <Icon className="h-4 w-4" aria-hidden />
+    <Button variant="ghost" size="sm" onClick={toggle} aria-label={`${t("theme.label")}: ${t(`theme.${target}`)}`} title={t(`theme.${target}`)}>
+      {dark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />}
     </Button>
   );
 }

@@ -11,7 +11,7 @@ export default function Info() {
   const sections = t("info.sections", { returnObjects: true }) as PolicySection[];
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-20 bg-background/50 backdrop-blur-md">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <Link to="/" className="flex items-center gap-2 text-lg font-extrabold text-primary">
             <MessageCircle className="size-5" aria-hidden /> {t("app.name")}
