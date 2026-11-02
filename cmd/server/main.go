@@ -60,6 +60,7 @@ func run() error {
 		Chat:           svc,
 		SearchLimiter:  searchLim,
 		WS:             hub.Handler(),
+		Notifier:       hub,
 		StaticDir:      cfg.StaticDir,
 		AllowedOrigins: cfg.AllowedOrigins,
 	})
@@ -93,3 +94,5 @@ func run() error {
 	<-jobsDone
 	return shutErr
 }
+
+var _ api.Notifier = (*realtime.Hub)(nil)

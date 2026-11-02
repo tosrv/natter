@@ -379,3 +379,23 @@ func TestUnauthenticatedRejected(t *testing.T) {
 		t.Fatal("unauthenticated accepted")
 	}
 }
+
+func TestNotifyConversationDeleted(t *testing.T) {
+	e := setup(t, 20, nil)
+	a, b, ta, tb, conv := e.pair(t)
+	ca, cb := e.dial(t, ta), e.dial(t, tb)
+	deadline := time.Now().Add(2 * time.Second)
+	for !(e.hub.online(a.ID) && e.hub.online(b.ID)) && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	offline := uuid.New()
+	e.hub.NotifyConversationDeleted([]store.DeletedConversation{
+		{ConversationID: conv, PeerID: b.ID},
+		{ConversationID: uuid.New(), PeerID: offline},
+	}, a.ID)
+	f := must(t, cb, "conversation_deleted")
+	if f.ConversationID == nil || *f.ConversationID != conv {
+		t.Fatalf("conversation_id = %v, want %v", f.ConversationID, conv)
+	}
+	waitClosed(t, ca, 2*time.Second)
+}

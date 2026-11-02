@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tosrv/pmess/internal/chat"
 	"github.com/tosrv/pmess/internal/ratelimit"
+	"github.com/tosrv/pmess/internal/store"
 )
 
 const maxFrameBytes = 8192
@@ -81,6 +82,16 @@ func (h *Hub) Disconnect(userID uuid.UUID) {
 	if c != nil {
 		c.close("account removed")
 	}
+}
+
+// NotifyConversationDeleted tells each online peer that a conversation was
+// removed, then disconnects the deleted user. Never blocks.
+func (h *Hub) NotifyConversationDeleted(peers []store.DeletedConversation, deletedUser uuid.UUID) {
+	for _, p := range peers {
+		id := p.ConversationID
+		h.deliver(p.PeerID, Frame{Type: "conversation_deleted", ConversationID: &id})
+	}
+	h.Disconnect(deletedUser)
 }
 
 // originPatterns converts full origins ("https://host:port") into the host
