@@ -159,6 +159,8 @@ func (a *Auth) Logout(c *gin.Context) {
 }
 
 // ClientIP trusts X-Real-IP only when the peer is the trusted proxy.
+// The trusted proxy address is process-global: it is set by New from
+// cfg.TrustedProxy (default 127.0.0.1), so one Auth per process is assumed.
 func ClientIP(c *gin.Context) string {
 	host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
 	if err != nil {

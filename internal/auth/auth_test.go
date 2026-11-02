@@ -132,7 +132,7 @@ func TestCallbackCreatesSession(t *testing.T) {
 				w.WriteHeader(401)
 				return
 			}
-			w.Write([]byte(`{"sub":"g123","email":"Dev@example.com"}`))
+			w.Write([]byte(`{"sub":"g123","email":"Dev@example.com","email_verified":true}`))
 		}
 	}))
 	defer fake.Close()
@@ -263,5 +263,75 @@ func TestClientIPIgnoresSpoofedHeader(t *testing.T) {
 	req.Header.Set("X-Real-IP", "1.2.3.4")
 	if w := do(r, req); w.Body.String() != "1.2.3.4" {
 		t.Fatalf("proxy: %s", w.Body)
+	}
+}
+
+func fakeGoogle(t *testing.T, e *env, tokenStatus, infoStatus int, info string) {
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/token":
+			w.WriteHeader(tokenStatus)
+			w.Write([]byte(`{"access_token":"at","token_type":"Bearer","expires_in":3600}`))
+		case "/userinfo":
+			w.WriteHeader(infoStatus)
+			w.Write([]byte(info))
+		}
+	}))
+	t.Cleanup(fake.Close)
+	e.a.OAuth.Endpoint.TokenURL = fake.URL + "/token"
+	e.a.UserInfoURL = fake.URL + "/userinfo"
+}
+
+func callback(e *env, query string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest("GET", "/api/auth/google/callback?state=s"+query, nil)
+	req.AddCookie(&http.Cookie{Name: "pm_oauth_state", Value: "s"})
+	return do(e.r, req)
+}
+
+func wantOAuthFailed(t *testing.T, w *httptest.ResponseRecorder) {
+	t.Helper()
+	if w.Code != http.StatusFound || w.Header().Get("Location") != "/?error=oauth_failed" {
+		t.Fatalf("got %d %q %s", w.Code, w.Header().Get("Location"), w.Body)
+	}
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "pm_session" {
+			t.Fatal("session cookie set")
+		}
+	}
+}
+
+func TestCallbackRejectsUnverifiedEmail(t *testing.T) {
+	for _, info := range []string{
+		`{"sub":"g1","email":"dev@example.com","email_verified":false}`,
+		`{"sub":"g1","email":"dev@example.com"}`,
+	} {
+		e := setup(t)
+		fakeGoogle(t, e, 200, 200, info)
+		wantOAuthFailed(t, callback(e, "&code=c"))
+		if _, err := e.st.GetDeveloper(context.Background()); err == nil {
+			t.Fatal("developer created from unverified email")
+		}
+	}
+}
+
+func TestCallbackProviderErrorRedirects(t *testing.T) {
+	ok := `{"sub":"g1","email":"a@b.c","email_verified":true}`
+	cases := []struct {
+		name     string
+		tok, inf int
+		query    string
+	}{
+		{"missing code", 200, 200, ""},
+		{"access denied", 200, 200, "&error=access_denied"},
+		{"exchange fails", 400, 200, "&code=c"},
+		{"userinfo non-200", 200, 500, "&code=c"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := setup(t)
+			fakeGoogle(t, e, tc.tok, tc.inf, ok)
+			wantOAuthFailed(t, callback(e, tc.query))
+		})
 	}
 }

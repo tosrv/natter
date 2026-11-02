@@ -37,30 +37,13 @@ func (a *Auth) GoogleCallback(c *gin.Context) {
 	}
 	a.setCookie(c, StateCookie, "", -1)
 	ctx := c.Request.Context()
-	tok, err := a.OAuth.Exchange(ctx, c.Query("code"))
+	sub, email, err := a.fetchIdentity(c)
 	if err != nil {
-		WriteError(c, fmt.Errorf("oauth exchange: %w", err))
+		_ = c.Error(err)
+		c.Redirect(http.StatusFound, "/?error=oauth_failed")
 		return
 	}
-	resp, err := a.OAuth.Client(ctx, tok).Get(a.UserInfoURL)
-	if err != nil {
-		WriteError(c, fmt.Errorf("userinfo: %w", err))
-		return
-	}
-	defer resp.Body.Close()
-	var info struct {
-		Sub   string `json:"sub"`
-		Email string `json:"email"`
-	}
-	if resp.StatusCode != http.StatusOK {
-		WriteError(c, fmt.Errorf("userinfo: status %d", resp.StatusCode))
-		return
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil || info.Sub == "" {
-		WriteError(c, fmt.Errorf("userinfo decode: %v", err))
-		return
-	}
-	u, err := a.svc.LoginGoogle(ctx, info.Sub, info.Email)
+	u, err := a.svc.LoginGoogle(ctx, sub, email)
 	if errors.Is(err, chat.ErrUserLimitReached) {
 		c.Redirect(http.StatusFound, "/?error=user_limit_reached")
 		return
@@ -72,4 +55,42 @@ func (a *Auth) GoogleCallback(c *gin.Context) {
 	if a.startSession(c, u, googleTTL) {
 		c.Redirect(http.StatusFound, "/")
 	}
+}
+
+// fetchIdentity exchanges the code and returns the verified Google identity.
+// Any provider-side failure (error param, missing code, failed exchange,
+// bad userinfo, unverified email) is returned as an error.
+func (a *Auth) fetchIdentity(c *gin.Context) (string, string, error) {
+	if e := c.Query("error"); e != "" {
+		return "", "", fmt.Errorf("oauth provider error: %s", e)
+	}
+	code := c.Query("code")
+	if code == "" {
+		return "", "", errors.New("oauth: missing code")
+	}
+	ctx := c.Request.Context()
+	tok, err := a.OAuth.Exchange(ctx, code)
+	if err != nil {
+		return "", "", fmt.Errorf("oauth exchange: %w", err)
+	}
+	resp, err := a.OAuth.Client(ctx, tok).Get(a.UserInfoURL)
+	if err != nil {
+		return "", "", fmt.Errorf("userinfo: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", "", fmt.Errorf("userinfo: status %d", resp.StatusCode)
+	}
+	var info struct {
+		Sub           string `json:"sub"`
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"email_verified"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		return "", "", fmt.Errorf("userinfo decode: %w", err)
+	}
+	if info.Sub == "" || info.Email == "" || !info.EmailVerified {
+		return "", "", errors.New("userinfo: missing sub/email or email not verified")
+	}
+	return info.Sub, info.Email, nil
 }
