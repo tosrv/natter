@@ -73,5 +73,14 @@
     "internal": "Terjadi kesalahan. Silakan coba lagi.",
     "oauth_failed": "Login Google gagal. Silakan coba lagi.",
     "unknown": "Terjadi kesalahan."
+  },
+  "status": {
+    "sending": "Mengirim",
+    "sent": "Terkirim",
+    "read": "Dibaca"
+  },
+  "date": {
+    "today": "Hari ini",
+    "yesterday": "Kemarin"
   }
 }

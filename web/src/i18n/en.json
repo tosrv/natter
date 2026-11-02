@@ -73,5 +73,14 @@
     "internal": "Something went wrong. Please try again.",
     "oauth_failed": "Google login failed. Please try again.",
     "unknown": "Something went wrong."
+  },
+  "status": {
+    "sending": "Sending",
+    "sent": "Sent",
+    "read": "Read"
+  },
+  "date": {
+    "today": "Today",
+    "yesterday": "Yesterday"
   }
 }
