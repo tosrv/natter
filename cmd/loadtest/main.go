@@ -34,6 +34,7 @@ type client struct {
 	received map[uuid.UUID]bool   // message ids received
 	lats     []time.Duration
 	nSent    int
+	sendErrs int
 	nRecv    int
 	dups     int
 	got      map[string]bool
@@ -186,6 +187,9 @@ func run(url, dsn string, n, msgs int, interval, grace time.Duration) int {
 				wc()
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "client %d write: %v\n", c.idx, err)
+					c.mu.Lock()
+					c.sendErrs += msgs - k
+					c.mu.Unlock()
 					return
 				}
 				c.mu.Lock()
@@ -199,7 +203,7 @@ func run(url, dsn string, n, msgs int, interval, grace time.Duration) int {
 	// Wait until everything arrived or the grace period ends.
 	deadline := time.Now().Add(grace)
 	for time.Now().Before(deadline) {
-		if totals(cs).recv >= totals(cs).sent {
+		if tt := totals(cs); tt.recv >= tt.sent {
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
@@ -221,9 +225,9 @@ func run(url, dsn string, n, msgs int, interval, grace time.Duration) int {
 	}
 	p50, p95, max := pct(0.5), pct(0.95), pct(1)
 	fmt.Printf("clients=%d messages=%d elapsed=%s\n", n, msgs, time.Since(start).Round(time.Millisecond))
-	fmt.Printf("sent=%d received=%d missing=%d duplicates=%d p50=%s p95=%s max=%s\n",
-		t.sent, t.recv, missing, t.dups, p50, p95, max)
-	if missing > 0 || t.dups > 0 || p95 >= time.Second {
+	fmt.Printf("sent=%d received=%d missing=%d duplicates=%d p50=%s p95=%s max=%s sendErrors=%d\n",
+		t.sent, t.recv, missing, t.dups, p50, p95, max, t.sendErrs)
+	if t.sendErrs > 0 || t.sent != n*msgs || missing > 0 || t.dups > 0 || p95 >= time.Second {
 		fmt.Println("FAIL")
 		return 1
 	}
@@ -251,8 +255,8 @@ func (c *client) onMessage(m *store.Message, now time.Time) {
 }
 
 type tot struct {
-	sent, recv, dups int
-	lats             []time.Duration
+	sent, recv, dups, sendErrs int
+	lats                       []time.Duration
 }
 
 func totals(cs []*client) tot {
@@ -262,6 +266,7 @@ func totals(cs []*client) tot {
 		t.sent += c.nSent
 		t.recv += c.nRecv
 		t.dups += c.dups
+		t.sendErrs += c.sendErrs
 		t.lats = append(t.lats, c.lats...)
 		c.mu.Unlock()
 	}
