@@ -7,7 +7,7 @@ describe("request", () => {
   it("throws ApiError with code from error body", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ error: { code: "user_limit_reached", message: "x" } }), { status: 403 })));
-    const err = await request("POST", "/auth/guest").catch((e) => e as ApiError);
+    const err: ApiError = await request("POST", "/auth/guest").then(() => { throw new Error("no throw"); }, (e: ApiError) => e);
     expect(err).toBeInstanceOf(ApiError);
     expect(err.code).toBe("user_limit_reached");
     expect(err.status).toBe(403);
