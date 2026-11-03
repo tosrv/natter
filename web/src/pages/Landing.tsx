@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { ApiError, createGuest, getConfig, getMe } from "@/lib/api";
 import { errorMessage } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { AtSign, CheckCheck, Languages, LogIn, MessageCircle, MoreHorizontal, Send, ShieldAlert, SunMoon, UserRound, Zap } from "lucide-react";
+import { AtSign, CheckCheck, Languages, LogIn, MessageCircle, MoreHorizontal, Send, ShieldAlert, SunMoon, Zap } from "lucide-react";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -79,11 +79,6 @@ export default function Landing() {
     { icon: AtSign, n: 1 }, { icon: Zap, n: 2 }, { icon: CheckCheck, n: 3 },
     { icon: MoreHorizontal, n: 4 }, { icon: SunMoon, n: 5 }, { icon: Languages, n: 6 },
   ];
-  const features = [
-    { icon: AtSign, text: t("landing.f1") },
-    { icon: Zap, text: t("landing.f2") },
-    { icon: UserRound, text: t("landing.f3") },
-  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/15 via-background dark:from-primary/10 to-background text-foreground">
@@ -125,13 +120,6 @@ export default function Landing() {
               )}
               <LegalNote className="text-center text-xs text-muted-foreground" />
             </div>
-            <ul className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:gap-4">
-              {features.map(({ icon: Icon, text }) => (
-                <li key={text} className="flex items-center gap-2 text-muted-foreground">
-                  <Icon className="size-4 text-primary" aria-hidden /> {text}
-                </li>
-              ))}
-            </ul>
           </div>
 
           <div aria-hidden className="mx-auto w-full max-w-sm overflow-hidden rounded-3xl border bg-card shadow-xl">

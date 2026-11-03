@@ -19,9 +19,6 @@
     "bubbleOut": "Sure, just a username away.",
     "headline": "Private chat, no phone number needed",
     "sub": "Find friends by username and chat in realtime. Sign in with Google, or try it right away as a guest.",
-    "f1": "Find people by username",
-    "f2": "Realtime, with read receipts",
-    "f3": "Guest mode, no sign-up",
     "guestNote": "No account · temporary data",
     "bubble3": "Nice, it's that easy?",
     "bubble4": "Yep. Pick a username and go.",
@@ -126,14 +123,6 @@
     "youBlocked": "You blocked this user",
     "blockedToast": "User blocked",
     "unblockedToast": "User unblocked"
-  },
-  "info": {
-    "title": "About pmess",
-    "intro": "pmess is a small, independently run messaging project. Here is how it works and the rules that apply.",
-    "terms": "Terms of Service",
-    "termsDesc": "The rules for using pmess and what you can expect from the service.",
-    "privacy": "Privacy Policy",
-    "privacyDesc": "What data we collect, how it is used and how long it is kept."
   },
   "privacy": {
     "title": "Privacy Policy",

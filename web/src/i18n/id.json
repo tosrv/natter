@@ -19,9 +19,6 @@
     "bubbleOut": "Boleh, cukup pakai username.",
     "headline": "Chat pribadi, tanpa nomor HP",
     "sub": "Temukan teman lewat username dan ngobrol secara realtime. Masuk dengan Google, atau langsung coba sebagai tamu.",
-    "f1": "Cari orang lewat username",
-    "f2": "Realtime, dengan tanda dibaca",
-    "f3": "Mode tamu, tanpa daftar",
     "guestNote": "Tanpa akun · data sementara",
     "bubble3": "Wah, segampang itu?",
     "bubble4": "Iya. Pilih username, langsung jalan.",
@@ -126,14 +123,6 @@
     "youBlocked": "Anda memblokir pengguna ini",
     "blockedToast": "Pengguna diblokir",
     "unblockedToast": "Blokir dibuka"
-  },
-  "info": {
-    "title": "Tentang pmess",
-    "intro": "pmess adalah proyek perpesanan kecil yang dikelola secara independen. Berikut cara kerjanya dan aturan yang berlaku.",
-    "terms": "Syarat Layanan",
-    "termsDesc": "Aturan penggunaan pmess dan apa yang bisa kamu harapkan dari layanan ini.",
-    "privacy": "Kebijakan Privasi",
-    "privacyDesc": "Data apa yang kami kumpulkan, cara penggunaannya, dan berapa lama disimpan."
   },
   "privacy": {
     "title": "Kebijakan Privasi",

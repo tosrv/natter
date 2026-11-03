@@ -22,7 +22,7 @@ export default function LegalPage({ ns }: { ns: "terms" | "privacy" }) {
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 md:py-16">
-        <Link to="/info" className="inline-flex items-center gap-1 text-sm font-semibold text-primary"><ArrowLeft className="h-4 w-4" aria-hidden />{t("common.back")}</Link>
+        <Link to="/" className="inline-flex items-center gap-1 text-sm font-semibold text-primary"><ArrowLeft className="h-4 w-4" aria-hidden />{t("common.back")}</Link>
         <article className="mt-6">
           <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">{t(`${ns}.title`)}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{t(`${ns}.updated`)}</p>
