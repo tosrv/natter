@@ -65,10 +65,20 @@ export default function Chat() {
           {active ? (
             <>
               <ChatHeader peerId={active.peer_id} name={peerName(active)} username={active.peer_username}
-                typing={c.typing(active.id)} onBack={isGuest ? undefined : () => c.setActiveId(null)} />
+                typing={c.typing(active.id)} onBack={isGuest ? undefined : () => c.setActiveId(null)}
+                blocked={active.blocked_by_me}
+                onBlock={isGuest ? undefined : () => c.setPeerBlocked(active.peer_id, true)}
+                onUnblock={isGuest ? undefined : () => c.setPeerBlocked(active.peer_id, false)} />
               <MessageList messages={c.messages(active.id)} pending={c.pending(active.id)} pendingIds={c.pendingIds}
                 meId={me.id} peerReadSeq={active.peer_last_read_seq} />
-              <Composer onSend={(b) => c.send(active.id, b)} onTyping={() => c.sendTyping(active.id)} />
+              {active.blocked_by_me ? (
+                <div className="flex items-center justify-between gap-3 border-t bg-card p-3">
+                  <p className="text-sm text-muted-foreground">{t("chat.youBlocked")}</p>
+                  <Button size="sm" variant="outline" className="shrink-0 rounded-full" onClick={() => void c.setPeerBlocked(active.peer_id, false)}>{t("chat.unblock")}</Button>
+                </div>
+              ) : (
+                <Composer onSend={(b) => c.send(active.id, b)} onTyping={() => c.sendTyping(active.id)} />
+              )}
             </>
           ) : (
             <div className="m-auto text-center text-muted-foreground">

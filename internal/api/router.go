@@ -30,19 +30,24 @@ type Deps struct {
 	WS             gin.HandlerFunc
 	StaticDir      string
 	AllowedOrigins []string
-	Pinger         Pinger       // optional; nil => /healthz 503
-	Logger         *slog.Logger // optional; nil => slog.Default()
+	// TurnstileSiteKey is exposed by GET /api/config (empty = captcha disabled).
+	TurnstileSiteKey string
+	Pinger           Pinger       // optional; nil => /healthz 503
+	Logger           *slog.Logger // optional; nil => slog.Default()
+	// SecureHeadersHSTS adds Strict-Transport-Security (set from COOKIE_SECURE).
+	SecureHeadersHSTS bool
 }
 
 func NewRouter(d Deps) *gin.Engine {
 	r := gin.New()
-	r.Use(RequestLog(d.Logger), Recover(d.Logger))
+	r.Use(SecurityHeaders(d.SecureHeadersHSTS), RequestLog(d.Logger), Recover(d.Logger))
 	// Registered before cors and outside /api: no auth, CORS rejection or rate limit.
 	r.GET("/healthz", Health(d.Pinger))
 	r.Use(cors(d.AllowedOrigins))
 	h := &handlers{chat: d.Chat, limiter: d.SearchLimiter, auth: d.Auth, notifier: d.Notifier}
 
 	api := r.Group("/api")
+	api.GET("/config", ConfigHandler(d.TurnstileSiteKey))
 	api.GET("/auth/google/login", d.Auth.GoogleLogin)
 	api.GET("/auth/google/callback", d.Auth.GoogleCallback)
 	api.POST("/auth/guest", d.Auth.Guest)
@@ -59,6 +64,9 @@ func NewRouter(d Deps) *gin.Engine {
 	authed.GET("/users/search", h.search)
 	authed.POST("/conversations", h.openConversation)
 	authed.GET("/conversations", h.conversations)
+	authed.POST("/blocks", h.block)
+	authed.DELETE("/blocks/:user_id", h.unblock)
+	authed.GET("/blocks", h.blocks)
 	authed.GET("/conversations/:id/messages", h.messages)
 	if d.WS != nil {
 		authed.GET("/ws", d.WS)

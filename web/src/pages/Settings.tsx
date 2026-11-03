@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import BlockedList from "@/components/BlockedList";
 import DeleteAccountDialog from "@/components/DeleteAccountDialog";
 import { ApiError, deleteAccount, getMe, logout, setDisplayName, setUsername, type Me } from "@/lib/api";
 import { validateDisplayName } from "@/lib/format";
@@ -139,6 +140,12 @@ export default function Settings() {
                   </div>
                   {fieldMsg("settings-username-msg", errs.username, unShown, t("settings.changesLeft", { count: me.username_changes_left }), errorMessage("username_invalid"))}
                 </form>
+              </Card>
+            )}
+
+            {!guest && (
+              <Card title={t("settings.blocked")}>
+                <BlockedList />
               </Card>
             )}
 

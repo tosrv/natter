@@ -166,6 +166,21 @@ func waitClosed(t *testing.T, c *websocket.Conn, d time.Duration) {
 	}
 }
 
+// waitRegistered polls until the hub holds a connection for userID that is
+// not prev, and returns it.
+func waitRegistered(t *testing.T, h *Hub, userID uuid.UUID, prev *conn) *conn {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if c := h.get(userID); c != nil && c != prev {
+			return c
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatal("connection not registered")
+	return nil
+}
+
 func TestDeliverOnlineUnder1s(t *testing.T) {
 	e := setup(t, 20, nil)
 	a, _, ta, tb, conv := e.pair(t)
@@ -239,10 +254,15 @@ func TestTypingAndRead(t *testing.T) {
 
 func TestSecondConnectionReplacesFirst(t *testing.T) {
 	e := setup(t, 20, nil)
-	_, _, ta, tb, conv := e.pair(t)
+	_, b, ta, tb, conv := e.pair(t)
 	ca := e.dial(t, ta)
 	cb1 := e.dial(t, tb)
+	// Dial returns after the HTTP upgrade; the server registers the connection
+	// a moment later in its handler goroutine. Wait for each registration so
+	// "second" really means registered second (slow CI runners reorder them).
+	first := waitRegistered(t, e.hub, b.ID, nil)
 	cb2 := e.dial(t, tb)
+	waitRegistered(t, e.hub, b.ID, first)
 	waitClosed(t, cb1, 2*time.Second)
 	write(t, ca, send(conv, uuid.New(), "hi"))
 	must(t, cb2, "message")
@@ -398,4 +418,41 @@ func TestNotifyConversationDeleted(t *testing.T) {
 		t.Fatalf("conversation_id = %v, want %v", f.ConversationID, conv)
 	}
 	waitClosed(t, ca, 2*time.Second)
+}
+
+func TestTypingAndReadSuppressedWhenBlocked(t *testing.T) {
+	e := setup(t, 20, nil)
+	a, b, ta, tb, conv := e.pair(t)
+	_ = a
+	if err := e.svc.Block(context.Background(), a, b.ID); err != nil {
+		t.Fatal(err)
+	}
+	ca, cb := e.dial(t, ta), e.dial(t, tb)
+	write(t, cb, map[string]any{"type": "typing", "conversation_id": conv})
+	write(t, cb, map[string]any{"type": "read", "conversation_id": conv, "seq": 1})
+	if f, err := readFrame(t, ca, 500*time.Millisecond); err == nil {
+		t.Fatalf("A got frame %+v", f)
+	}
+	if f, err := readFrame(t, cb, 500*time.Millisecond); err == nil {
+		t.Fatalf("B got frame %+v", f)
+	}
+	_ = ca
+}
+
+func TestSendBlockedErrorFrame(t *testing.T) {
+	e := setup(t, 20, nil)
+	a, b, ta, tb, conv := e.pair(t)
+	if err := e.svc.Block(context.Background(), a, b.ID); err != nil {
+		t.Fatal(err)
+	}
+	ca, cb := e.dial(t, ta), e.dial(t, tb)
+	cid := uuid.New()
+	write(t, cb, send(conv, cid, "hi"))
+	f := must(t, cb, "error")
+	if f.Code != "not_found" || f.ClientMsgID == nil || *f.ClientMsgID != cid {
+		t.Fatalf("frame %+v", f)
+	}
+	if f, err := readFrame(t, ca, 500*time.Millisecond); err == nil {
+		t.Fatalf("A got frame %+v", f)
+	}
 }

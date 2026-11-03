@@ -4,11 +4,12 @@ import { ArrowLeft, MessageCircle } from "lucide-react";
 import LanguageToggle from "@/components/LanguageToggle";
 import ThemeToggle from "@/components/ThemeToggle";
 
-type PolicySection = { h: string; p: string[] };
-
 export default function Info() {
   const { t } = useTranslation();
-  const sections = t("info.sections", { returnObjects: true }) as PolicySection[];
+  const links = [
+    { to: "/terms", title: t("info.terms"), desc: t("info.termsDesc") },
+    { to: "/privacy", title: t("info.privacy"), desc: t("info.privacyDesc") },
+  ];
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-20 bg-background/50 backdrop-blur-md">
@@ -24,14 +25,17 @@ export default function Info() {
         <Link to="/" className="inline-flex items-center gap-1 text-sm font-semibold text-primary"><ArrowLeft className="h-4 w-4" aria-hidden />{t("common.back")}</Link>
         <article className="mt-6">
           <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">{t("info.title")}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{t("info.updated")}</p>
           <p className="mt-6 leading-relaxed">{t("info.intro")}</p>
-          {sections.map((s) => (
-            <section key={s.h} className="mt-10">
-              <h2 className="text-xl font-bold">{s.h}</h2>
-              {s.p.map((para) => <p key={para} className="mt-3 leading-relaxed text-muted-foreground">{para}</p>)}
-            </section>
-          ))}
+          <ul className="mt-8 flex flex-col gap-3">
+            {links.map((l) => (
+              <li key={l.to}>
+                <Link to={l.to} className="block rounded-2xl border bg-card p-5 transition-colors hover:border-primary">
+                  <h2 className="text-lg font-bold text-primary">{l.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{l.desc}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </article>
       </main>
 

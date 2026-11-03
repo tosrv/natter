@@ -36,6 +36,8 @@ type Auth struct {
 	svc          *chat.Service
 	cfg          config.Config
 	guestLimiter *ratelimit.Limiter
+	// Turnstile verifies captcha tokens on guest creation; disabled when no secret.
+	Turnstile *Turnstile
 	// OAuth is the Google OAuth2 config; Endpoint may be overridden in tests.
 	OAuth *oauth2.Config
 	// UserInfoURL is the OpenID Connect userinfo endpoint.
@@ -52,6 +54,7 @@ func New(st *store.Store, svc *chat.Service, cfg config.Config, guestLimiter *ra
 	}
 	return &Auth{
 		st: st, svc: svc, cfg: cfg, guestLimiter: guestLimiter,
+		Turnstile: NewTurnstile(cfg.TurnstileSecretKey),
 		OAuth: &oauth2.Config{
 			ClientID:     cfg.GoogleClientID,
 			ClientSecret: cfg.GoogleClientSecret,
