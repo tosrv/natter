@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -51,12 +52,13 @@ func (t *Turnstile) Verify(ctx context.Context, token, remoteIP string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 64<<10))
 		return chat.ErrCaptchaUnavailable
 	}
 	var out struct {
 		Success bool `json:"success"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 64<<10)).Decode(&out); err != nil {
 		return chat.ErrCaptchaUnavailable
 	}
 	if !out.Success {

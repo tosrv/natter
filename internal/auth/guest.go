@@ -14,7 +14,12 @@ func (a *Auth) Guest(c *gin.Context) {
 		TurnstileToken string `json:"turnstile_token"`
 	}
 	if a.Turnstile.Enabled() {
-		_ = c.ShouldBindJSON(&body) // empty/invalid body => empty token => captcha_failed
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 4<<10)
+		_ = c.ShouldBindJSON(&body) // empty/invalid/oversized body => empty token => captcha_failed
+		if len(body.TurnstileToken) > 2048 {
+			WriteError(c, chat.ErrCaptchaFailed)
+			return
+		}
 		if err := a.Turnstile.Verify(c.Request.Context(), body.TurnstileToken, ClientIP(c)); err != nil {
 			WriteError(c, err)
 			return

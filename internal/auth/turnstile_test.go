@@ -142,3 +142,14 @@ func TestGuestValidTokenSlotFull(t *testing.T) {
 	}
 	wantErr(t, guestTok(e, "10.7.7.7", "good"), 403, "user_limit_reached")
 }
+
+func TestGuestTurnstileOversized(t *testing.T) {
+	var calls atomic.Int32
+	e := setupTS(t, func(w http.ResponseWriter, r *http.Request) { calls.Add(1); okSiteverify(w, r) })
+	devUser(t, e)
+	wantErr(t, guestTok(e, "10.8.8.8", strings.Repeat("a", 10<<10)), 400, "captcha_failed")
+	wantErr(t, guestTok(e, "10.8.8.8", strings.Repeat("a", 3000)), 400, "captcha_failed")
+	if calls.Load() != 0 {
+		t.Fatalf("siteverify called %d times", calls.Load())
+	}
+}
