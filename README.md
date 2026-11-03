@@ -1,222 +1,138 @@
 # pmess — Personal Messenger
 
 [![CI](https://github.com/tosrv/pmess/actions/workflows/ci.yml/badge.svg)](https://github.com/tosrv/pmess/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
 
-Aplikasi chat pribadi sederhana: login dengan Google (atau masuk sebagai **tamu** untuk menghubungi developer), cari pengguna lewat username, lalu chat realtime lewat WebSocket (status terkirim/dibaca ✓/✓✓, indikator mengetik, notifikasi, UI Indonesia/Inggris).
+**English** · [Bahasa Indonesia](README.id.md)
 
-- Backend: Go (`cmd/server`, `internal/*`), PostgreSQL 16.
-- Frontend: React + Vite (`web/`), disajikan oleh server Go dari `STATIC_DIR`.
-- Spesifikasi: `docs/superpowers/specs/2026-11-02-personal-messenger-design.md`.
+A real-time 1:1 chat app built as a learning project in **real-time systems and concurrency**: a Go backend with WebSockets and PostgreSQL, a React frontend, and a CI → registry → auto-deploy pipeline.
 
-## Prasyarat
+**Live demo:** <https://chat.rahmattomy.com> — sign in with Google, or continue as a guest to message the developer.
 
-- Go 1.24+
-- Node.js 22+ dan npm
-- Docker + Docker Compose v2 (untuk Postgres, image aplikasi, dan test integrasi testcontainers)
+![pmess chat, light theme](docs/screenshots/chat-light-desktop.png)
 
-## Setup Google OAuth
+## Features
 
-1. Buka [Google Cloud Console](https://console.cloud.google.com/) → buat/pilih project.
-2. **APIs & Services → OAuth consent screen**: isi nama aplikasi, email dukungan; scope cukup `openid` dan `email`. Tambahkan test user bila status masih *Testing*.
-3. **APIs & Services → Credentials → Create credentials → OAuth client ID**, tipe **Web application**.
-4. **Authorized redirect URIs**: isi persis sama dengan `OAUTH_REDIRECT_URL`, misalnya
-   - produksi: `https://chat.example.com/api/auth/google/callback`
-   - lokal: `http://localhost:8080/api/auth/google/callback`
-5. Salin **Client ID** dan **Client secret** ke `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+- Real-time 1:1 messaging over WebSocket, with **sent ✓ / read ✓✓** receipts and a typing indicator
+- Find people by username; display names are separate from usernames
+- **Guest mode**: chat with the developer without an account (deleted 30 minutes after the last message)
+- Block users, delete your own account, English/Indonesian UI, light/dark/system theme
+- Messages survive offline periods and reconnects; conversations expire after 1 month without activity
+- Abuse protection: Cloudflare Turnstile on guest sign-up, per-user and per-IP rate limits, a 300-account cap
 
-## Variabel lingkungan
+## Architecture
 
-Salin `.env.example` ke `.env` lalu isi. `.env` tidak boleh di-commit.
+```mermaid
+flowchart LR
+    B[Browser<br/>React + Vite] -- HTTPS REST --> N[Nginx<br/>TLS]
+    B -- WSS --> N
+    N --> S
 
-| Variabel | Wajib | Default | Keterangan |
-|---|---|---|---|
-| `DATABASE_URL` | ya | – | URL Postgres, mis. `postgres://pmess:PASSWORD@localhost:5432/pmess?sslmode=disable`. Di `docker compose` dibangun otomatis dari `POSTGRES_PASSWORD` |
-| `POSTGRES_PASSWORD` | ya (compose) | – | Password Postgres untuk `docker compose`; compose menolak jalan bila kosong |
-| `GOOGLE_CLIENT_ID` | ya (login Google) | – | Dari Google Cloud Console |
-| `GOOGLE_CLIENT_SECRET` | ya (login Google) | – | Rahasia — jangan di-commit |
-| `OAUTH_REDIRECT_URL` | ya (login Google) | – | Harus sama dengan Authorized redirect URI |
-| `DEVELOPER_EMAIL` | ya | – | Email Google akun developer (penerima pesan tamu) |
-| `ALLOWED_ORIGINS` | tidak | kosong | Daftar origin dipisah koma untuk CORS/WebSocket, mis. `https://chat.example.com` |
-| `COOKIE_SECURE` | tidak | `false` | Set `true` di produksi (HTTPS) |
-| `LISTEN_ADDR` | tidak | `:8080` | Alamat listen HTTP |
-| `TRUSTED_PROXY` | tidak | `127.0.0.1` (`172.28.0.1` di compose) | IP peer yang dipercaya untuk header `X-Real-IP` (alamat Nginx). Compose memberi jaringan default subnet tetap `172.28.0.0/16` dengan gateway `172.28.0.1`, sehingga Nginx di host terlihat sebagai `172.28.0.1` — default compose sudah benar. Server mencatat WARN sekali bila `X-Real-IP` datang dari peer tak dipercaya |
-| `STATIC_DIR` | tidak | `web/dist` | Folder build frontend (`/app/web` di image Docker) |
-| `TURNSTILE_SITE_KEY` | tidak | kosong | Site key Cloudflare Turnstile (captcha tamu). Kosongkan **keduanya** untuk menonaktifkan; mengisi hanya salah satu membuat server menolak start |
-| `TURNSTILE_SECRET_KEY` | tidak | kosong | Secret key Turnstile — rahasia, jangan di-commit |
-| `E2E_FAKE_LOGIN` | tidak | `0` | **Hanya untuk test E2E.** `1` mengaktifkan `POST /api/test/login` |
+    subgraph S[Go server · single process]
+        direction TB
+        API[REST handlers<br/>Gin] --> C[chat service<br/>business rules]
+        HUB[WebSocket hub<br/>goroutine per conn] --> C
+        C --> ST[store<br/>pgx + SQL]
+        J[jobs<br/>guest cleanup · retention]
+    end
 
-> ⚠️ **Jangan pernah set `E2E_FAKE_LOGIN=1` di produksi.** Route itu memungkinkan siapa pun login sebagai siapa pun. Server mencetak peringatan keras di log saat aktif, dan **menolak start** bila `E2E_FAKE_LOGIN=1` bersamaan dengan `COOKIE_SECURE=true`.
-
-## Cloudflare Turnstile (captcha tamu)
-
-Tombol "Lanjut sebagai tamu" dilindungi Turnstile; verifikasi server dilakukan sebelum rate limit dan slot. Bila Cloudflare tidak terjangkau, login tamu gagal tertutup (503 `captcha_unavailable`).
-
-1. Dashboard Cloudflare → **Turnstile** → **Add widget**.
-2. Isi nama (mis. `pmess`), hostname `chat.rahmattomy.com`, mode **Managed**.
-3. Salin **site key** dan **secret key** ke `.env` di VPS (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`).
-4. `docker compose up -d` agar container app memuat env baru.
-
-Untuk dev/E2E lokal kosongkan keduanya (captcha mati). Test key Cloudflare yang selalu lolos: site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`. Test Playwright untuk widget hanya jalan dengan `E2E_TURNSTILE=1` dan butuh akses ke `challenges.cloudflare.com` (CI mengaturnya).
-
-## Header keamanan
-
-Server menambahkan sendiri pada semua respons: `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `X-Frame-Options: DENY`, dan `Strict-Transport-Security: max-age=31536000` hanya bila `COOKIE_SECURE=true`. **Jangan menambahkan header yang sama di Nginx** (`add_header`) agar tidak terduplikasi; kebijakan ada di `internal/api/security.go`.
-
-## Blokir pengguna
-
-Pengguna terdaftar dapat memblokir lawan bicara dari menu percakapan (atau membuka blokir dari Pengaturan). Perilakunya: pesan dan pembukaan percakapan antar pihak yang terkait blokir (siapa pun pemblokirnya) mengembalikan 404 `not_found`; pihak tersebut tidak muncul di pencarian; indikator mengetik/dibaca tidak diteruskan. Hanya pemblokir yang melihat label "Diblokir" — pihak yang diblokir tidak pernah diberi tahu, hanya menerima galat umum. Tamu tidak dapat memblokir (403); developer boleh memblokir tamu. Blok/buka blokir bersifat idempoten.
-
-## Menjalankan lokal (mode dev)
-
-```bash
-# 1. Postgres (file dev mempublikasikan 127.0.0.1:5432)
-echo POSTGRES_PASSWORD=pmess >> .env
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres
-
-# 2. Backend (terminal 1)
-export DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable'
-export TRUSTED_PROXY=127.0.0.1
-export DEVELOPER_EMAIL=you@example.com
-export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...
-export OAUTH_REDIRECT_URL=http://localhost:8080/api/auth/google/callback
-go run ./cmd/server          # migrasi DB berjalan otomatis
-
-# 3. Frontend (terminal 2)
-cd web && npm install && npm run dev
+    ST --> PG[(PostgreSQL 16)]
+    J --> ST
 ```
 
-Buka URL yang dicetak Vite (proxy `/api` diarahkan ke `:8080`), atau jalankan `npm run build` lalu buka `http://localhost:8080` langsung.
-
-## Menjalankan dengan Docker
-
-```bash
-cp .env.example .env   # isi nilainya; wajib POSTGRES_PASSWORD (DATABASE_URL dibangun darinya)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d   # build lokal; compose prod menarik image dari GHCR
-# aplikasi di http://127.0.0.1:8080 (hanya localhost; publik lewat Nginx). Postgres tidak dipublikasikan ke host.
-docker compose logs -f app
+```mermaid
+flowchart LR
+    P[push to main] --> CI[GitHub Actions<br/>go test -race · vitest · Playwright · backup/restore test]
+    CI -- all green --> R[GHCR image<br/>latest + sha-xxxxxxx]
+    R --> W[Watchtower on the VPS<br/>pre-update backup → swap app]
 ```
 
-Image dibangun multi-stage (Node 22 → Go 1.24 `CGO_ENABLED=0` → `debian:bookworm-slim` + `postgresql-client-16`, user non-root uid 65532), berisi binary dan file statis di `/app/web`.
+All business rules live in one package (`internal/chat`), shared by REST and WebSocket, so a rule like "a guest may only message the developer" is written and tested once.
 
-**Hanya dev/sandbox:** `docker-compose.dev.yml` mempublikasikan Postgres ke `127.0.0.1:5432` dan menambah build secret `extra_ca` (CA bundle untuk proxy TLS-intercepting). Pakai `EXTRA_CA_FILE=./ca.pem docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d`. Jangan dipakai di produksi; tanpa secret, mount di Dockerfile tidak berefek.
+## How it handles concurrency
 
-## Verifikasi (spec §10)
+This is the part the project was built to learn. Each guarantee is enforced by the database or by a single code path, and each has a test you can run.
 
-Semua bisa dijalankan sendiri. Docker harus berjalan untuk test `store` (testcontainers).
+### 1. Gap-free, consistent ordering per conversation
+
+Every message gets a sequence number from a counter on its conversation row. The `UPDATE … RETURNING` takes a row lock, so concurrent senders in the same conversation queue up instead of racing:
+
+```sql
+UPDATE conversations SET last_seq = last_seq + 1, last_activity_at = now()
+WHERE id = $1 RETURNING last_seq
+```
+
+`TestConcurrentSend` has 50 users send at once and checks every conversation's sequence is exactly `1..N` with no gaps or duplicates. A global `BIGSERIAL` would have been simpler but can leave gaps and does not guarantee commit order matches id order under load.
+
+### 2. No duplicates when a client resends
+
+The browser generates a `client_msg_id` (UUID) and keeps unacknowledged messages in an outbox. After a reconnect it resends them with the same id. The database enforces `UNIQUE (sender_id, client_msg_id)`; a resend that hits it rolls back (so no sequence number is consumed) and returns the original message. `TestResend` fires the same message from two goroutines at once and expects one row.
+
+### 3. Catching up after a disconnect
+
+Clients remember the last `seq` they have for each conversation and ask `GET /api/conversations/:id/messages?after_seq=N` after reconnecting, paging until they are caught up. Combined with (2), "nothing lost, nothing doubled" holds across flaky networks.
+
+### 4. The 300th account
+
+The account cap is a one-row counter with a constraint, not a `COUNT(*)`:
+
+```sql
+used int NOT NULL CHECK (used BETWEEN 0 AND 300)
+-- sign-up, inside the same transaction as the INSERT:
+UPDATE user_slots SET used = used + 1 WHERE id = 1
+```
+
+Two people signing up for the last slot serialize on the row lock; the second one violates the `CHECK` and gets a clear "limit reached" error. `TestSlotRace` releases two goroutines at once and expects exactly one success.
+
+### 5. Slow clients don't slow everyone else
+
+Each WebSocket connection has a reader goroutine, a writer goroutine and a bounded outbound buffer (64 frames). Enqueueing never blocks: if a client can't keep up, its connection is closed and it catches up through (3) when it reconnects. Delivery to the recipient happens only after the message is committed.
+
+## Load test
+
+`cmd/loadtest` opens 50 WebSocket clients in 25 conversations, each sending 20 messages, and measures send-to-receive latency. Three consecutive runs on a single machine (server, Postgres and clients together):
+
+| sent | received | missing | duplicates | p50 | p95 | max |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1000 | 1000 | 0 | 0 | 25–28 ms | 40–46 ms | 56–74 ms |
+
+The tool exits non-zero if any message is missing or duplicated or p95 reaches 1 s. How to run it: [docs/operations.md](docs/operations.md#verification).
+
+## Tech stack
+
+- **Backend:** Go 1.24, Gin, `coder/websocket`, pgx, golang-migrate, PostgreSQL 16
+- **Frontend:** React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui, react-i18next
+- **Tests:** Go tests with `-race` against real Postgres (testcontainers), Vitest, Playwright
+- **Ops:** Docker, GitHub Actions, GHCR, Watchtower, Nginx, Cloudflare Turnstile
+
+## Run it
 
 ```bash
-# Seluruh test Go dengan race detector
+cp .env.example .env    # set POSTGRES_PASSWORD, DEVELOPER_EMAIL, Google OAuth keys
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+# then open http://localhost:8080
+```
+
+Verify the guarantees yourself (Docker must be running):
+
+```bash
 go test -race ./...
-
-# Per kriteria
-go test -race ./internal/chat/...
-go test -race ./internal/store/...
-go test -race -run TestConcurrentSend ./...     # 11: 50 pengirim bersamaan
-go test -race -run TestResend ./...             # 12: reconnect / kirim ulang
-go test -race -run TestSlotRace ./...           # 13: slot ke-300
-go test -race -run TestAuthz ./internal/api/... # 16: otorisasi (404)
-go test -race ./internal/api/...                # 14, 15, 17
-go test -race -run TestRetention ./internal/jobs/... # 8: retensi
-
-# Frontend unit test
 cd web && npm test
 ```
 
-**Load test (kriteria 2, latensi < 1 detik)** — butuh server berjalan dan Postgres terjangkau dari host (stack dev, lihat di atas):
+Local development, all environment variables, E2E tests, deployment, backups and restore are in the **[operations guide](docs/operations.md)**.
 
-```bash
-DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable' go run ./cmd/loadtest
-# mencetak p50/p95/max; exit 0 + "OK" bila tidak ada pesan hilang/duplikat
-```
+## Security & privacy
 
-Load test memakai header `X-Real-IP` berbeda per klien agar tidak terkena rate limit per IP; server harus memercayai peer-nya (`TRUSTED_PROXY`). Untuk `go run ./cmd/server` lokal default `127.0.0.1` sudah cukup; untuk Docker default compose `172.28.0.1` (gateway) sudah cocok.
+- Strict Content-Security-Policy and other security headers on every response
+- Turnstile on guest sign-up, verified server-side before any rate-limit or account slot is used
+- Blocking is invisible to the blocked person: they only ever see a generic "not found"
+- Messages are **not** end-to-end encrypted — a server admin can read them in the database. This is stated in the app's [privacy policy](https://chat.rahmattomy.com/privacy).
 
-**E2E Playwright (kriteria 1, 4, 5, 6, 9, 10)** — dua browser saling chat, alur tamu, notifikasi, toggle bahasa:
+## Design documents
 
-```bash
-printf 'E2E_FAKE_LOGIN=1\nCOOKIE_SECURE=false\nDEVELOPER_EMAIL=dev@e2e.test\nPOSTGRES_PASSWORD=test\n' > .env
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
-cd web
-npm install
-npx playwright install chromium   # sekali saja
-E2E_BASE_URL=http://localhost:8080 npm run e2e
-cd .. && docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v && rm .env
-```
+The project was built spec-first. Designs and implementation plans for each phase are in [`docs/superpowers/`](docs/superpowers/) (written in Indonesian).
 
-## Nginx (produksi)
+## License
 
-Contoh server block lengkap ada di [`deploy/nginx.conf.example`](deploy/nginx.conf.example): redirect HTTP→HTTPS, TLS (ganti path sertifikat), `location /api/ws` dengan header `Upgrade`/`Connection`, `proxy_read_timeout 75s` (ping WS tiap 25 s), dan `X-Real-IP $remote_addr` (dipakai rate limit; pastikan `TRUSTED_PROXY` sesuai). Di produksi set juga `COOKIE_SECURE=true` dan `ALLOWED_ORIGINS=https://domain-anda`.
-
-## Operasional
-
-Alur: push ke `main` -> CI (test + backup-test) -> image `ghcr.io/tosrv/pmess` (`latest` dan `sha-<7 karakter>`) -> Watchtower di VPS menariknya otomatis. `docker-compose.yml` adalah compose produksi (image dari GHCR, tanpa `build`).
-
-### Setup GHCR (sekali)
-
-Setelah job `image` pertama sukses: GitHub -> profil/organisasi -> **Packages** -> `pmess` -> **Package settings** -> **Change visibility** -> **Public**. Setelah itu VPS menarik image tanpa login. Image tidak berisi secret (semua config lewat `.env`).
-
-### Deploy pertama di VPS
-
-```bash
-git clone https://github.com/tosrv/pmess.git && cd pmess
-cp .env.example .env            # isi POSTGRES_PASSWORD, GOOGLE_*, DEVELOPER_EMAIL, dst.
-sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess   # uid 65532 = user di dalam container
-docker compose up -d
-docker compose ps               # app harus healthy
-curl -fsS http://127.0.0.1:8080/healthz
-```
-
-Pasang Nginx dari `deploy/nginx.conf.example` (sudah meneruskan `/healthz`).
-
-### Cara kerja Watchtower
-
-Service `watchtower` (`nickfedor/watchtower`, versi terkunci di compose; fork aktif dari `containrrr/watchtower` yang sudah diarsip) memeriksa registry tiap 300 detik. Hanya container berlabel `com.centurylinklabs.watchtower.enable=true` yang diperbarui, yaitu `app`. `postgres` dan `backup` tidak diperbarui. Sebelum `app` diganti, Watchtower menjalankan hook `/app/deploy/backup.sh preupdate` di dalam container `app` (backup `preupdate`). Lihat log: `docker compose logs -f watchtower`. Migrasi DB berjalan otomatis saat `app` start.
-
-Catatan: container `backup` memakai image yang sama tetapi tidak diperbarui otomatis; ia ikut versi baru saat `docker compose pull && docker compose up -d backup` dijalankan manual (mis. sesekali).
-
-### Rollback
-
-Set `PMESS_TAG=sha-<versi lama>` di `.env`, lalu `docker compose up -d app backup`. Selama `PMESS_TAG` bukan `latest`, Watchtower tidak memperbarui `app` (tag tetap sama). Kembali ke `PMESS_TAG=latest` untuk mengikuti pembaruan lagi. Rollback image **tidak** membatalkan migrasi; bila migrasi bermasalah, restore dari backup `preupdate`.
-
-### Backup
-
-- **Lokasi:** `/var/backups/pmess` di host (ubah dengan `BACKUP_DIR`), terpasang di container sebagai `/backups`. Folder harus dibuat dengan `sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess`.
-- **Jadwal:** service `backup` menjalankan `pg_dump -Fc` tiap hari pukul 02:00 waktu `TZ` (default `UTC`); hari Minggu diberi label `weekly`. Backup `preupdate` dibuat Watchtower sebelum tiap update.
-- **Nama file:** `pmess-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump`.
-- **Retensi:** 7 `daily`, 4 `weekly`, 5 `preupdate`; yang lebih lama dihapus hanya setelah backup baru sukses.
-- **Gagal backup:** tercatat sebagai log JSON `level=ERROR` (`docker compose logs backup`); tidak ada alert terpisah.
-- **Salin ke komputer sendiri (manual, disarankan rutin):**
-
-```bash
-scp 'user@vps:/var/backups/pmess/pmess-*.dump' ./backup-pmess/
-```
-
-> **Risiko:** backup hanya ada di VPS. Bila VPS hilang atau diretas, backup ikut hilang. Salin berkala dengan `scp` di atas.
-
-### Restore
-
-Dijalankan di host dari root repo. Urutan: hentikan `watchtower` (dinyalakan lagi saat skrip selesai, juga bila gagal) -> safety dump `preupdate` dari kondisi saat ini (bila `app` berjalan) -> hentikan `app` -> `pg_restore --single-transaction` (gagal = rollback penuh, database lama utuh) -> nyalakan `app` -> tunggu `/healthz` OK maks 60 detik. Service `backup` tidak disentuh.
-
-```bash
-deploy/restore.sh /var/backups/pmess/pmess-YYYYMMDD-HHMM-daily.dump --yes
-```
-
-Bila safety dump gagal, skrip berhenti sebelum menyentuh apa pun; tambahkan `--no-safety-dump` sebagai argumen ketiga (`... --yes --no-safety-dump`) untuk melewatinya. Tanpa `--yes` skrip menolak jalan. Pakai `sudo` bila folder backup hanya terbaca uid 65532.
-
-### Subnet jaringan tetap
-
-Compose memakai subnet tetap `172.28.0.0/16` (gateway `172.28.0.1`). Bila bentrok dengan jaringan yang sudah ada di VPS (`docker network ls`, `ip route`), `docker compose up` gagal dengan "Pool overlaps". Ubah blok `networks.default.ipam.config` di `docker-compose.yml` (mis. `subnet: 172.29.0.0/16`, `gateway: 172.29.0.1`) **dan** set `TRUSTED_PROXY` di `.env` ke gateway baru (`TRUSTED_PROXY=172.29.0.1`); keduanya harus cocok agar `X-Real-IP` dari Nginx dipercaya. Lalu `docker compose down && docker compose up -d`.
-
-### Alert (UptimeRobot)
-
-1. Buat akun gratis di uptimerobot.com.
-2. **Add New Monitor** -> tipe **HTTP(s)**, URL `https://<domain>/healthz`, interval **5 menit**.
-3. **Alert Contacts**: tambahkan email Anda; atur notifikasi setelah 2 kali gagal berturut-turut dan saat pulih.
-4. Uji sekali: `docker compose stop app`, tunggu email (maks ~10 menit), lalu `docker compose start app` dan pastikan email pulih masuk.
-
-## Privasi
-
-- Pesan **tidak** dienkripsi end-to-end; admin server dapat membacanya lewat database.
-- Email pengguna tidak pernah dikirim ke pengguna lain; isi pesan selalu dirender sebagai teks biasa.
-- Akun tamu dihapus 30 menit setelah aktivitas terakhir percakapannya; percakapan dihapus setelah 1 bulan tanpa aktivitas.
-- Info kontak yang diisi tamu bersifat sukarela dan ikut terhapus bersama akun tamu.
+[MIT](LICENSE)
