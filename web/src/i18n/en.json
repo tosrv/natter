@@ -180,6 +180,8 @@
     "username_required": "Please choose a username first.",
     "query_too_short": "Type at least 2 characters.",
     "rate_limited": "Too many requests. Please slow down.",
+    "captcha_failed": "Captcha check failed. Please try again.",
+    "captcha_unavailable": "Captcha service is unavailable. Please try again later.",
     "unauthorized": "Please log in.",
     "invalid_state": "Login session expired. Please try again.",
     "bad_request": "Invalid request.",

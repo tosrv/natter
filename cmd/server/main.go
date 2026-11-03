@@ -59,15 +59,16 @@ func run() error {
 	svc := chat.New(st, cfg.DeveloperEmail)
 	hub := realtime.NewHub(svc, msgLim, cfg.AllowedOrigins)
 	router := api.NewRouter(api.Deps{
-		Auth:           auth.New(st, svc, cfg, guestLim),
-		Chat:           svc,
-		SearchLimiter:  searchLim,
-		WS:             hub.Handler(),
-		Notifier:       hub,
-		StaticDir:      cfg.StaticDir,
-		AllowedOrigins: cfg.AllowedOrigins,
-		Pinger:         st,
-		Logger:         logger,
+		Auth:             auth.New(st, svc, cfg, guestLim),
+		Chat:             svc,
+		SearchLimiter:    searchLim,
+		WS:               hub.Handler(),
+		Notifier:         hub,
+		StaticDir:        cfg.StaticDir,
+		AllowedOrigins:   cfg.AllowedOrigins,
+		TurnstileSiteKey: cfg.TurnstileSiteKey,
+		Pinger:           st,
+		Logger:           logger,
 	})
 
 	jobsDone := make(chan struct{})

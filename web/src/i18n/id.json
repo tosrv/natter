@@ -180,6 +180,8 @@
     "username_required": "Pilih username terlebih dahulu.",
     "query_too_short": "Ketik minimal 2 karakter.",
     "rate_limited": "Terlalu banyak permintaan. Pelan-pelan.",
+    "captcha_failed": "Verifikasi captcha gagal. Silakan coba lagi.",
+    "captcha_unavailable": "Layanan captcha sedang tidak tersedia. Coba lagi nanti.",
     "unauthorized": "Silakan masuk.",
     "invalid_state": "Sesi login kedaluwarsa. Silakan coba lagi.",
     "bad_request": "Permintaan tidak valid.",

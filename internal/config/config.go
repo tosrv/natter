@@ -19,6 +19,9 @@ type Config struct {
 	TrustedProxy       string
 	StaticDir          string
 	LogLevel           string
+	// Turnstile keys: both empty disables the captcha; exactly one is an error.
+	TurnstileSiteKey   string
+	TurnstileSecretKey string
 	// E2EFakeLogin enables POST /api/test/login. Never set in production.
 	E2EFakeLogin bool
 }
@@ -45,6 +48,8 @@ func Load() (Config, error) {
 		TrustedProxy:       envDefault("TRUSTED_PROXY", "127.0.0.1"),
 		StaticDir:          envDefault("STATIC_DIR", "web/dist"),
 		LogLevel:           envDefault("LOG_LEVEL", "info"),
+		TurnstileSiteKey:   strings.TrimSpace(os.Getenv("TURNSTILE_SITE_KEY")),
+		TurnstileSecretKey: strings.TrimSpace(os.Getenv("TURNSTILE_SECRET_KEY")),
 		E2EFakeLogin:       os.Getenv("E2E_FAKE_LOGIN") == "1",
 	}
 	for _, o := range strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",") {
@@ -57,6 +62,9 @@ func Load() (Config, error) {
 	}
 	if c.DeveloperEmail == "" {
 		return Config{}, errors.New("DEVELOPER_EMAIL is required")
+	}
+	if (c.TurnstileSiteKey == "") != (c.TurnstileSecretKey == "") {
+		return Config{}, errors.New("TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY must both be set or both be empty")
 	}
 	if c.E2EFakeLogin && c.CookieSecure {
 		return Config{}, errors.New("refusing to start: E2E_FAKE_LOGIN=1 is not allowed with COOKIE_SECURE=true (production); unset E2E_FAKE_LOGIN")

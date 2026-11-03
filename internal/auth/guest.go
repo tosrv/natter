@@ -9,6 +9,17 @@ import (
 
 // Guest creates a guest account with a conversation to the developer.
 func (a *Auth) Guest(c *gin.Context) {
+	// Verify the captcha first so failed attempts never consume a limiter token or slot.
+	var body struct {
+		TurnstileToken string `json:"turnstile_token"`
+	}
+	if a.Turnstile.Enabled() {
+		_ = c.ShouldBindJSON(&body) // empty/invalid body => empty token => captcha_failed
+		if err := a.Turnstile.Verify(c.Request.Context(), body.TurnstileToken, ClientIP(c)); err != nil {
+			WriteError(c, err)
+			return
+		}
+	}
 	if !a.guestLimiter.Allow("guest:" + ClientIP(c)) {
 		WriteError(c, chat.ErrRateLimited)
 		return

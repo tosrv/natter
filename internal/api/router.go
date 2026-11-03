@@ -30,8 +30,10 @@ type Deps struct {
 	WS             gin.HandlerFunc
 	StaticDir      string
 	AllowedOrigins []string
-	Pinger         Pinger       // optional; nil => /healthz 503
-	Logger         *slog.Logger // optional; nil => slog.Default()
+	// TurnstileSiteKey is exposed by GET /api/config (empty = captcha disabled).
+	TurnstileSiteKey string
+	Pinger           Pinger       // optional; nil => /healthz 503
+	Logger           *slog.Logger // optional; nil => slog.Default()
 }
 
 func NewRouter(d Deps) *gin.Engine {
@@ -43,6 +45,7 @@ func NewRouter(d Deps) *gin.Engine {
 	h := &handlers{chat: d.Chat, limiter: d.SearchLimiter, auth: d.Auth, notifier: d.Notifier}
 
 	api := r.Group("/api")
+	api.GET("/config", ConfigHandler(d.TurnstileSiteKey))
 	api.GET("/auth/google/login", d.Auth.GoogleLogin)
 	api.GET("/auth/google/callback", d.Auth.GoogleCallback)
 	api.POST("/auth/guest", d.Auth.Guest)

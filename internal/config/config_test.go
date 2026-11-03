@@ -65,3 +65,23 @@ func TestGuestLimitPerHour(t *testing.T) {
 		t.Fatalf("e2e = %d, want 1000", got)
 	}
 }
+
+func TestLoadTurnstilePair(t *testing.T) {
+	cases := []struct {
+		site, secret string
+		ok           bool
+	}{{"s", "", false}, {"", "k", false}, {"s", "k", true}, {"", "", true}}
+	for _, tc := range cases {
+		t.Setenv("DATABASE_URL", "postgres://x")
+		t.Setenv("DEVELOPER_EMAIL", "a@b.c")
+		t.Setenv("TURNSTILE_SITE_KEY", tc.site)
+		t.Setenv("TURNSTILE_SECRET_KEY", tc.secret)
+		c, err := config.Load()
+		if (err == nil) != tc.ok {
+			t.Fatalf("site=%q secret=%q: err=%v", tc.site, tc.secret, err)
+		}
+		if tc.ok && (c.TurnstileSiteKey != tc.site || c.TurnstileSecretKey != tc.secret) {
+			t.Fatalf("keys not loaded: %+v", c)
+		}
+	}
+}

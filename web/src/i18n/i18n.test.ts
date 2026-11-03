@@ -7,6 +7,7 @@ const ERROR_CODES = [
   "message_too_long", "username_invalid", "username_taken", "username_change_limit",
   "username_required", "query_too_short", "rate_limited", "unauthorized",
   "invalid_state", "bad_request", "internal", "oauth_failed",
+  "captcha_failed", "captcha_unavailable",
 ];
 
 function keys(o: Record<string, unknown>, p = ""): string[] {
