@@ -67,8 +67,8 @@ export default function Chat() {
               <ChatHeader peerId={active.peer_id} name={peerName(active)} username={active.peer_username}
                 typing={c.typing(active.id)} onBack={isGuest ? undefined : () => c.setActiveId(null)}
                 blocked={active.blocked_by_me} ended={active.peer_ended}
-                onBlock={isGuest ? undefined : () => c.setPeerBlocked(active.peer_id, true)}
-                onUnblock={isGuest ? undefined : () => c.setPeerBlocked(active.peer_id, false)} />
+                onBlock={isGuest || active.peer_ended ? undefined : () => c.setPeerBlocked(active.peer_id, true)}
+                onUnblock={isGuest || active.peer_ended ? undefined : () => c.setPeerBlocked(active.peer_id, false)} />
               <MessageList messages={c.messages(active.id)} pending={c.pending(active.id)} pendingIds={c.pendingIds}
                 meId={me.id} peerReadSeq={active.peer_last_read_seq} />
               {active.peer_ended ? (

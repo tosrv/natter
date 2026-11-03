@@ -424,3 +424,40 @@ func TestDeleteMeGuestDeactivates(t *testing.T) {
 		t.Fatalf("after end %d", w.Code)
 	}
 }
+
+func TestEndGuestAndClearAlreadyEnded(t *testing.T) {
+	e, n := setupN(t)
+	e.user(t, "d", devEmail, "devuser")
+	st, svc := e.st, e.svc
+	cfg := config.Config{DeveloperEmail: devEmail, TrustedProxy: "127.0.0.1"}
+	a := auth.New(st, svc, cfg, ratelimit.New(5, time.Hour, nil))
+	d := api.Deps{Auth: a, Chat: svc, Notifier: n}
+	ctx := context.Background()
+	g, _, err := svc.CreateGuest(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := st.EndGuest(ctx, g.ID); err != nil {
+		t.Fatal(err)
+	}
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("DELETE", "/api/me", nil)
+	api.EndGuestAndClear(d, c, g.ID)
+	c.Writer.WriteHeaderNow()
+	if w.Code != 204 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	cleared := false
+	for _, ck := range w.Result().Cookies() {
+		if ck.Name == auth.SessionCookie && ck.MaxAge < 0 {
+			cleared = true
+		}
+	}
+	if !cleared {
+		t.Fatal("cookie not cleared")
+	}
+	if n.guestCalls != 0 || n.calls != 0 {
+		t.Fatalf("notifier called %+v", n)
+	}
+}

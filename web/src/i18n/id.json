@@ -57,7 +57,7 @@
     "q1": "Apakah pmess gratis?",
     "a1": "Ya. Masuk dengan Google atau lanjut sebagai tamu tanpa biaya.",
     "q2": "Apa yang bisa dilakukan tamu?",
-    "a2": "Tamu mendapat akun sementara untuk langsung ngobrol. Akun ini berakhir otomatis dan tidak bisa dipakai lagi, jadi masuk dengan Google kalau ingin terus memakai chat Anda.",
+    "a2": "Tamu mendapat akun sementara untuk langsung ngobrol. Akun ini berakhir otomatis dan tidak bisa dipakai lagi, jadi masuk dengan Google kalau ingin terus memakai chat-mu.",
     "q3": "Bisakah saya menghapus akun?",
     "a3": "Bisa. Buka Pengaturan lalu hapus akun kapan saja.",
     "q4": "Apakah pesan saya terenkripsi?",
@@ -140,7 +140,7 @@
     "e2e": "Pesan tidak dienkripsi end-to-end. Admin server dapat membaca pesan melalui database.",
     "guest": "Saat sesi tamu berakhir, akunnya dinonaktifkan dan tidak bisa dipakai lagi. Percakapan disimpan di sisi developer hingga 1 bulan sejak pesan terakhir, lalu dihapus otomatis. Tamu yang tidak mengirim pesan dihapus seketika.",
     "retention": "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
-    "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut disimpan bersama percakapan hingga 1 bulan agar developer bisa menghubungi Anda, lalu ikut terhapus.",
+    "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut disimpan bersama percakapan hingga 1 bulan agar developer bisa menghubungimu, lalu ikut terhapus.",
     "intro": "Kebijakan ini menjelaskan data apa yang dikumpulkan pmess, bagaimana data itu digunakan, dan berapa lama disimpan. pmess adalah proyek perpesanan kecil yang dikelola secara independen, jadi kami berusaha membuatnya singkat dan jelas.",
     "updated": "Terakhir diperbarui: 3 November 2026",
     "sections": [

@@ -20,7 +20,7 @@ export default function ChatHeader({ peerId, name, username, typing, onBack, blo
       <div className="min-w-0">
         <p className="truncate font-semibold">{name}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {typing ? <span className="italic text-primary">{t("chat.typing")}</span> : `@${username}`}
+          {typing ? <span className="italic text-primary">{t("chat.typing")}</span> : (username ? `@${username}` : null)}
           {ended
             ? <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">{t("chat.ended")}</span>
             : blocked && <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">{t("chat.blocked")}</span>}
