@@ -34,6 +34,7 @@ var (
 	ErrCaptchaFailed        = &Error{"captcha_failed", http.StatusBadRequest}
 	ErrCaptchaUnavailable   = &Error{"captcha_unavailable", http.StatusServiceUnavailable}
 	ErrUnauthorized         = &Error{"unauthorized", http.StatusUnauthorized}
+	ErrPeerEnded            = &Error{"peer_ended", http.StatusGone}
 )
 
 // mapErr translates store sentinels into chat errors; others pass through.

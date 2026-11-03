@@ -8,15 +8,28 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tosrv/pmess/internal/jobs"
+	"github.com/tosrv/pmess/internal/store"
 	"github.com/tosrv/pmess/internal/store/storetest"
 )
 
 type fakeHub struct {
-	mu  sync.Mutex
-	ids []uuid.UUID
+	mu       sync.Mutex
+	ids      []uuid.UUID
+	outcomes map[uuid.UUID]store.EndGuestOutcome
+	convs    map[uuid.UUID][]store.EndedConversation
 }
 
-func (f *fakeHub) Disconnect(id uuid.UUID) { f.mu.Lock(); f.ids = append(f.ids, id); f.mu.Unlock() }
+func (f *fakeHub) NotifyGuestEnded(o store.EndGuestOutcome, c []store.EndedConversation, id uuid.UUID) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.outcomes == nil {
+		f.outcomes = map[uuid.UUID]store.EndGuestOutcome{}
+		f.convs = map[uuid.UUID][]store.EndedConversation{}
+	}
+	f.ids = append(f.ids, id)
+	f.outcomes[id] = o
+	f.convs[id] = c
+}
 
 func (f *fakeHub) got() []uuid.UUID {
 	f.mu.Lock()
@@ -95,5 +108,48 @@ func TestRetention(t *testing.T) {
 	d, err := jobs.RunRetention(ctx, s, func() time.Time { return time.Now().AddDate(0, 0, 32) })
 	if err != nil || d != 1 {
 		t.Fatalf("32d: d=%d err=%v", d, err)
+	}
+}
+
+func TestCleanupGuestsDeactivates(t *testing.T) {
+	ctx := context.Background()
+	s := storetest.New(t)
+	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.io", "", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	talker, conv, err := s.CreateGuest(ctx, dev.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := s.SendMessage(ctx, conv, talker.ID, uuid.New(), "hi"); err != nil {
+		t.Fatal(err)
+	}
+	silent, sconv, err := s.CreateGuest(ctx, dev.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hub := &fakeHub{}
+	n, err := jobs.CleanupGuests(ctx, s, hub, func() time.Time { return time.Now().Add(31 * time.Minute) })
+	if err != nil || n != 2 {
+		t.Fatalf("n=%d err=%v", n, err)
+	}
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+	if hub.outcomes[talker.ID] != store.GuestDeactivated || hub.outcomes[silent.ID] != store.GuestDeleted {
+		t.Fatalf("outcomes %v", hub.outcomes)
+	}
+	if c := hub.convs[talker.ID]; len(c) != 1 || c[0].ConversationID != conv || c[0].PeerID != dev.ID {
+		t.Fatalf("talker convs %v", c)
+	}
+	if c := hub.convs[silent.ID]; len(c) != 1 || c[0].ConversationID != sconv {
+		t.Fatalf("silent convs %v", c)
+	}
+	u, err := s.GetUser(ctx, talker.ID)
+	if err != nil || u.DeactivatedAt == nil {
+		t.Fatalf("talker %+v %v", u, err)
+	}
+	if _, err := s.GetUser(ctx, silent.ID); err == nil {
+		t.Fatal("silent guest still exists")
 	}
 }

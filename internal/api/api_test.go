@@ -267,9 +267,17 @@ func TestCORSAndStatic(t *testing.T) {
 var _ = http.StatusOK
 
 type fakeNotifier struct {
-	peers []store.DeletedConversation
-	user  uuid.UUID
-	calls int
+	peers      []store.DeletedConversation
+	user       uuid.UUID
+	calls      int
+	guestCalls int
+	outcome    store.EndGuestOutcome
+	ended      []store.EndedConversation
+}
+
+func (f *fakeNotifier) NotifyGuestEnded(o store.EndGuestOutcome, c []store.EndedConversation, u uuid.UUID) {
+	f.outcome, f.ended, f.user = o, c, u
+	f.guestCalls++
 }
 
 func (f *fakeNotifier) NotifyConversationDeleted(p []store.DeletedConversation, u uuid.UUID) {
@@ -373,5 +381,46 @@ func TestSearchIncludesDisplayNameNoEmail(t *testing.T) {
 	w := e.do("GET", "/api/users/search?q=bobby", tok, "")
 	if w.Code != 200 || !strings.Contains(w.Body.String(), `"display_name":"User"`) || strings.Contains(w.Body.String(), "secret.com") {
 		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+}
+
+func TestDeleteMeGuestDeactivates(t *testing.T) {
+	e, n := setupN(t)
+	ctx := context.Background()
+	dev, _ := e.user(t, "d", devEmail, "devuser")
+	g, conv, err := e.svc.CreateGuest(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := e.svc.Send(ctx, g, conv, uuid.New(), "hi"); err != nil {
+		t.Fatal(err)
+	}
+	tok, err := e.st.CreateSession(ctx, g.ID, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := usedSlots(t, e)
+	w := e.do("DELETE", "/api/me", tok, "")
+	if w.Code != 204 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	cleared := false
+	for _, c := range w.Result().Cookies() {
+		if c.Name == auth.SessionCookie && c.MaxAge < 0 {
+			cleared = true
+		}
+	}
+	if !cleared {
+		t.Fatal("cookie not cleared")
+	}
+	if n.guestCalls != 1 || n.calls != 0 || n.outcome != store.GuestDeactivated || n.user != g.ID ||
+		len(n.ended) != 1 || n.ended[0].ConversationID != conv || n.ended[0].PeerID != dev.ID {
+		t.Fatalf("notifier %+v", n)
+	}
+	if usedSlots(t, e) != before-1 {
+		t.Fatal("slot not released")
+	}
+	if w := e.do("GET", "/api/me", tok, ""); w.Code != 401 {
+		t.Fatalf("after end %d", w.Code)
 	}
 }

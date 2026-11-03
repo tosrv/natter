@@ -102,7 +102,7 @@ func (s *Service) OpenConversation(ctx context.Context, u store.User, peerID uui
 	if err != nil {
 		return uuid.Nil, mapErr(err)
 	}
-	if p.Kind != kindGoogle || p.Username == nil || *p.Username == "" {
+	if p.Kind != kindGoogle || p.DeactivatedAt != nil || p.Username == nil || *p.Username == "" {
 		return uuid.Nil, ErrNotFound
 	}
 	if err := s.notBlocked(ctx, u.ID, peerID); err != nil {
@@ -138,6 +138,11 @@ func (s *Service) Send(ctx context.Context, u store.User, convID, clientMsgID uu
 	if err := s.notBlocked(ctx, u.ID, p); err != nil {
 		return store.Message{}, uuid.Nil, false, err
 	}
+	if ended, err := s.peerEnded(ctx, p); err != nil {
+		return store.Message{}, uuid.Nil, false, err
+	} else if ended {
+		return store.Message{}, uuid.Nil, false, ErrPeerEnded
+	}
 	m, dup, err := s.st.SendMessage(ctx, convID, u.ID, clientMsgID, body)
 	if err != nil {
 		return store.Message{}, uuid.Nil, false, mapErr(err)
@@ -154,7 +159,8 @@ func (s *Service) Messages(ctx context.Context, u store.User, convID uuid.UUID, 
 }
 
 // MarkRead stores u's read position; notifyPeer is false when u and the
-// peer are block-related (the read event must not be forwarded).
+// peer are block-related or the peer is deactivated (the read event must
+// not be forwarded).
 func (s *Service) MarkRead(ctx context.Context, u store.User, convID uuid.UUID, seq int64) (int64, uuid.UUID, bool, error) {
 	p, err := s.peer(ctx, u, convID)
 	if err != nil {
@@ -164,11 +170,11 @@ func (s *Service) MarkRead(ctx context.Context, u store.User, convID uuid.UUID, 
 	if err != nil {
 		return 0, uuid.Nil, false, mapErr(err)
 	}
-	rel, err := s.st.BlockRelated(ctx, u.ID, p)
+	ok, err := s.deliverable(ctx, u.ID, p)
 	if err != nil {
 		return 0, uuid.Nil, false, err
 	}
-	return v, p, !rel, nil
+	return v, p, ok, nil
 }
 
 func (s *Service) Conversations(ctx context.Context, u store.User) ([]store.ConversationSummary, error) {
@@ -180,17 +186,31 @@ func (s *Service) Conversations(ctx context.Context, u store.User) ([]store.Conv
 }
 
 // PeerOf returns the peer of convID; deliver is false when u and the peer
-// are block-related (e.g. typing must not be forwarded).
+// are block-related or the peer is deactivated (e.g. typing must not be
+// forwarded).
 func (s *Service) PeerOf(ctx context.Context, u store.User, convID uuid.UUID) (uuid.UUID, bool, error) {
 	p, err := s.peer(ctx, u, convID)
 	if err != nil {
 		return uuid.Nil, false, err
 	}
-	rel, err := s.st.BlockRelated(ctx, u.ID, p)
+	ok, err := s.deliverable(ctx, u.ID, p)
 	if err != nil {
 		return uuid.Nil, false, err
 	}
-	return p, !rel, nil
+	return p, ok, nil
+}
+
+// deliverable is false when uid and peer are block-related or peer is deactivated.
+func (s *Service) deliverable(ctx context.Context, uid, peer uuid.UUID) (bool, error) {
+	rel, err := s.st.BlockRelated(ctx, uid, peer)
+	if err != nil || rel {
+		return false, err
+	}
+	ended, err := s.peerEnded(ctx, peer)
+	if err != nil {
+		return false, err
+	}
+	return !ended, nil
 }
 
 func (s *Service) SetDisplayName(ctx context.Context, u store.User, raw string) (store.User, error) {
@@ -205,21 +225,11 @@ func (s *Service) SetDisplayName(ctx context.Context, u store.User, raw string) 
 	return nu, mapErr(err)
 }
 
-// DeleteAccount removes the user (guests included); the developer is protected.
+// DeleteAccount fully removes a Google account. The developer is protected;
+// guests are ended with EndGuest instead (forbidden here).
 func (s *Service) DeleteAccount(ctx context.Context, u store.User) ([]store.DeletedConversation, error) {
-	if u.IsDeveloper {
+	if u.IsDeveloper || u.Kind == kindGuest {
 		return nil, ErrForbidden
-	}
-	if u.Kind == "guest" { // TODO(Task 2): emit conversation_ended for deactivation
-		_, ended, err := s.st.EndGuest(ctx, u.ID)
-		if err != nil {
-			return nil, mapErr(err)
-		}
-		d := make([]store.DeletedConversation, 0, len(ended))
-		for _, e := range ended {
-			d = append(d, store.DeletedConversation{ConversationID: e.ConversationID, PeerID: e.PeerID})
-		}
-		return d, nil
 	}
 	d, err := s.st.DeleteAccount(ctx, u.ID)
 	return d, mapErr(err)

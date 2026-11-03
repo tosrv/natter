@@ -79,6 +79,19 @@ func (h *handlers) setDisplayName(c *gin.Context) {
 
 func (h *handlers) deleteMe(c *gin.Context) {
 	u := auth.CurrentUser(c)
+	if u.Kind == "guest" {
+		out, convs, err := h.chat.EndGuest(c.Request.Context(), u.ID)
+		if err != nil {
+			WriteError(c, err)
+			return
+		}
+		h.auth.ClearSession(c)
+		if h.notifier != nil {
+			h.notifier.NotifyGuestEnded(out, convs, u.ID)
+		}
+		c.Status(http.StatusNoContent)
+		return
+	}
 	peers, err := h.chat.DeleteAccount(c.Request.Context(), u)
 	if err != nil {
 		WriteError(c, err)

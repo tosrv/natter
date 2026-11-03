@@ -94,6 +94,21 @@ func (h *Hub) NotifyConversationDeleted(peers []store.DeletedConversation, delet
 	h.Disconnect(deletedUser)
 }
 
+// NotifyGuestEnded tells each online peer how the guest's conversations
+// ended: conversation_deleted for GuestDeleted, conversation_ended for
+// GuestDeactivated. The guest is then disconnected. Never blocks.
+func (h *Hub) NotifyGuestEnded(outcome store.EndGuestOutcome, convs []store.EndedConversation, guestID uuid.UUID) {
+	typ := "conversation_ended"
+	if outcome == store.GuestDeleted {
+		typ = "conversation_deleted"
+	}
+	for _, c := range convs {
+		id := c.ConversationID
+		h.deliver(c.PeerID, Frame{Type: typ, ConversationID: &id})
+	}
+	h.Disconnect(guestID)
+}
+
 // originPatterns converts full origins ("https://host:port") into the host
 // patterns websocket.AcceptOptions expects; bare hosts pass through.
 func originPatterns(origins []string) []string {
