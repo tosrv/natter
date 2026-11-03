@@ -212,5 +212,6 @@ Compose memakai subnet tetap `172.28.0.0/16` (gateway `172.28.0.1`). Bila bentro
 
 - Pesan **tidak** dienkripsi end-to-end; admin server dapat membacanya lewat database.
 - Email pengguna tidak pernah dikirim ke pengguna lain; isi pesan selalu dirender sebagai teks biasa.
-- Akun tamu dihapus 30 menit setelah aktivitas terakhir percakapannya; percakapan dihapus setelah 1 bulan tanpa aktivitas.
-- Info kontak yang diisi tamu bersifat sukarela dan ikut terhapus bersama akun tamu.
+- Sesi tamu berakhir 30 menit setelah aktivitas terakhir percakapannya, saat logout, atau saat "Akhiri sesi". Tamu yang punya pesan dinonaktifkan (disimpan, tidak bisa dipakai, username dikosongkan); tamu tanpa pesan dihapus. Developer tetap melihat percakapan berlabel "Sesi berakhir" dan tidak bisa membalas.
+- Percakapan dihapus setelah 1 bulan tanpa aktivitas; job harian (03:00) lalu membersihkan tamu nonaktif yang tidak punya percakapan lagi.
+- Info kontak yang diisi tamu bersifat sukarela dan disimpan bersama percakapan (hingga 1 bulan), lalu ikut terhapus.

@@ -52,12 +52,12 @@
     "trustSub": "pmess is a simple project. Here's exactly how your data is handled.",
     "tr1": "Not end-to-end encrypted. Server administrators can read messages.",
     "tr2": "Conversations are deleted after 1 month of inactivity.",
-    "tr3": "Guest accounts are deleted 30 minutes after their last message.",
+    "tr3": "Guest accounts are deactivated 30 minutes after their last message; their conversation is kept up to 1 month.",
     "faqTitle": "Frequently asked questions",
     "q1": "Is pmess free?",
     "a1": "Yes. Sign in with Google or continue as a guest at no cost.",
     "q2": "What can a guest do?",
-    "a2": "Guests get a temporary account to chat right away. It is deleted automatically, so sign in with Google if you want to keep your chats.",
+    "a2": "Guests get a temporary account to chat right away. It ends automatically and cannot be used again, so sign in with Google if you want to keep using your chats.",
     "q3": "Can I delete my account?",
     "a3": "Yes. Open Settings and delete your account at any time.",
     "q4": "Are my messages encrypted?",
@@ -138,9 +138,9 @@
   "privacy": {
     "title": "Privacy Policy",
     "e2e": "Messages are not end-to-end encrypted. Server administrators can read messages through the database.",
-    "guest": "Guest accounts are deleted 30 minutes after the last message in their conversation (or after creation if no message was sent).",
+    "guest": "When a guest session ends, the account is deactivated and can no longer be used. The conversation stays on the developer's side for up to 1 month after the last message, then is deleted automatically. A guest who sent no message is deleted immediately.",
     "retention": "Conversations are deleted after 1 month of inactivity.",
-    "contact": "Sharing contact information as a guest is voluntary. It is deleted together with the guest account.",
+    "contact": "Sharing contact information as a guest is voluntary. It is kept with the conversation for up to 1 month so the developer can reach you, then deleted with it.",
     "intro": "This policy explains what data pmess collects, how it is used, and how long it is kept. pmess is a small, independently run messaging project, so we aim to keep this short and plain.",
     "updated": "Last updated: November 3, 2026",
     "sections": [
@@ -169,8 +169,9 @@
         "h": "4. Data retention",
         "p": [
           "Conversations are deleted after 1 month of inactivity.",
-          "Guest accounts are deleted 30 minutes after the last message in their conversation, or 30 minutes after creation if no message was sent.",
-          "Sharing contact information as a guest is voluntary. It is deleted together with the guest account."
+          "A guest session ends 30 minutes after the last message, or when the guest logs out or ends the session. The account is then deactivated and can no longer be used. A guest who sent no message is deleted immediately.",
+          "The conversation of a deactivated guest, including any contact information the guest voluntarily shared, is kept on the developer's side for up to 1 month after the last message, then deleted automatically.",
+          "Sharing contact information as a guest is voluntary."
         ]
       },
       {
@@ -226,7 +227,7 @@
       {
         "h": "4. Data retention",
         "p": [
-          "Guest accounts are deleted 30 minutes after the last message in their conversation.",
+          "When a guest session ends (30 minutes after the last message, logout or End session), the account is deactivated. Its conversation, including any contact info the guest shared, is kept for the developer for up to 1 month after the last message, then deleted. Guests who sent no message are deleted immediately.",
           "Conversations are deleted after 1 month without activity.",
           "You can delete your own account at any time from Settings."
         ]
@@ -304,7 +305,7 @@
     "devNote": "The developer account cannot be deleted.",
     "endSession": "End session",
     "guestNote": "Guest sessions can only change language and theme.",
-    "guestHint": "Ending the session deletes this guest account and its chats.",
+    "guestHint": "Ending the session deactivates this guest account. Your conversation is kept for the developer for up to 1 month.",
     "blocked": "Blocked users",
     "blockedEmpty": "None"
   }

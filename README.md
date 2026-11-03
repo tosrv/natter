@@ -15,7 +15,7 @@ A real-time 1:1 chat app built as a learning project in **real-time systems and 
 
 - Real-time 1:1 messaging over WebSocket, with **sent ✓ / read ✓✓** receipts and a typing indicator
 - Find people by username; display names are separate from usernames
-- **Guest mode**: chat with the developer without an account (deleted 30 minutes after the conversation's last activity)
+- **Guest mode**: chat with the developer without an account (the account is deactivated when the session ends; the conversation is kept up to 1 month for the developer)
 - Block users, delete your own account, English/Indonesian UI, light/dark/system theme
 - Messages survive offline periods and reconnects; conversations expire after 1 month without activity
 - Abuse protection: Cloudflare Turnstile on guest sign-up, per-user and per-IP rate limits, a 300-account cap
@@ -129,6 +129,7 @@ Local development, all environment variables, E2E tests, deployment, backups and
 - Strict Content-Security-Policy and other security headers on every response
 - Turnstile on guest sign-up, verified server-side before any rate-limit or account slot is used
 - Blocking is invisible to the blocked person: they only ever see a generic "not found"
+- Guest sessions end after 30 minutes of inactivity (or logout): the account is deactivated, and the conversation, including any contact info the guest shared, is kept up to 1 month, then deleted. Guests who sent no message are deleted immediately.
 - Messages are **not** end-to-end encrypted — a server admin can read them in the database. This is stated in the app's [privacy policy](https://chat.rahmattomy.com/privacy).
 
 ## Design documents

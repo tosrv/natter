@@ -52,12 +52,12 @@
     "trustSub": "pmess adalah proyek sederhana. Begini persisnya datamu diperlakukan.",
     "tr1": "Tidak terenkripsi end-to-end. Admin server bisa membaca pesan.",
     "tr2": "Percakapan dihapus setelah 1 bulan tidak aktif.",
-    "tr3": "Akun tamu dihapus 30 menit setelah pesan terakhirnya.",
+    "tr3": "Akun tamu dinonaktifkan 30 menit setelah pesan terakhirnya; percakapannya disimpan hingga 1 bulan.",
     "faqTitle": "Pertanyaan yang sering diajukan",
     "q1": "Apakah pmess gratis?",
     "a1": "Ya. Masuk dengan Google atau lanjut sebagai tamu tanpa biaya.",
     "q2": "Apa yang bisa dilakukan tamu?",
-    "a2": "Tamu mendapat akun sementara untuk langsung ngobrol. Akun ini terhapus otomatis, jadi masuk dengan Google kalau ingin menyimpan chat.",
+    "a2": "Tamu mendapat akun sementara untuk langsung ngobrol. Akun ini berakhir otomatis dan tidak bisa dipakai lagi, jadi masuk dengan Google kalau ingin terus memakai chat Anda.",
     "q3": "Bisakah saya menghapus akun?",
     "a3": "Bisa. Buka Pengaturan lalu hapus akun kapan saja.",
     "q4": "Apakah pesan saya terenkripsi?",
@@ -138,9 +138,9 @@
   "privacy": {
     "title": "Kebijakan Privasi",
     "e2e": "Pesan tidak dienkripsi end-to-end. Admin server dapat membaca pesan melalui database.",
-    "guest": "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya (atau setelah dibuat bila belum ada pesan).",
+    "guest": "Saat sesi tamu berakhir, akunnya dinonaktifkan dan tidak bisa dipakai lagi. Percakapan disimpan di sisi developer hingga 1 bulan sejak pesan terakhir, lalu dihapus otomatis. Tamu yang tidak mengirim pesan dihapus seketika.",
     "retention": "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
-    "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut ikut terhapus bersama akun tamu.",
+    "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut disimpan bersama percakapan hingga 1 bulan agar developer bisa menghubungi Anda, lalu ikut terhapus.",
     "intro": "Kebijakan ini menjelaskan data apa yang dikumpulkan pmess, bagaimana data itu digunakan, dan berapa lama disimpan. pmess adalah proyek perpesanan kecil yang dikelola secara independen, jadi kami berusaha membuatnya singkat dan jelas.",
     "updated": "Terakhir diperbarui: 3 November 2026",
     "sections": [
@@ -169,8 +169,9 @@
         "h": "4. Penyimpanan data",
         "p": [
           "Percakapan dihapus setelah 1 bulan tidak aktif.",
-          "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya, atau 30 menit setelah dibuat jika belum ada pesan.",
-          "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut dihapus bersama akun tamu."
+          "Sesi tamu berakhir 30 menit setelah pesan terakhir, atau saat tamu keluar atau mengakhiri sesi. Akunnya lalu dinonaktifkan dan tidak bisa dipakai lagi. Tamu yang tidak mengirim pesan dihapus seketika.",
+          "Percakapan tamu yang dinonaktifkan, termasuk info kontak yang dibagikan secara sukarela, disimpan di sisi developer hingga 1 bulan sejak pesan terakhir, lalu dihapus otomatis.",
+          "Membagikan info kontak sebagai tamu bersifat sukarela."
         ]
       },
       {
@@ -226,7 +227,7 @@
       {
         "h": "4. Penyimpanan data",
         "p": [
-          "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya.",
+          "Saat sesi tamu berakhir (30 menit setelah pesan terakhir, logout, atau Akhiri sesi), akunnya dinonaktifkan. Percakapannya, termasuk info kontak yang dibagikan tamu, disimpan untuk developer hingga 1 bulan sejak pesan terakhir, lalu dihapus. Tamu yang tidak mengirim pesan dihapus seketika.",
           "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
           "Kamu bisa menghapus akunmu sendiri kapan saja lewat Pengaturan."
         ]
@@ -304,7 +305,7 @@
     "devNote": "Akun developer tidak bisa dihapus.",
     "endSession": "Akhiri sesi",
     "guestNote": "Sesi tamu hanya bisa mengubah bahasa dan tema.",
-    "guestHint": "Mengakhiri sesi menghapus akun tamu ini beserta percakapannya.",
+    "guestHint": "Mengakhiri sesi menonaktifkan akun tamu ini. Percakapan Anda disimpan untuk developer hingga 1 bulan.",
     "blocked": "Pengguna yang diblokir",
     "blockedEmpty": "Tidak ada"
   }
