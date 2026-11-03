@@ -91,7 +91,9 @@ test("guest with Turnstile test key", async ({ browser }) => {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   await page.goto("/");
-  await expect(page.locator("[data-testid=turnstile] iframe")).toBeAttached({ timeout: 30_000 });
+  // Turnstile renders its iframe inside a closed shadow root, so assert on the
+  // effect instead: the guest button only enables once the widget issued a token.
+  await expect(page.locator("[data-testid=turnstile]")).toBeAttached();
   const btn = page.getByRole("button", { name: "Continue as guest" });
   await expect(btn).toBeEnabled({ timeout: 30_000 });
   await btn.click();
@@ -119,19 +121,25 @@ test("security headers and no CSP violations", async ({ browser }) => {
   expect(h["x-content-type-options"]).toBe("nosniff");
   expect(h["x-frame-options"]).toBe("DENY");
   expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin");
-  await page.waitForLoadState("networkidle");
+  // Turnstile keeps talking to Cloudflare, so "networkidle" never settles on the
+  // landing page. Wait for concrete state instead: with Turnstile on, the guest
+  // button enables only after Cloudflare's script and iframe loaded.
+  await page.waitForLoadState("load");
+  if (process.env.E2E_TURNSTILE === "1") {
+    await expect(page.getByRole("button", { name: "Continue as guest" }).first()).toBeEnabled({ timeout: 30_000 });
+  }
   expect(await violations()).toEqual([]);
 
   const login = await ctx.request.post("/api/test/login", { data: { sub: `pub-csp-${run}`, email: `pub-csp-${run}@e2e.test`, username: `csp_${run}` } });
   expect(login.ok()).toBeTruthy();
   await page.goto("/chat");
   await expect(page.getByRole("heading", { name: /Chat/ })).toContainText(`csp_${run}`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   expect(await violations()).toEqual([]);
 
   await page.goto("/settings");
   await expect(page.getByText("Blocked users")).toBeVisible();
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
   expect(await violations()).toEqual([]);
 
   expect(consoleCsp).toEqual([]);
