@@ -41,9 +41,30 @@ Salin `.env.example` ke `.env` lalu isi. `.env` tidak boleh di-commit.
 | `LISTEN_ADDR` | tidak | `:8080` | Alamat listen HTTP |
 | `TRUSTED_PROXY` | tidak | `127.0.0.1` (`172.28.0.1` di compose) | IP peer yang dipercaya untuk header `X-Real-IP` (alamat Nginx). Compose memberi jaringan default subnet tetap `172.28.0.0/16` dengan gateway `172.28.0.1`, sehingga Nginx di host terlihat sebagai `172.28.0.1` — default compose sudah benar. Server mencatat WARN sekali bila `X-Real-IP` datang dari peer tak dipercaya |
 | `STATIC_DIR` | tidak | `web/dist` | Folder build frontend (`/app/web` di image Docker) |
+| `TURNSTILE_SITE_KEY` | tidak | kosong | Site key Cloudflare Turnstile (captcha tamu). Kosongkan **keduanya** untuk menonaktifkan; mengisi hanya salah satu membuat server menolak start |
+| `TURNSTILE_SECRET_KEY` | tidak | kosong | Secret key Turnstile — rahasia, jangan di-commit |
 | `E2E_FAKE_LOGIN` | tidak | `0` | **Hanya untuk test E2E.** `1` mengaktifkan `POST /api/test/login` |
 
 > ⚠️ **Jangan pernah set `E2E_FAKE_LOGIN=1` di produksi.** Route itu memungkinkan siapa pun login sebagai siapa pun. Server mencetak peringatan keras di log saat aktif, dan **menolak start** bila `E2E_FAKE_LOGIN=1` bersamaan dengan `COOKIE_SECURE=true`.
+
+## Cloudflare Turnstile (captcha tamu)
+
+Tombol "Lanjut sebagai tamu" dilindungi Turnstile; verifikasi server dilakukan sebelum rate limit dan slot. Bila Cloudflare tidak terjangkau, login tamu gagal tertutup (503 `captcha_unavailable`).
+
+1. Dashboard Cloudflare → **Turnstile** → **Add widget**.
+2. Isi nama (mis. `pmess`), hostname `chat.rahmattomy.com`, mode **Managed**.
+3. Salin **site key** dan **secret key** ke `.env` di VPS (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`).
+4. `docker compose up -d` agar container app memuat env baru.
+
+Untuk dev/E2E lokal kosongkan keduanya (captcha mati). Test key Cloudflare yang selalu lolos: site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`. Test Playwright untuk widget hanya jalan dengan `E2E_TURNSTILE=1` dan butuh akses ke `challenges.cloudflare.com` (CI mengaturnya).
+
+## Header keamanan
+
+Server menambahkan sendiri pada semua respons: `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `X-Frame-Options: DENY`, dan `Strict-Transport-Security: max-age=31536000` hanya bila `COOKIE_SECURE=true`. **Jangan menambahkan header yang sama di Nginx** (`add_header`) agar tidak terduplikasi; kebijakan ada di `internal/api/security.go`.
+
+## Blokir pengguna
+
+Pengguna terdaftar dapat memblokir lawan bicara dari menu percakapan (atau membuka blokir dari Pengaturan). Perilakunya: pesan dan pembukaan percakapan antar pihak yang terkait blokir (siapa pun pemblokirnya) mengembalikan 404 `not_found`; pihak tersebut tidak muncul di pencarian; indikator mengetik/dibaca tidak diteruskan. Hanya pemblokir yang melihat label "Diblokir" — pihak yang diblokir tidak pernah diberi tahu, hanya menerima galat umum. Tamu tidak dapat memblokir (403); developer boleh memblokir tamu. Blok/buka blokir bersifat idempoten.
 
 ## Menjalankan lokal (mode dev)
 
