@@ -15,7 +15,7 @@ A real-time 1:1 chat app built as a learning project in **real-time systems and 
 
 - Real-time 1:1 messaging over WebSocket, with **sent ✓ / read ✓✓** receipts and a typing indicator
 - Find people by username; display names are separate from usernames
-- **Guest mode**: chat with the developer without an account (deleted 30 minutes after the last message)
+- **Guest mode**: chat with the developer without an account (deleted 30 minutes after the conversation's last activity)
 - Block users, delete your own account, English/Indonesian UI, light/dark/system theme
 - Messages survive offline periods and reconnects; conversations expire after 1 month without activity
 - Abuse protection: Cloudflare Turnstile on guest sign-up, per-user and per-IP rate limits, a 300-account cap
@@ -62,7 +62,7 @@ UPDATE conversations SET last_seq = last_seq + 1, last_activity_at = now()
 WHERE id = $1 RETURNING last_seq
 ```
 
-`TestConcurrentSend` has 50 users send at once and checks every conversation's sequence is exactly `1..N` with no gaps or duplicates. A global `BIGSERIAL` would have been simpler but can leave gaps and does not guarantee commit order matches id order under load.
+`TestConcurrentSend` has 50 users send at once — into 25 pair conversations and one shared conversation (1,000 messages from 50 senders) — and checks every conversation's sequence is exactly `1..N` with no gaps or duplicates. A global `BIGSERIAL` would have been simpler but can leave gaps and does not guarantee commit order matches id order under load.
 
 ### 2. No duplicates when a client resends
 
@@ -96,7 +96,7 @@ Each WebSocket connection has a reader goroutine, a writer goroutine and a bound
 |---:|---:|---:|---:|---:|---:|---:|
 | 1000 | 1000 | 0 | 0 | 25–28 ms | 40–46 ms | 56–74 ms |
 
-The tool exits non-zero if any message is missing or duplicated or p95 reaches 1 s. How to run it: [docs/operations.md](docs/operations.md#verification).
+The tool exits non-zero if any send fails, any message is missing or duplicated, or p95 reaches 1 s. How to run it: [docs/operations.md](docs/operations.md#verification).
 
 ## Tech stack
 
@@ -108,7 +108,9 @@ The tool exits non-zero if any message is missing or duplicated or p95 reaches 1
 ## Run it
 
 ```bash
-cp .env.example .env    # set POSTGRES_PASSWORD, DEVELOPER_EMAIL, Google OAuth keys
+cp .env.example .env    # set POSTGRES_PASSWORD, DEVELOPER_EMAIL and Google OAuth keys; for localhost also set
+                        # COOKIE_SECURE=false, OAUTH_REDIRECT_URL=http://localhost:8080/api/auth/google/callback,
+                        # ALLOWED_ORIGINS=http://localhost:8080
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 # then open http://localhost:8080
 ```

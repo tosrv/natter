@@ -15,7 +15,7 @@ Aplikasi chat 1:1 real-time yang dibuat sebagai proyek belajar **sistem real-tim
 
 - Chat 1:1 real-time lewat WebSocket, dengan status **terkirim ✓ / dibaca ✓✓** dan indikator mengetik
 - Cari orang lewat username; display name terpisah dari username
-- **Mode tamu**: chat dengan developer tanpa akun (dihapus 30 menit setelah pesan terakhir)
+- **Mode tamu**: chat dengan developer tanpa akun (dihapus 30 menit setelah aktivitas terakhir percakapannya)
 - Blokir pengguna, hapus akun sendiri, UI Inggris/Indonesia, tema terang/gelap/ikut sistem
 - Pesan tetap aman saat offline dan setelah reconnect; percakapan kedaluwarsa setelah 1 bulan tanpa aktivitas
 - Perlindungan penyalahgunaan: Cloudflare Turnstile saat membuat tamu, rate limit per pengguna dan per IP, batas 300 akun
@@ -62,7 +62,7 @@ UPDATE conversations SET last_seq = last_seq + 1, last_activity_at = now()
 WHERE id = $1 RETURNING last_seq
 ```
 
-`TestConcurrentSend` membuat 50 pengguna mengirim bersamaan dan memastikan nomor urut tiap percakapan tepat `1..N`, tanpa celah dan tanpa duplikat. `BIGSERIAL` global lebih sederhana, tetapi bisa meninggalkan celah dan tidak menjamin urutan commit sama dengan urutan id saat beban tinggi.
+`TestConcurrentSend` membuat 50 pengguna mengirim bersamaan — ke 25 percakapan berpasangan dan satu percakapan bersama (1.000 pesan dari 50 pengirim) — dan memastikan nomor urut tiap percakapan tepat `1..N`, tanpa celah dan tanpa duplikat. `BIGSERIAL` global lebih sederhana, tetapi bisa meninggalkan celah dan tidak menjamin urutan commit sama dengan urutan id saat beban tinggi.
 
 ### 2. Tanpa duplikat saat klien mengirim ulang
 
@@ -96,7 +96,7 @@ Setiap koneksi WebSocket punya goroutine pembaca, goroutine penulis, dan buffer 
 |---:|---:|---:|---:|---:|---:|---:|
 | 1000 | 1000 | 0 | 0 | 25–28 ms | 40–46 ms | 56–74 ms |
 
-Alat ini keluar dengan status gagal bila ada pesan yang hilang atau dobel, atau p95 mencapai 1 detik. Cara menjalankannya: [docs/operations.id.md](docs/operations.id.md#verifikasi-spec-10).
+Alat ini keluar dengan status gagal bila ada kiriman yang gagal, ada pesan yang hilang atau dobel, atau p95 mencapai 1 detik. Cara menjalankannya: [docs/operations.id.md](docs/operations.id.md#verifikasi-spec-10).
 
 ## Tech stack
 
@@ -108,7 +108,9 @@ Alat ini keluar dengan status gagal bila ada pesan yang hilang atau dobel, atau 
 ## Menjalankan
 
 ```bash
-cp .env.example .env    # isi POSTGRES_PASSWORD, DEVELOPER_EMAIL, key Google OAuth
+cp .env.example .env    # isi POSTGRES_PASSWORD, DEVELOPER_EMAIL, dan key Google OAuth; untuk localhost set juga
+                        # COOKIE_SECURE=false, OAUTH_REDIRECT_URL=http://localhost:8080/api/auth/google/callback,
+                        # ALLOWED_ORIGINS=http://localhost:8080
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 # lalu buka http://localhost:8080
 ```
