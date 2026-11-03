@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  ApiError, getMe, listConversations, listMessages, logout as apiLogout, openConversation,
+  ApiError, blockUser, getMe, unblockUser, listConversations, listMessages, logout as apiLogout, openConversation,
   type ConversationSummary, type Me, type Message,
 } from "@/lib/api";
 import { Outbox, mergeMessages, type ClientMsg } from "@/lib/outbox";
@@ -29,6 +29,14 @@ export function removeConversation(s: ChatState, convId: string): ChatState {
     convs: s.convs.filter((c) => c.id !== convId),
     msgs,
     activeId: s.activeId === convId ? null : s.activeId,
+  };
+}
+
+/** Pure: set blocked_by_me on the conversation whose id or peer_id matches. */
+export function setBlocked(s: ChatState, convIdOrPeerId: string, blocked: boolean): ChatState {
+  return {
+    ...s,
+    convs: s.convs.map((c) => (c.id === convIdOrPeerId || c.peer_id === convIdOrPeerId) ? { ...c, blocked_by_me: blocked } : c),
   };
 }
 
@@ -222,6 +230,14 @@ export function useChat() {
     sock.current?.send({ type: "typing", conversation_id: convId });
   }, []);
 
+  const setPeerBlocked = useCallback(async (peerId: string, blocked: boolean) => {
+    try {
+      if (blocked) await blockUser(peerId); else await unblockUser(peerId);
+      setConvs((cs) => setBlocked({ convs: cs, msgs: {}, activeId: null }, peerId, blocked).convs);
+      toast.success(t(blocked ? "chat.blockedToast" : "chat.unblockedToast"));
+    } catch (e) { handleErr(e); }
+  }, [handleErr, t]);
+
   const openPeer = useCallback(async (peerId: string) => {
     try {
       const { id } = await openConversation(peerId);
@@ -244,7 +260,7 @@ export function useChat() {
 
   return {
     me, convs, activeId, setActiveId, messages, pending: pendingFor, pendingIds, typing, online,
-    bootError, retryBoot, send, sendTyping, openPeer, markRead, logout, toLanding,
+    bootError, retryBoot, send, sendTyping, openPeer, setPeerBlocked, markRead, logout, toLanding,
     contactOpen, setContactOpen,
   };
 }

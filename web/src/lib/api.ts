@@ -26,7 +26,9 @@ export interface Message {
 export interface ConversationSummary {
   id: string; peer_id: string; peer_username: string; peer_display_name: string; peer_kind: string;
   last_message: Message | null; unread: number; peer_last_read_seq: number; last_activity_at: string;
+  blocked_by_me: boolean;
 }
+export interface BlockedUser { id: string; username: string; display_name: string; blocked_at: string }
 export interface Guest { id: string; username: string; conversation_id: string }
 
 export async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -66,3 +68,6 @@ export const createGuest = () => request<Guest>("POST", "/auth/guest");
 export const logout = () => request<void>("POST", "/auth/logout");
 export const setDisplayName = (display_name: string) => request<Me>("PUT", "/me/display-name", { display_name });
 export const deleteAccount = () => request<void>("DELETE", "/me");
+export const blockUser = (user_id: string) => request<void>("POST", "/blocks", { user_id });
+export const unblockUser = (user_id: string) => request<void>("DELETE", `/blocks/${encodeURIComponent(user_id)}`);
+export const listBlocks = () => request<BlockedUser[]>("GET", "/blocks");

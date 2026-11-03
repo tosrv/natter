@@ -107,7 +107,16 @@
     "sendFailed": "Pesan gagal dikirim (terlalu sering). Coba lagi nanti.",
     "conversationDeleted": "Percakapan ini telah dihapus.",
     "settings": "Pengaturan",
-    "selectHint": "Pilih percakapan atau cari seseorang."
+    "selectHint": "Pilih percakapan atau cari seseorang.",
+    "blocked": "Diblokir",
+    "block": "Blokir",
+    "unblock": "Buka blokir",
+    "menu": "Menu percakapan",
+    "blockTitle": "Blokir {{name}}?",
+    "blockBody": "Anda tidak akan menerima pesan dari pengguna ini dan mereka tidak bisa mengirim pesan kepada Anda. Anda bisa membuka blokir kapan saja.",
+    "youBlocked": "Anda memblokir pengguna ini",
+    "blockedToast": "Pengguna diblokir",
+    "unblockedToast": "Blokir dibuka"
   },
   "info": {
     "title": "Kebijakan Privasi",
@@ -225,6 +234,8 @@
     "devNote": "Akun developer tidak bisa dihapus.",
     "endSession": "Akhiri sesi",
     "guestNote": "Sesi tamu hanya bisa mengubah bahasa dan tema.",
-    "guestHint": "Mengakhiri sesi menghapus akun tamu ini beserta percakapannya."
+    "guestHint": "Mengakhiri sesi menghapus akun tamu ini beserta percakapannya.",
+    "blocked": "Pengguna yang diblokir",
+    "blockedEmpty": "Tidak ada"
   }
 }
