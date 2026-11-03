@@ -159,7 +159,7 @@ func (a *Auth) Logout(c *gin.Context) {
 		return
 	}
 	if u := CurrentUser(c); u.Kind == "guest" {
-		if err := a.st.DeleteGuest(ctx, u.ID); err != nil {
+		if _, _, err := a.st.EndGuest(ctx, u.ID); err != nil && !errors.Is(err, store.ErrNotFound) { // TODO(Task 2): use outcome
 			WriteError(c, err)
 			return
 		}

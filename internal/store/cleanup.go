@@ -13,7 +13,7 @@ func (s *Store) ExpiredGuests(ctx context.Context, olderThan time.Time) ([]uuid.
 	rows, err := s.pool.Query(ctx, `
 		SELECT u.id FROM users u
 		LEFT JOIN conversations c ON c.user_a = u.id OR c.user_b = u.id
-		WHERE u.kind = 'guest'
+		WHERE u.kind = 'guest' AND u.deactivated_at IS NULL
 		GROUP BY u.id, u.created_at
 		HAVING COALESCE(max(c.last_activity_at), u.created_at) < $1`, olderThan)
 	if err != nil {

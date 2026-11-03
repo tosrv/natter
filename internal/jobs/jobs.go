@@ -27,7 +27,7 @@ func CleanupGuests(ctx context.Context, st *store.Store, hub Disconnector, now f
 	n := 0
 	var firstErr error
 	for _, id := range ids {
-		if err := st.DeleteGuest(ctx, id); err != nil {
+		if _, _, err := st.EndGuest(ctx, id); err != nil { // TODO(Task 2): use outcome
 			if firstErr == nil {
 				firstErr = err
 			}

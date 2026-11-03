@@ -23,14 +23,15 @@ type User struct {
 	UsernameChanges int
 	IsDeveloper     bool
 	CreatedAt       time.Time
+	DeactivatedAt   *time.Time
 }
 
-const userCols = `id, kind, google_sub, email, username, display_name, username_changes, is_developer, created_at`
+const userCols = `id, kind, google_sub, email, username, display_name, username_changes, is_developer, created_at, deactivated_at`
 
 func scanUser(row pgx.Row) (User, error) {
 	var u User
 	err := row.Scan(&u.ID, &u.Kind, &u.GoogleSub, &u.Email, &u.Username, &u.DisplayName,
-		&u.UsernameChanges, &u.IsDeveloper, &u.CreatedAt)
+		&u.UsernameChanges, &u.IsDeveloper, &u.CreatedAt, &u.DeactivatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
@@ -165,22 +166,6 @@ func (s *Store) CreateGuest(ctx context.Context, developerID uuid.UUID) (User, u
 		return u, conv, err
 	}
 	return User{}, uuid.Nil, errors.New("create guest: could not allocate username")
-}
-
-// DeleteGuest removes a guest (cascading conversations) and frees its slot.
-// Non-guest or unknown ids are a no-op.
-func (s *Store) DeleteGuest(ctx context.Context, id uuid.UUID) error {
-	return s.WithTx(ctx, func(tx pgx.Tx) error {
-		tag, err := tx.Exec(ctx, `DELETE FROM users WHERE id=$1 AND kind='guest'`, id)
-		if err != nil {
-			return err
-		}
-		if tag.RowsAffected() == 0 {
-			return nil
-		}
-		_, err = tx.Exec(ctx, `UPDATE user_slots SET used = used - 1 WHERE id = 1`)
-		return err
-	})
 }
 
 func (s *Store) GetUser(ctx context.Context, id uuid.UUID) (User, error) {

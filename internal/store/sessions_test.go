@@ -78,7 +78,7 @@ func TestSessionGoneAfterGuestDeleted(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.DeleteGuest(ctx, g.ID); err != nil {
+	if _, _, err := s.EndGuest(ctx, g.ID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.UserBySession(ctx, tok); !errors.Is(err, store.ErrNotFound) {

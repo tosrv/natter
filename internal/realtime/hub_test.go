@@ -353,7 +353,7 @@ func TestDisconnectDeletedGuest(t *testing.T) {
 	for !e.hub.online(g.ID) && time.Now().Before(deadline) {
 		time.Sleep(5 * time.Millisecond)
 	}
-	if err := e.st.DeleteGuest(ctx, g.ID); err != nil {
+	if _, _, err := e.st.EndGuest(ctx, g.ID); err != nil {
 		t.Fatal(err)
 	}
 	e.hub.Disconnect(g.ID)

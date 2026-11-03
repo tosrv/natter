@@ -86,7 +86,7 @@ func TestExistingUserLoginWhenFull(t *testing.T) {
 	}
 }
 
-func TestDeleteGuestFreesSlot(t *testing.T) {
+func TestEndGuestFreesSlot(t *testing.T) {
 	s := storetest.New(t)
 	ctx := context.Background()
 	dev, _, err := s.UpsertGoogleUser(ctx, "dev", "dev@x.com", "", true)
@@ -117,19 +117,20 @@ func TestDeleteGuestFreesSlot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Deleting a Google user is a no-op.
-	if err := s.DeleteGuest(ctx, dev.ID); err != nil {
-		t.Fatal(err)
+	// Ending a Google user is refused.
+	if _, _, err := s.EndGuest(ctx, dev.ID); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("want ErrNotFound, got %v", err)
 	}
 	if _, err := s.GetUser(ctx, dev.ID); err != nil {
 		t.Fatalf("google user removed: %v", err)
 	}
 	if n := usedSlots(t, s); n != 2 {
-		t.Fatalf("used=%d after google delete, want 2", n)
+		t.Fatalf("used=%d after google end, want 2", n)
 	}
 
-	if err := s.DeleteGuest(ctx, g.ID); err != nil {
-		t.Fatal(err)
+	// The guest has a message, so it is deactivated (history kept).
+	if out, _, err := s.EndGuest(ctx, g.ID); err != nil || out != store.GuestDeactivated {
+		t.Fatalf("out=%v err=%v", out, err)
 	}
 	if n := usedSlots(t, s); n != 1 {
 		t.Fatalf("used=%d, want 1", n)
@@ -137,11 +138,8 @@ func TestDeleteGuestFreesSlot(t *testing.T) {
 	var convs, msgs int
 	s.Pool().QueryRow(ctx, `SELECT count(*) FROM conversations WHERE id=$1`, convID).Scan(&convs)
 	s.Pool().QueryRow(ctx, `SELECT count(*) FROM messages WHERE conversation_id=$1`, convID).Scan(&msgs)
-	if convs != 0 || msgs != 0 {
+	if convs != 1 || msgs != 1 {
 		t.Fatalf("convs=%d msgs=%d", convs, msgs)
-	}
-	if _, err := s.GetUser(ctx, g.ID); !errors.Is(err, store.ErrNotFound) {
-		t.Fatalf("want ErrNotFound, got %v", err)
 	}
 }
 

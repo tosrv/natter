@@ -142,7 +142,7 @@ func TestSendToDeletedGuest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := st.DeleteGuest(ctx, g.ID); err != nil {
+	if _, _, err := st.EndGuest(ctx, g.ID); err != nil {
 		t.Fatal(err)
 	}
 	_, _, _, err = svc.Send(ctx, dev, conv, uuid.New(), "hello?")
