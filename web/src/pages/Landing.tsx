@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import LanguageToggle from "@/components/LanguageToggle";
 import ThemeToggle from "@/components/ThemeToggle";
-import { ApiError, createGuest, getMe } from "@/lib/api";
+import TurnstileWidget from "@/components/TurnstileWidget";
+import LegalNote from "@/components/LegalNote";
+import { toast } from "sonner";
+import { ApiError, createGuest, getConfig, getMe } from "@/lib/api";
 import { errorMessage } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { AtSign, CheckCheck, Languages, LogIn, MessageCircle, MoreHorizontal, Send, ShieldAlert, SunMoon, UserRound, Zap } from "lucide-react";
@@ -15,6 +18,11 @@ export default function Landing() {
   const [params] = useSearchParams();
   const [err, setErr] = useState<string | null>(params.get("error"));
   const [busy, setBusy] = useState(false);
+  // undefined = loading, "" = Turnstile disabled, "error" = config unavailable (fail closed)
+  const [siteKey, setSiteKey] = useState<string | undefined>();
+  const [configFailed, setConfigFailed] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const resetWidget = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (params.has("error")) window.history.replaceState(null, "", window.location.pathname);
@@ -31,14 +39,30 @@ export default function Landing() {
     return () => { alive = false; };
   }, [nav]);
 
+  useEffect(() => {
+    let alive = true;
+    getConfig().then((c) => { if (alive) setSiteKey(c.turnstile_site_key ?? ""); })
+      .catch(() => { if (alive) setConfigFailed(true); });
+    return () => { alive = false; };
+  }, []);
+
+  const needsToken = !!siteKey;
+  const guestDisabled = busy || configFailed || siteKey === undefined || (needsToken && !token);
+
   async function guest() {
+    if (guestDisabled) return;
     setBusy(true);
     setErr(null);
     try {
-      await createGuest();
+      await createGuest(needsToken ? token ?? undefined : undefined);
       nav("/chat", { state: { newGuest: true } });
     } catch (e) {
-      setErr(e instanceof ApiError ? e.code : "internal");
+      const code = e instanceof ApiError ? e.code : "internal";
+      setErr(code);
+      if (code === "captcha_failed") toast.error(errorMessage(code));
+      // A Turnstile token is single-use: always get a fresh one after a failure.
+      resetWidget.current?.();
+      setToken(null);
       setBusy(false);
     }
   }
@@ -90,9 +114,16 @@ export default function Landing() {
                 <a href="/api/auth/google/login"><span className="flex size-6 items-center justify-center rounded-full bg-white"><GoogleIcon /></span> {t("landing.google")}</a>
               </Button>
               <div className="flex flex-col gap-1">
-                <Button variant="outline" size="lg" className="rounded-full" onClick={guest} disabled={busy}>{t("landing.guest")}</Button>
+                <Button variant="outline" size="lg" className="rounded-full" onClick={guest} disabled={guestDisabled}>{t("landing.guest")}</Button>
                 <span className="text-center text-xs text-muted-foreground">{t("landing.guestNote")}</span>
               </div>
+              {configFailed && <p role="alert" className="text-center text-xs text-destructive">{t("landing.configFailed")}</p>}
+              {needsToken && (
+                <div className="flex justify-center">
+                  <TurnstileWidget siteKey={siteKey!} onToken={setToken} onReady={(r) => { resetWidget.current = r; }} />
+                </div>
+              )}
+              <LegalNote className="text-center text-xs text-muted-foreground" />
             </div>
             <ul className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:gap-4">
               {features.map(({ icon: Icon, text }) => (
@@ -159,7 +190,7 @@ export default function Landing() {
             </li>
           ))}
         </ul>
-        <Link to="/info" className="mt-3 inline-block text-sm text-primary underline">{t("landing.info")}</Link>
+        <Link to="/privacy" className="mt-3 inline-block text-sm text-primary underline">{t("landing.info")}</Link>
       </Section>
 
       <Section id="faq" title={t("landing.faqTitle")}>
@@ -183,7 +214,7 @@ export default function Landing() {
             <Button asChild size="lg" variant="secondary" className="gap-3 rounded-full">
               <a href="/api/auth/google/login"><GoogleIcon /> {t("landing.google")}</a>
             </Button>
-            <Button size="lg" variant="ghost" className="rounded-full border border-primary-foreground/40 hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={guest} disabled={busy}>
+            <Button size="lg" variant="ghost" className="rounded-full border border-primary-foreground/40 hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={guest} disabled={guestDisabled}>
               {t("landing.ctaGuest")}
             </Button>
           </div>
@@ -192,7 +223,10 @@ export default function Landing() {
 
       <footer className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 border-t px-4 py-4 text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} {t("app.name")}. {t("landing.rights")}</span>
-        <Link to="/info" className="underline">{t("landing.info")}</Link>
+        <span className="flex items-center gap-3">
+          <Link to="/terms" className="underline">{t("landing.terms")}</Link>
+          <Link to="/privacy" className="underline">{t("landing.info")}</Link>
+        </span>
       </footer>
     </div>
   );

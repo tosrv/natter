@@ -68,7 +68,13 @@
     "navHow": "How it works",
     "navFeat": "Features",
     "navData": "Privacy",
-    "navFaq": "FAQ"
+    "navFaq": "FAQ",
+    "consent": "By continuing, you agree to our <terms>{{terms}}</terms> and <privacy>{{privacy}}</privacy>.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "captchaLoadFailed": "Could not load the verification check. Check your connection and reload the page.",
+    "captchaVerify": "Complete the verification to continue as a guest.",
+    "configFailed": "Could not load guest sign-in settings. Reload the page to try again."
   },
   "onboarding": {
     "title": "Choose a username",
@@ -119,13 +125,21 @@
     "unblockedToast": "User unblocked"
   },
   "info": {
+    "title": "About pmess",
+    "intro": "pmess is a small, independently run messaging project. Here is how it works and the rules that apply.",
+    "terms": "Terms of Service",
+    "termsDesc": "The rules for using pmess and what you can expect from the service.",
+    "privacy": "Privacy Policy",
+    "privacyDesc": "What data we collect, how it is used and how long it is kept."
+  },
+  "privacy": {
     "title": "Privacy Policy",
     "e2e": "Messages are not end-to-end encrypted. Server administrators can read messages through the database.",
     "guest": "Guest accounts are deleted 30 minutes after the last message in their conversation (or after creation if no message was sent).",
     "retention": "Conversations are deleted after 1 month of inactivity.",
     "contact": "Sharing contact information as a guest is voluntary. It is deleted together with the guest account.",
     "intro": "This policy explains what data pmess collects, how it is used, and how long it is kept. pmess is a small, independently run messaging project, so we aim to keep this short and plain.",
-    "updated": "Last updated: November 2, 2026",
+    "updated": "Last updated: November 3, 2026",
     "sections": [
       {
         "h": "1. Information we collect",
@@ -169,9 +183,61 @@
         ]
       },
       {
-        "h": "7. Changes to this policy",
+        "h": "7. Cloudflare Turnstile",
+        "p": [
+          "When you continue as a guest, we use Cloudflare Turnstile to check that you are not a bot. Turnstile processes data from your browser, such as your IP address and browser characteristics, to make this decision. This data is handled by Cloudflare under its own privacy policy and is not stored by pmess."
+        ]
+      },
+      {
+        "h": "8. Changes to this policy",
         "p": [
           "If we change this policy, we will update the date at the top of this page."
+        ]
+      }
+    ]
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "updated": "Last updated: November 3, 2026",
+    "intro": "By using pmess you agree to these terms. They are short on purpose.",
+    "sections": [
+      {
+        "h": "1. The service",
+        "p": [
+          "pmess is a personal project provided as is, without any guarantee of availability, reliability or that data will be kept. It may change or stop at any time."
+        ]
+      },
+      {
+        "h": "2. Acceptable use",
+        "p": [
+          "Do not use pmess for spam, harassment, or any illegal content.",
+          "The developer may delete accounts that break these rules, without notice."
+        ]
+      },
+      {
+        "h": "3. Messages are not private from the server",
+        "p": [
+          "Messages are not end-to-end encrypted. Server administrators can read them through the database. Do not share passwords or other sensitive information."
+        ]
+      },
+      {
+        "h": "4. Data retention",
+        "p": [
+          "Guest accounts are deleted 30 minutes after the last message in their conversation.",
+          "Conversations are deleted after 1 month without activity.",
+          "You can delete your own account at any time from Settings."
+        ]
+      },
+      {
+        "h": "5. Capacity",
+        "p": [
+          "pmess is limited to 300 accounts. When the limit is reached, new sign-ups are paused until space is available."
+        ]
+      },
+      {
+        "h": "6. Changes to these terms",
+        "p": [
+          "These terms may change. When they do, we will update the date at the top of this page. Continuing to use pmess means you accept the updated terms."
         ]
       }
     ]

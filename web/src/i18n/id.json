@@ -68,7 +68,13 @@
     "navHow": "Cara kerja",
     "navFeat": "Fitur",
     "navData": "Privasi",
-    "navFaq": "FAQ"
+    "navFaq": "FAQ",
+    "consent": "Dengan melanjutkan, kamu menyetujui <terms>{{terms}}</terms> dan <privacy>{{privacy}}</privacy>.",
+    "terms": "Syarat Layanan",
+    "privacy": "Kebijakan Privasi",
+    "captchaLoadFailed": "Verifikasi tidak dapat dimuat. Periksa koneksimu lalu muat ulang halaman.",
+    "captchaVerify": "Selesaikan verifikasi untuk lanjut sebagai tamu.",
+    "configFailed": "Pengaturan masuk sebagai tamu tidak dapat dimuat. Muat ulang halaman untuk mencoba lagi."
   },
   "onboarding": {
     "title": "Pilih username",
@@ -119,13 +125,21 @@
     "unblockedToast": "Blokir dibuka"
   },
   "info": {
+    "title": "Tentang pmess",
+    "intro": "pmess adalah proyek perpesanan kecil yang dikelola secara independen. Berikut cara kerjanya dan aturan yang berlaku.",
+    "terms": "Syarat Layanan",
+    "termsDesc": "Aturan penggunaan pmess dan apa yang bisa kamu harapkan dari layanan ini.",
+    "privacy": "Kebijakan Privasi",
+    "privacyDesc": "Data apa yang kami kumpulkan, cara penggunaannya, dan berapa lama disimpan."
+  },
+  "privacy": {
     "title": "Kebijakan Privasi",
     "e2e": "Pesan tidak dienkripsi end-to-end. Admin server dapat membaca pesan melalui database.",
     "guest": "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya (atau setelah dibuat bila belum ada pesan).",
     "retention": "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
     "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut ikut terhapus bersama akun tamu.",
     "intro": "Kebijakan ini menjelaskan data apa yang dikumpulkan pmess, bagaimana data itu digunakan, dan berapa lama disimpan. pmess adalah proyek perpesanan kecil yang dikelola secara independen, jadi kami berusaha membuatnya singkat dan jelas.",
-    "updated": "Terakhir diperbarui: 2 November 2026",
+    "updated": "Terakhir diperbarui: 3 November 2026",
     "sections": [
       {
         "h": "1. Informasi yang kami kumpulkan",
@@ -169,9 +183,61 @@
         ]
       },
       {
-        "h": "7. Perubahan kebijakan",
+        "h": "7. Cloudflare Turnstile",
+        "p": [
+          "Saat kamu lanjut sebagai tamu, kami memakai Cloudflare Turnstile untuk memastikan kamu bukan bot. Turnstile memproses data dari browsermu, seperti alamat IP dan karakteristik browser, untuk membuat keputusan tersebut. Data ini ditangani Cloudflare sesuai kebijakan privasinya sendiri dan tidak disimpan oleh pmess."
+        ]
+      },
+      {
+        "h": "8. Perubahan kebijakan ini",
         "p": [
           "Jika kebijakan ini berubah, kami akan memperbarui tanggal di bagian atas halaman ini."
+        ]
+      }
+    ]
+  },
+  "terms": {
+    "title": "Syarat Layanan",
+    "updated": "Terakhir diperbarui: 3 November 2026",
+    "intro": "Dengan memakai pmess, kamu menyetujui syarat ini. Sengaja dibuat singkat.",
+    "sections": [
+      {
+        "h": "1. Layanan",
+        "p": [
+          "pmess adalah proyek pribadi yang disediakan apa adanya, tanpa jaminan ketersediaan, keandalan, atau bahwa data akan tersimpan. Layanan bisa berubah atau berhenti kapan saja."
+        ]
+      },
+      {
+        "h": "2. Penggunaan yang diperbolehkan",
+        "p": [
+          "Dilarang memakai pmess untuk spam, pelecehan, atau konten ilegal.",
+          "Developer berhak menghapus akun yang melanggar aturan ini tanpa pemberitahuan."
+        ]
+      },
+      {
+        "h": "3. Pesan tidak tersembunyi dari server",
+        "p": [
+          "Pesan tidak dienkripsi end-to-end. Admin server dapat membacanya melalui database. Jangan bagikan kata sandi atau informasi sensitif lainnya."
+        ]
+      },
+      {
+        "h": "4. Penyimpanan data",
+        "p": [
+          "Akun tamu dihapus 30 menit setelah pesan terakhir di percakapannya.",
+          "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
+          "Kamu bisa menghapus akunmu sendiri kapan saja lewat Pengaturan."
+        ]
+      },
+      {
+        "h": "5. Kapasitas",
+        "p": [
+          "pmess dibatasi hingga 300 akun. Bila batas tercapai, pendaftaran baru dihentikan sementara sampai ada tempat kosong."
+        ]
+      },
+      {
+        "h": "6. Perubahan syarat",
+        "p": [
+          "Syarat ini bisa berubah. Bila berubah, kami akan memperbarui tanggal di bagian atas halaman ini. Terus memakai pmess berarti kamu menerima syarat yang diperbarui."
         ]
       }
     ]
