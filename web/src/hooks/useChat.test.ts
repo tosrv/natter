@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { removeConversation, setBlocked, type ChatState } from "./useChat";
+import { handlePeerEnded, markEnded, removeConversation, setBlocked, type ChatState } from "./useChat";
+import { Outbox } from "@/lib/outbox";
 import type { ConversationSummary, Message } from "@/lib/api";
 
 const conv = (id: string) => ({ id, peer_id: "p" + id, peer_username: "u" + id, peer_display_name: "U" + id, peer_kind: "user",
@@ -33,5 +34,22 @@ describe("setBlocked", () => {
     const s = setBlocked(setBlocked(base, "pb", true), "pb", false);
     expect(s.convs[1].blocked_by_me).toBe(false);
     expect(s.convs[0]).toBe(base.convs[0]);
+  });
+});
+
+describe("markEnded / handlePeerEnded", () => {
+  const base: ChatState = { convs: [conv("a"), conv("b")], msgs: {}, activeId: "a" };
+  it("marks only the matching conversation", () => {
+    const s = markEnded(base, "a");
+    expect(s.convs[0].peer_ended).toBe(true);
+    expect(s.convs[1]).toBe(base.convs[1]);
+  });
+  it("drops that conversation's outbox entries and keeps others", () => {
+    const o = new Outbox();
+    const x = o.add("a", "1"); const y = o.add("b", "2"); const z = o.add("a", "3");
+    const r = handlePeerEnded(base, o, "a");
+    expect(r.state.convs[0].peer_ended).toBe(true);
+    expect(r.dropped.sort()).toEqual([x.client_msg_id, z.client_msg_id].sort());
+    expect(o.pending()).toEqual([y]);
   });
 });

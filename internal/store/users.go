@@ -23,14 +23,15 @@ type User struct {
 	UsernameChanges int
 	IsDeveloper     bool
 	CreatedAt       time.Time
+	DeactivatedAt   *time.Time
 }
 
-const userCols = `id, kind, google_sub, email, username, display_name, username_changes, is_developer, created_at`
+const userCols = `id, kind, google_sub, email, username, display_name, username_changes, is_developer, created_at, deactivated_at`
 
 func scanUser(row pgx.Row) (User, error) {
 	var u User
 	err := row.Scan(&u.ID, &u.Kind, &u.GoogleSub, &u.Email, &u.Username, &u.DisplayName,
-		&u.UsernameChanges, &u.IsDeveloper, &u.CreatedAt)
+		&u.UsernameChanges, &u.IsDeveloper, &u.CreatedAt, &u.DeactivatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
@@ -167,22 +168,6 @@ func (s *Store) CreateGuest(ctx context.Context, developerID uuid.UUID) (User, u
 	return User{}, uuid.Nil, errors.New("create guest: could not allocate username")
 }
 
-// DeleteGuest removes a guest (cascading conversations) and frees its slot.
-// Non-guest or unknown ids are a no-op.
-func (s *Store) DeleteGuest(ctx context.Context, id uuid.UUID) error {
-	return s.WithTx(ctx, func(tx pgx.Tx) error {
-		tag, err := tx.Exec(ctx, `DELETE FROM users WHERE id=$1 AND kind='guest'`, id)
-		if err != nil {
-			return err
-		}
-		if tag.RowsAffected() == 0 {
-			return nil
-		}
-		_, err = tx.Exec(ctx, `UPDATE user_slots SET used = used - 1 WHERE id = 1`)
-		return err
-	})
-}
-
 func (s *Store) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 	return scanUser(s.pool.QueryRow(ctx, `SELECT `+userCols+` FROM users WHERE id=$1`, id))
 }
@@ -207,11 +192,23 @@ type DeletedConversation struct {
 
 // DeleteAccount deletes the user (cascading sessions, conversations and
 // messages) and frees its slot, in one transaction. It returns the removed
-// conversations with their peers; ErrNotFound if the user does not exist.
+// conversations with their peers; ErrNotFound if the user does not exist, is
+// deactivated, or is a guest (guests end through EndGuest).
 func (s *Store) DeleteAccount(ctx context.Context, userID uuid.UUID) ([]DeletedConversation, error) {
 	var peers []DeletedConversation
 	err := s.WithTx(ctx, func(tx pgx.Tx) error {
 		peers = nil
+		// Lock the user first; guests are refused so EndGuest's
+		// conversation-then-user lock order is never inverted here.
+		var kind string
+		err := tx.QueryRow(ctx,
+			`SELECT kind FROM users WHERE id=$1 AND deactivated_at IS NULL FOR UPDATE`, userID).Scan(&kind)
+		if errors.Is(err, pgx.ErrNoRows) || (err == nil && kind == "guest") {
+			return ErrNotFound
+		}
+		if err != nil {
+			return err
+		}
 		rows, err := tx.Query(ctx,
 			`SELECT id, CASE WHEN user_a=$1 THEN user_b ELSE user_a END
 			 FROM conversations WHERE user_a=$1 OR user_b=$1`, userID)
@@ -230,7 +227,7 @@ func (s *Store) DeleteAccount(ctx context.Context, userID uuid.UUID) ([]DeletedC
 		if err := rows.Err(); err != nil {
 			return err
 		}
-		tag, err := tx.Exec(ctx, `DELETE FROM users WHERE id=$1`, userID)
+		tag, err := tx.Exec(ctx, `DELETE FROM users WHERE id=$1 AND deactivated_at IS NULL`, userID)
 		if err != nil {
 			return err
 		}

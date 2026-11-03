@@ -20,7 +20,9 @@ export default function ConversationList({ items, activeId, onSelect }: {
               <span className="flex items-baseline gap-1.5">
                 <span className="truncate font-semibold">{peerName(c)}</span>
                 <span className="truncate text-xs text-muted-foreground">@{c.peer_username}</span>
-                {c.blocked_by_me && <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">{t("chat.blocked")}</span>}
+                {c.peer_ended
+                  ? <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">{t("chat.ended")}</span>
+                  : c.blocked_by_me && <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">{t("chat.blocked")}</span>}
               </span>
               {c.last_message && <span className="block truncate text-sm text-muted-foreground">{c.last_message.body}</span>}
             </span>

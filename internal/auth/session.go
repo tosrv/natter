@@ -42,6 +42,8 @@ type Auth struct {
 	OAuth *oauth2.Config
 	// UserInfoURL is the OpenID Connect userinfo endpoint.
 	UserInfoURL string
+	// Notifier is told when a guest logout ends the guest; optional.
+	Notifier chat.GuestNotifier
 }
 
 var trustedProxy atomic.Value // string
@@ -151,7 +153,8 @@ func (a *Auth) startSession(c *gin.Context, u store.User, ttl time.Duration) boo
 // ClearSession expires the session cookie.
 func (a *Auth) ClearSession(c *gin.Context) { a.setCookie(c, SessionCookie, "", -1) }
 
-// Logout deletes the session; a guest account is deleted entirely.
+// Logout deletes the session; a guest is ended (deleted if it never sent a
+// message, deactivated otherwise) and the notifier informed.
 func (a *Auth) Logout(c *gin.Context) {
 	ctx := c.Request.Context()
 	if err := a.st.DeleteSession(ctx, c.GetString(tokenKey)); err != nil {
@@ -159,7 +162,13 @@ func (a *Auth) Logout(c *gin.Context) {
 		return
 	}
 	if u := CurrentUser(c); u.Kind == "guest" {
-		if err := a.st.DeleteGuest(ctx, u.ID); err != nil {
+		out, convs, err := a.svc.EndGuest(ctx, u.ID)
+		switch {
+		case err == nil:
+			if a.Notifier != nil {
+				a.Notifier.NotifyGuestEnded(out, convs, u.ID)
+			}
+		case !errors.Is(err, chat.ErrNotFound):
 			WriteError(c, err)
 			return
 		}

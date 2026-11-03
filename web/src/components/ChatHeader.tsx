@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import Avatar from "@/components/Avatar";
 import BlockMenu from "@/components/BlockMenu";
 
-export default function ChatHeader({ peerId, name, username, typing, onBack, blocked, onBlock, onUnblock }: {
+export default function ChatHeader({ peerId, name, username, typing, onBack, blocked, ended, onBlock, onUnblock }: {
   peerId: string; name: string; username: string; typing: boolean; onBack?: () => void;
-  blocked?: boolean; onBlock?: () => Promise<void> | void; onUnblock?: () => Promise<void> | void;
+  blocked?: boolean; ended?: boolean; onBlock?: () => Promise<void> | void; onUnblock?: () => Promise<void> | void;
 }) {
   const { t } = useTranslation();
   return (
@@ -20,8 +20,10 @@ export default function ChatHeader({ peerId, name, username, typing, onBack, blo
       <div className="min-w-0">
         <p className="truncate font-semibold">{name}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {typing ? <span className="italic text-primary">{t("chat.typing")}</span> : `@${username}`}
-          {blocked && <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">{t("chat.blocked")}</span>}
+          {typing ? <span className="italic text-primary">{t("chat.typing")}</span> : (username ? `@${username}` : null)}
+          {ended
+            ? <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">{t("chat.ended")}</span>
+            : blocked && <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">{t("chat.blocked")}</span>}
         </p>
       </div>
       {onBlock && onUnblock && <BlockMenu name={name} blocked={!!blocked} onBlock={onBlock} onUnblock={onUnblock} />}

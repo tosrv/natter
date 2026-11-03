@@ -58,8 +58,10 @@ func run() error {
 
 	svc := chat.New(st, cfg.DeveloperEmail)
 	hub := realtime.NewHub(svc, msgLim, cfg.AllowedOrigins)
+	au := auth.New(st, svc, cfg, guestLim)
+	au.Notifier = hub
 	router := api.NewRouter(api.Deps{
-		Auth:              auth.New(st, svc, cfg, guestLim),
+		Auth:              au,
 		Chat:              svc,
 		SearchLimiter:     searchLim,
 		WS:                hub.Handler(),
@@ -102,4 +104,7 @@ func run() error {
 	return shutErr
 }
 
-var _ api.Notifier = (*realtime.Hub)(nil)
+var (
+	_ api.Notifier  = (*realtime.Hub)(nil)
+	_ jobs.Notifier = (*realtime.Hub)(nil)
+)

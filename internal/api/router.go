@@ -17,9 +17,11 @@ import (
 	"github.com/tosrv/pmess/internal/store"
 )
 
-// Notifier is told about conversations removed by an account deletion.
+// Notifier is told about conversations removed by a Google account deletion
+// and about guests ended via DELETE /api/me.
 type Notifier interface {
 	NotifyConversationDeleted(peers []store.DeletedConversation, deletedUser uuid.UUID)
+	chat.GuestNotifier
 }
 
 type Deps struct {

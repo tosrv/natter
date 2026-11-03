@@ -15,7 +15,7 @@ Aplikasi chat 1:1 real-time yang dibuat sebagai proyek belajar **sistem real-tim
 
 - Chat 1:1 real-time lewat WebSocket, dengan status **terkirim ✓ / dibaca ✓✓** dan indikator mengetik
 - Cari orang lewat username; display name terpisah dari username
-- **Mode tamu**: chat dengan developer tanpa akun (dihapus 30 menit setelah aktivitas terakhir percakapannya)
+- **Mode tamu**: chat dengan developer tanpa akun (akun dinonaktifkan saat sesi berakhir; percakapan disimpan hingga 1 bulan untuk developer)
 - Blokir pengguna, hapus akun sendiri, UI Inggris/Indonesia, tema terang/gelap/ikut sistem
 - Pesan tetap aman saat offline dan setelah reconnect; percakapan kedaluwarsa setelah 1 bulan tanpa aktivitas
 - Perlindungan penyalahgunaan: Cloudflare Turnstile saat membuat tamu, rate limit per pengguna dan per IP, batas 300 akun
@@ -129,6 +129,7 @@ Mode dev lokal, semua variabel lingkungan, test E2E, deploy, backup, dan restore
 - Content-Security-Policy yang ketat dan header keamanan lain di setiap respons
 - Turnstile saat membuat tamu, diverifikasi di server sebelum rate limit atau slot akun terpakai
 - Pihak yang diblokir tidak pernah tahu dirinya diblokir: ia hanya melihat galat umum "tidak ditemukan"
+- Sesi tamu berakhir setelah 30 menit tanpa aktivitas (atau logout): akun dinonaktifkan, dan percakapan beserta info kontak yang dibagikan tamu disimpan hingga 1 bulan, lalu dihapus. Tamu yang tidak mengirim pesan dihapus seketika.
 - Pesan **tidak** dienkripsi end-to-end — admin server bisa membacanya di database. Hal ini dinyatakan di [kebijakan privasi](https://chat.rahmattomy.com/privacy) aplikasi.
 
 ## Dokumen desain

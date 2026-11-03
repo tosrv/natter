@@ -39,13 +39,13 @@ type UserBrief struct {
 
 var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
-// SearchUsers finds Google users whose username starts with prefix
+// SearchUsers finds active Google users whose username starts with prefix
 // (case-insensitive, wildcards literal), excluding excludeID and users block-related to it.
 func (s *Store) SearchUsers(ctx context.Context, prefix string, excludeID uuid.UUID, limit int) ([]UserBrief, error) {
 	pat := likeEscaper.Replace(strings.ToLower(prefix)) + "%"
 	rows, err := s.pool.Query(ctx,
 		`SELECT id, username, display_name FROM users
-		 WHERE kind='google' AND username IS NOT NULL AND id <> $2
+		 WHERE kind='google' AND username IS NOT NULL AND deactivated_at IS NULL AND id <> $2
 		   AND lower(username) LIKE $1 ESCAPE '\'
 		   AND NOT EXISTS (SELECT 1 FROM blocks b
 		     WHERE (b.blocker_id=$2 AND b.blocked_id=users.id) OR (b.blocker_id=users.id AND b.blocked_id=$2))

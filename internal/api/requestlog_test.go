@@ -28,7 +28,7 @@ func logOne(t *testing.T, b *bytes.Buffer) map[string]any {
 func TestRequestLogFields(t *testing.T) {
 	var b bytes.Buffer
 	h := opsRouter(t, nil, slog.New(slog.NewJSONHandler(&b, nil)))
-	get(h, "/api/me?token=abc", map[string]string{"Authorization": "Bearer secret", "Cookie": "pm_session=xyz"})
+	get(h, "/api/me?token=qtokq", map[string]string{"Authorization": "Bearer secret", "Cookie": "pm_session=xyz"})
 	m := logOne(t, &b)
 	if m["method"] != "GET" || m["path"] != "/api/me" || m["status"] != float64(401) {
 		t.Fatalf("%v", m)
@@ -39,7 +39,7 @@ func TestRequestLogFields(t *testing.T) {
 	if _, ok := m["request_id"]; !ok {
 		t.Fatalf("no request_id: %v", m)
 	}
-	for _, bad := range []string{"abc", "secret", "xyz", "token="} {
+	for _, bad := range []string{"qtokq", "secret", "xyz", "token="} {
 		if strings.Contains(b.String(), bad) {
 			t.Fatalf("log leaks %q: %s", bad, b.String())
 		}
@@ -68,14 +68,14 @@ func TestPanicLogNoCookie(t *testing.T) {
 	r := gin.New()
 	r.Use(api.RequestLog(l), api.Recover(l))
 	r.GET("/boom", func(*gin.Context) { panic("kaboom") })
-	w := get(r, "/boom?token=abc", map[string]string{"Cookie": "pm_session=xyz", "Authorization": "Bearer secret"})
+	w := get(r, "/boom?token=qtokq", map[string]string{"Cookie": "pm_session=xyz", "Authorization": "Bearer secret"})
 	if w.Code != 500 || !strings.Contains(w.Body.String(), `"code":"internal"`) {
 		t.Fatalf("%d %s", w.Code, w.Body)
 	}
 	if !strings.Contains(b.String(), `"msg":"panic"`) || !strings.Contains(b.String(), `"level":"ERROR"`) {
 		t.Fatalf("no panic log: %s", b.String())
 	}
-	for _, bad := range []string{"xyz", "secret", "abc"} {
+	for _, bad := range []string{"xyz", "secret", "qtokq"} {
 		if strings.Contains(b.String(), bad) {
 			t.Fatalf("leaks %q: %s", bad, b.String())
 		}

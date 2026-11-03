@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -79,6 +80,10 @@ func (h *handlers) setDisplayName(c *gin.Context) {
 
 func (h *handlers) deleteMe(c *gin.Context) {
 	u := auth.CurrentUser(c)
+	if u.Kind == "guest" {
+		h.endGuestAndClear(c, u.ID)
+		return
+	}
 	peers, err := h.chat.DeleteAccount(c.Request.Context(), u)
 	if err != nil {
 		WriteError(c, err)
@@ -87,6 +92,22 @@ func (h *handlers) deleteMe(c *gin.Context) {
 	h.auth.ClearSession(c)
 	if h.notifier != nil {
 		h.notifier.NotifyConversationDeleted(peers, u.ID)
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// endGuestAndClear ends the guest and clears its session. A guest already ended
+// concurrently (ErrNotFound) still gets the cookie cleared and a 204, without
+// notifying anyone.
+func (h *handlers) endGuestAndClear(c *gin.Context, guestID uuid.UUID) {
+	out, convs, err := h.chat.EndGuest(c.Request.Context(), guestID)
+	if err != nil && !errors.Is(err, store.ErrNotFound) && !errors.Is(err, chat.ErrNotFound) {
+		WriteError(c, err)
+		return
+	}
+	h.auth.ClearSession(c)
+	if err == nil && h.notifier != nil {
+		h.notifier.NotifyGuestEnded(out, convs, guestID)
 	}
 	c.Status(http.StatusNoContent)
 }

@@ -66,12 +66,16 @@ export default function Chat() {
             <>
               <ChatHeader peerId={active.peer_id} name={peerName(active)} username={active.peer_username}
                 typing={c.typing(active.id)} onBack={isGuest ? undefined : () => c.setActiveId(null)}
-                blocked={active.blocked_by_me}
-                onBlock={isGuest ? undefined : () => c.setPeerBlocked(active.peer_id, true)}
-                onUnblock={isGuest ? undefined : () => c.setPeerBlocked(active.peer_id, false)} />
+                blocked={active.blocked_by_me} ended={active.peer_ended}
+                onBlock={isGuest || active.peer_ended ? undefined : () => c.setPeerBlocked(active.peer_id, true)}
+                onUnblock={isGuest || active.peer_ended ? undefined : () => c.setPeerBlocked(active.peer_id, false)} />
               <MessageList messages={c.messages(active.id)} pending={c.pending(active.id)} pendingIds={c.pendingIds}
                 meId={me.id} peerReadSeq={active.peer_last_read_seq} />
-              {active.blocked_by_me ? (
+              {active.peer_ended ? (
+                <div className="border-t bg-card p-3" role="status">
+                  <p className="text-sm text-muted-foreground">{t("chat.peerEnded")}</p>
+                </div>
+              ) : active.blocked_by_me ? (
                 <div className="flex items-center justify-between gap-3 border-t bg-card p-3">
                   <p className="text-sm text-muted-foreground">{t("chat.youBlocked")}</p>
                   <Button size="sm" variant="outline" className="shrink-0 rounded-full" onClick={() => void c.setPeerBlocked(active.peer_id, false)}>{t("chat.unblock")}</Button>

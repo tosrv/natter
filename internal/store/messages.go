@@ -67,6 +67,17 @@ func (s *Store) SendMessage(ctx context.Context, convID, senderID, clientMsgID u
 		if err != nil {
 			return err
 		}
+		// A sender deactivated while we waited on the conversation lock
+		// (EndGuest) must not persist a message; rolling back keeps last_seq.
+		var one int
+		err = tx.QueryRow(ctx,
+			`SELECT 1 FROM users WHERE id=$1 AND deactivated_at IS NULL FOR KEY SHARE`, senderID).Scan(&one)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		if err != nil {
+			return err
+		}
 		m, err = scanMessage(tx.QueryRow(ctx,
 			`INSERT INTO messages (conversation_id, seq, sender_id, client_msg_id, body)
 			 VALUES ($1,$2,$3,$4,$5) RETURNING `+msgCols, convID, seq, senderID, clientMsgID, body))

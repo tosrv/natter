@@ -212,5 +212,6 @@ Compose uses the fixed subnet `172.28.0.0/16` (gateway `172.28.0.1`). If it clas
 
 - Messages are **not** end-to-end encrypted; a server admin can read them in the database.
 - A user's email is never sent to other users; message bodies are always rendered as plain text.
-- Guest accounts are deleted 30 minutes after their conversation's last activity; conversations are deleted after 1 month without activity.
-- Contact info a guest enters is voluntary and is deleted together with the guest account.
+- A guest session ends 30 minutes after its conversation's last activity, on logout, or on "End session". A guest with messages is deactivated (kept, unusable, username cleared); a guest without messages is deleted. The developer still sees the conversation as "Session ended" and cannot reply.
+- Conversations are deleted after 1 month without activity; the daily job (03:00) then purges deactivated guests that have no conversation left.
+- Contact info a guest enters is voluntary and is kept with the conversation (up to 1 month), then deleted with it.

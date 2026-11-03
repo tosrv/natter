@@ -365,3 +365,106 @@ func TestCallbackStoresGoogleName(t *testing.T) {
 		t.Fatalf("display_name %q %v", n, err)
 	}
 }
+
+type guestNotifier struct {
+	calls   int
+	outcome store.EndGuestOutcome
+	user    uuid.UUID
+}
+
+func (g *guestNotifier) NotifyGuestEnded(o store.EndGuestOutcome, _ []store.EndedConversation, u uuid.UUID) {
+	g.calls++
+	g.outcome, g.user = o, u
+}
+
+func sessionCookie(t *testing.T, w *httptest.ResponseRecorder) *http.Cookie {
+	t.Helper()
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "pm_session" {
+			return c
+		}
+	}
+	t.Fatal("no session cookie")
+	return nil
+}
+
+// talkingGuest creates a guest via HTTP who sends one message to the developer.
+func talkingGuest(t *testing.T, e *env) (store.User, *http.Cookie) {
+	t.Helper()
+	ctx := context.Background()
+	w := guest(e, "10.3.3.3")
+	if w.Code != 201 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	var b struct {
+		ID             uuid.UUID `json:"id"`
+		ConversationID uuid.UUID `json:"conversation_id"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &b); err != nil {
+		t.Fatal(err)
+	}
+	g, err := e.st.GetUser(ctx, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := e.svc.Send(ctx, g, b.ConversationID, uuid.New(), "hi"); err != nil {
+		t.Fatal(err)
+	}
+	return g, sessionCookie(t, w)
+}
+
+func TestGuestLogoutDeactivates(t *testing.T) {
+	e := setup(t)
+	n := &guestNotifier{}
+	e.a.Notifier = n
+	ctx := context.Background()
+	dev, err := e.svc.SetUsername(ctx, devUser(t, e), "devuser")
+	if err != nil {
+		t.Fatal(err)
+	}
+	g, sess := talkingGuest(t, e)
+	req := httptest.NewRequest("POST", "/api/auth/logout", nil)
+	req.AddCookie(sess)
+	if w := do(e.r, req); w.Code != 204 {
+		t.Fatalf("logout %d %s", w.Code, w.Body)
+	}
+	req = httptest.NewRequest("GET", "/api/whoami", nil)
+	req.AddCookie(sess)
+	wantErr(t, do(e.r, req), 401, "unauthorized")
+	if n.calls != 1 || n.outcome != store.GuestDeactivated || n.user != g.ID {
+		t.Fatalf("notifier %+v", n)
+	}
+	cs, err := e.svc.Conversations(ctx, dev)
+	if err != nil || len(cs) != 1 || !cs[0].PeerEnded {
+		t.Fatalf("cs=%+v err=%v", cs, err)
+	}
+}
+
+func TestEndedGuestCookieRejected(t *testing.T) {
+	e := setup(t)
+	devUser(t, e)
+	ctx := context.Background()
+	g, sess := talkingGuest(t, e)
+	if _, _, err := e.svc.EndGuest(ctx, g.ID); err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest("GET", "/api/whoami", nil)
+	req.AddCookie(sess)
+	wantErr(t, do(e.r, req), 401, "unauthorized")
+	req = httptest.NewRequest("POST", "/api/auth/guest", nil)
+	req.RemoteAddr = "10.4.4.4:1000"
+	req.AddCookie(sess)
+	w := do(e.r, req)
+	if w.Code != 201 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	var b struct {
+		ID uuid.UUID `json:"id"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &b); err != nil || b.ID == g.ID || b.ID == uuid.Nil {
+		t.Fatalf("new guest %s (old %s)", b.ID, g.ID)
+	}
+	if old, err := e.st.GetUser(ctx, g.ID); err != nil || old.DeactivatedAt == nil {
+		t.Fatalf("old guest %+v %v", old, err)
+	}
+}

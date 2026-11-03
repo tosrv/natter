@@ -3,6 +3,7 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -16,10 +17,14 @@ const (
 	RetentionHour = 3
 )
 
-type Disconnector interface{ Disconnect(uuid.UUID) }
+// Notifier is told how each guest ended (and disconnects it).
+type Notifier interface {
+	NotifyGuestEnded(outcome store.EndGuestOutcome, convs []store.EndedConversation, guestID uuid.UUID)
+}
 
-// CleanupGuests deletes guests inactive for GuestTTL and disconnects them.
-func CleanupGuests(ctx context.Context, st *store.Store, hub Disconnector, now func() time.Time) (int, error) {
+// CleanupGuests ends guests inactive for GuestTTL (deleted without messages,
+// deactivated otherwise) and notifies hub of each outcome.
+func CleanupGuests(ctx context.Context, st *store.Store, hub Notifier, now func() time.Time) (int, error) {
 	ids, err := st.ExpiredGuests(ctx, now().Add(-GuestTTL))
 	if err != nil {
 		return 0, err
@@ -27,13 +32,17 @@ func CleanupGuests(ctx context.Context, st *store.Store, hub Disconnector, now f
 	n := 0
 	var firstErr error
 	for _, id := range ids {
-		if err := st.DeleteGuest(ctx, id); err != nil {
+		out, convs, err := st.EndGuest(ctx, id)
+		if err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				continue // already ended (e.g. concurrent logout)
+			}
 			if firstErr == nil {
 				firstErr = err
 			}
 			continue
 		}
-		hub.Disconnect(id)
+		hub.NotifyGuestEnded(out, convs, id)
 		n++
 	}
 	return n, firstErr
@@ -54,7 +63,7 @@ func NextDailyRun(now time.Time, hour int) time.Time {
 }
 
 // Run blocks until ctx is done.
-func Run(ctx context.Context, st *store.Store, hub Disconnector, limiters []*ratelimit.Limiter, now func() time.Time) {
+func Run(ctx context.Context, st *store.Store, hub Notifier, limiters []*ratelimit.Limiter, now func() time.Time) {
 	tick := time.NewTicker(time.Minute)
 	defer tick.Stop()
 	daily := time.NewTimer(time.Until(NextDailyRun(now(), RetentionHour)))
@@ -69,7 +78,7 @@ func Run(ctx context.Context, st *store.Store, hub Disconnector, limiters []*rat
 				slog.Error("guest cleanup", "err", err)
 			}
 			if n > 0 {
-				slog.Info("guests deleted", "count", n)
+				slog.Info("guests ended", "count", n)
 			}
 			for _, l := range limiters {
 				l.Sweep()
@@ -80,6 +89,12 @@ func Run(ctx context.Context, st *store.Store, hub Disconnector, limiters []*rat
 				slog.Error("retention", "err", err)
 			} else {
 				slog.Info("conversations deleted", "count", n)
+			}
+			g, err := st.PurgeDeactivatedGuests(ctx)
+			if err != nil {
+				slog.Error("purge deactivated guests", "err", err)
+			} else {
+				slog.Info("deactivated guests purged", "count", g)
 			}
 			daily.Reset(time.Until(NextDailyRun(now(), RetentionHour)))
 		}

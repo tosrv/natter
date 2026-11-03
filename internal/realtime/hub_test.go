@@ -353,7 +353,7 @@ func TestDisconnectDeletedGuest(t *testing.T) {
 	for !e.hub.online(g.ID) && time.Now().Before(deadline) {
 		time.Sleep(5 * time.Millisecond)
 	}
-	if err := e.st.DeleteGuest(ctx, g.ID); err != nil {
+	if _, _, err := e.st.EndGuest(ctx, g.ID); err != nil {
 		t.Fatal(err)
 	}
 	e.hub.Disconnect(g.ID)
@@ -454,5 +454,44 @@ func TestSendBlockedErrorFrame(t *testing.T) {
 	}
 	if f, err := readFrame(t, ca, 500*time.Millisecond); err == nil {
 		t.Fatalf("A got frame %+v", f)
+	}
+}
+
+func TestNotifyGuestEnded(t *testing.T) {
+	e := setup(t, 20, nil)
+	ctx := context.Background()
+	dev, err := e.svc.LoginGoogle(ctx, "devsub", devEmail, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dtok, err := e.st.CreateSession(ctx, dev.ID, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	g, conv, err := e.svc.CreateGuest(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gtok, err := e.st.CreateSession(ctx, g.ID, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cd, cg := e.dial(t, dtok), e.dial(t, gtok)
+	deadline := time.Now().Add(2 * time.Second)
+	for !(e.hub.online(dev.ID) && e.hub.online(g.ID)) && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	e.hub.NotifyGuestEnded(store.GuestDeactivated, []store.EndedConversation{{ConversationID: conv, PeerID: dev.ID}}, g.ID)
+	f := must(t, cd, "conversation_ended")
+	if f.ConversationID == nil || *f.ConversationID != conv {
+		t.Fatalf("conversation_id = %v, want %v", f.ConversationID, conv)
+	}
+	waitClosed(t, cg, 2*time.Second)
+
+	other := uuid.New()
+	e.hub.NotifyGuestEnded(store.GuestDeleted, []store.EndedConversation{{ConversationID: other, PeerID: dev.ID}}, uuid.New())
+	f = must(t, cd, "conversation_deleted")
+	if f.ConversationID == nil || *f.ConversationID != other {
+		t.Fatalf("conversation_id = %v, want %v", f.ConversationID, other)
 	}
 }
