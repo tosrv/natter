@@ -399,3 +399,40 @@ func TestNotifyConversationDeleted(t *testing.T) {
 	}
 	waitClosed(t, ca, 2*time.Second)
 }
+
+func TestTypingAndReadSuppressedWhenBlocked(t *testing.T) {
+	e := setup(t, 20, nil)
+	a, b, ta, tb, conv := e.pair(t)
+	_ = a
+	if err := e.svc.Block(context.Background(), a, b.ID); err != nil {
+		t.Fatal(err)
+	}
+	ca, cb := e.dial(t, ta), e.dial(t, tb)
+	write(t, cb, map[string]any{"type": "typing", "conversation_id": conv})
+	write(t, cb, map[string]any{"type": "read", "conversation_id": conv, "seq": 1})
+	if f, err := readFrame(t, ca, 500*time.Millisecond); err == nil {
+		t.Fatalf("A got frame %+v", f)
+	}
+	if f, err := readFrame(t, cb, 500*time.Millisecond); err == nil {
+		t.Fatalf("B got frame %+v", f)
+	}
+	_ = ca
+}
+
+func TestSendBlockedErrorFrame(t *testing.T) {
+	e := setup(t, 20, nil)
+	a, b, ta, tb, conv := e.pair(t)
+	if err := e.svc.Block(context.Background(), a, b.ID); err != nil {
+		t.Fatal(err)
+	}
+	ca, cb := e.dial(t, ta), e.dial(t, tb)
+	cid := uuid.New()
+	write(t, cb, send(conv, cid, "hi"))
+	f := must(t, cb, "error")
+	if f.Code != "not_found" || f.ClientMsgID == nil || *f.ClientMsgID != cid {
+		t.Fatalf("frame %+v", f)
+	}
+	if f, err := readFrame(t, ca, 500*time.Millisecond); err == nil {
+		t.Fatalf("A got frame %+v", f)
+	}
+}

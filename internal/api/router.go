@@ -59,6 +59,9 @@ func NewRouter(d Deps) *gin.Engine {
 	authed.GET("/users/search", h.search)
 	authed.POST("/conversations", h.openConversation)
 	authed.GET("/conversations", h.conversations)
+	authed.POST("/blocks", h.block)
+	authed.DELETE("/blocks/:user_id", h.unblock)
+	authed.GET("/blocks", h.blocks)
 	authed.GET("/conversations/:id/messages", h.messages)
 	if d.WS != nil {
 		authed.GET("/ws", d.WS)
