@@ -40,6 +40,16 @@ export function setBlocked(s: ChatState, convIdOrPeerId: string, blocked: boolea
   };
 }
 
+/** Pure: mark the conversation as ended by the peer (guest session over). */
+export function markEnded(s: ChatState, convId: string): ChatState {
+  return { ...s, convs: s.convs.map((c) => c.id === convId ? { ...c, peer_ended: true } : c) };
+}
+
+/** Pure-ish: mark ended and drop that conversation's pending outbox entries; returns dropped client_msg_ids. */
+export function handlePeerEnded(s: ChatState, outbox: Outbox, convId: string): { state: ChatState; dropped: string[] } {
+  return { state: markEnded(s, convId), dropped: outbox.dropConversation(convId) };
+}
+
 export const peerName = (c: Pick<ConversationSummary, "peer_display_name" | "peer_username"> | undefined) =>
   c ? (c.peer_display_name || c.peer_username) : "";
 
@@ -154,8 +164,31 @@ export function useChat() {
         setTypingUntil((tu) => { const n = { ...tu }; delete n[id]; return n; });
         if (wasActive) toast(t("chat.conversationDeleted"));
       });
+      s.on("conversation_ended", (f) => {
+        const id = (f as Extract<ServerFrame, { type: "conversation_ended" }>).conversation_id;
+        const { state, dropped } = handlePeerEnded({ convs: convsRef.current, msgs: msgsRef.current, activeId: activeRef.current }, outbox.current, id);
+        setConvs(state.convs); convsRef.current = state.convs;
+        for (const cid of dropped) delete rateRetries.current[cid];
+        setPending(outbox.current.pending());
+        clearTimeout(typingTimers.current[id]); delete typingTimers.current[id];
+        setTypingUntil((tu) => ({ ...tu, [id]: 0 }));
+        if (activeRef.current === id) toast(t("chat.peerEndedToast"));
+      });
       s.on("error", (f) => {
         const e = f as Extract<ServerFrame, { type: "error" }>;
+        if (e.code === "peer_ended") {
+          // The error frame carries no conversation id; find it via the pending message.
+          const convId = e.client_msg_id
+            ? outbox.current.pending().find((x) => x.client_msg_id === e.client_msg_id)?.conversation_id : undefined;
+          if (convId) {
+            const { state, dropped } = handlePeerEnded({ convs: convsRef.current, msgs: msgsRef.current, activeId: activeRef.current }, outbox.current, convId);
+            setConvs(state.convs); convsRef.current = state.convs;
+            for (const cid of dropped) delete rateRetries.current[cid];
+            setPending(outbox.current.pending());
+          } else if (e.client_msg_id) { outbox.current.fail(e.client_msg_id); setPending(outbox.current.pending()); }
+          toast.error(errorMessage("peer_ended"));
+          return;
+        }
         if (e.client_msg_id && e.code === "rate_limited") {
           // Keep it in the outbox; retry with backoff 10s, 20s, 40s (also resent
           // on reconnect), then give up and mark it failed.
