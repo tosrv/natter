@@ -34,11 +34,13 @@ type Deps struct {
 	TurnstileSiteKey string
 	Pinger           Pinger       // optional; nil => /healthz 503
 	Logger           *slog.Logger // optional; nil => slog.Default()
+	// SecureHeadersHSTS adds Strict-Transport-Security (set from COOKIE_SECURE).
+	SecureHeadersHSTS bool
 }
 
 func NewRouter(d Deps) *gin.Engine {
 	r := gin.New()
-	r.Use(RequestLog(d.Logger), Recover(d.Logger))
+	r.Use(SecurityHeaders(d.SecureHeadersHSTS), RequestLog(d.Logger), Recover(d.Logger))
 	// Registered before cors and outside /api: no auth, CORS rejection or rate limit.
 	r.GET("/healthz", Health(d.Pinger))
 	r.Use(cors(d.AllowedOrigins))
