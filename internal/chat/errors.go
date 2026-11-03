@@ -30,6 +30,7 @@ var (
 	ErrDisplayNameInvalid   = &Error{"display_name_invalid", http.StatusBadRequest}
 	ErrQueryTooShort        = &Error{"query_too_short", http.StatusBadRequest}
 	ErrRateLimited          = &Error{"rate_limited", http.StatusTooManyRequests}
+	ErrBadRequest           = &Error{"bad_request", http.StatusBadRequest}
 	ErrUnauthorized         = &Error{"unauthorized", http.StatusUnauthorized}
 )
 

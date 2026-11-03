@@ -174,19 +174,23 @@ func (c *conn) handle(f Frame) {
 			h.deliver(peer, Frame{Type: "message", Message: &m})
 		}
 	case "typing":
-		peer, err := h.svc.PeerOf(ctx, c.user, conv)
+		peer, deliver, err := h.svc.PeerOf(ctx, c.user, conv)
 		if err != nil {
 			c.svcErr(nil, err)
 			return
 		}
-		h.deliver(peer, Frame{Type: "typing", ConversationID: &conv, UserID: &c.userID})
+		if deliver {
+			h.deliver(peer, Frame{Type: "typing", ConversationID: &conv, UserID: &c.userID})
+		}
 	case "read":
-		seq, peer, err := h.svc.MarkRead(ctx, c.user, conv, f.Seq)
+		seq, peer, notify, err := h.svc.MarkRead(ctx, c.user, conv, f.Seq)
 		if err != nil {
 			c.svcErr(nil, err)
 			return
 		}
-		h.deliver(peer, Frame{Type: "read", ConversationID: &conv, UserID: &c.userID, Seq: seq})
+		if notify {
+			h.deliver(peer, Frame{Type: "read", ConversationID: &conv, UserID: &c.userID, Seq: seq})
+		}
 	default:
 		c.sendErr(f.ClientMsgID, "bad_frame", "unknown frame type")
 	}

@@ -105,6 +105,9 @@ func (s *Service) OpenConversation(ctx context.Context, u store.User, peerID uui
 	if p.Kind != kindGoogle || p.Username == nil || *p.Username == "" {
 		return uuid.Nil, ErrNotFound
 	}
+	if err := s.notBlocked(ctx, u.ID, peerID); err != nil {
+		return uuid.Nil, err
+	}
 	id, err := s.st.GetOrCreateConversation(ctx, u.ID, peerID)
 	return id, mapErr(err)
 }
@@ -132,6 +135,9 @@ func (s *Service) Send(ctx context.Context, u store.User, convID, clientMsgID uu
 	if err != nil {
 		return store.Message{}, uuid.Nil, false, err
 	}
+	if err := s.notBlocked(ctx, u.ID, p); err != nil {
+		return store.Message{}, uuid.Nil, false, err
+	}
 	m, dup, err := s.st.SendMessage(ctx, convID, u.ID, clientMsgID, body)
 	if err != nil {
 		return store.Message{}, uuid.Nil, false, mapErr(err)
@@ -147,16 +153,22 @@ func (s *Service) Messages(ctx context.Context, u store.User, convID uuid.UUID, 
 	return ms, mapErr(err)
 }
 
-func (s *Service) MarkRead(ctx context.Context, u store.User, convID uuid.UUID, seq int64) (int64, uuid.UUID, error) {
+// MarkRead stores u's read position; notifyPeer is false when u and the
+// peer are block-related (the read event must not be forwarded).
+func (s *Service) MarkRead(ctx context.Context, u store.User, convID uuid.UUID, seq int64) (int64, uuid.UUID, bool, error) {
 	p, err := s.peer(ctx, u, convID)
 	if err != nil {
-		return 0, uuid.Nil, err
+		return 0, uuid.Nil, false, err
 	}
 	v, err := s.st.MarkRead(ctx, convID, u.ID, seq)
 	if err != nil {
-		return 0, uuid.Nil, mapErr(err)
+		return 0, uuid.Nil, false, mapErr(err)
 	}
-	return v, p, nil
+	rel, err := s.st.BlockRelated(ctx, u.ID, p)
+	if err != nil {
+		return 0, uuid.Nil, false, err
+	}
+	return v, p, !rel, nil
 }
 
 func (s *Service) Conversations(ctx context.Context, u store.User) ([]store.ConversationSummary, error) {
@@ -167,8 +179,18 @@ func (s *Service) Conversations(ctx context.Context, u store.User) ([]store.Conv
 	return cs, mapErr(err)
 }
 
-func (s *Service) PeerOf(ctx context.Context, u store.User, convID uuid.UUID) (uuid.UUID, error) {
-	return s.peer(ctx, u, convID)
+// PeerOf returns the peer of convID; deliver is false when u and the peer
+// are block-related (e.g. typing must not be forwarded).
+func (s *Service) PeerOf(ctx context.Context, u store.User, convID uuid.UUID) (uuid.UUID, bool, error) {
+	p, err := s.peer(ctx, u, convID)
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	rel, err := s.st.BlockRelated(ctx, u.ID, p)
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	return p, !rel, nil
 }
 
 func (s *Service) SetDisplayName(ctx context.Context, u store.User, raw string) (store.User, error) {

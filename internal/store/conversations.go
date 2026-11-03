@@ -51,6 +51,7 @@ type ConversationSummary struct {
 	Unread          int64     `json:"unread"`
 	PeerLastReadSeq int64     `json:"peer_last_read_seq"`
 	LastActivityAt  time.Time `json:"last_activity_at"`
+	BlockedByMe     bool      `json:"blocked_by_me"`
 }
 
 // ListConversations lists userID's conversations, most recently active first.
@@ -60,7 +61,8 @@ func (s *Store) ListConversations(ctx context.Context, userID uuid.UUID) ([]Conv
 		SELECT c.id, p.id, coalesce(p.username,''), p.display_name, p.kind,
 		       c.last_seq - me.last_read_seq, pm.last_read_seq,
 		       coalesce(c.last_activity_at, c.created_at),
-		       m.id, m.seq, m.sender_id, m.body, m.created_at, m.client_msg_id
+		       m.id, m.seq, m.sender_id, m.body, m.created_at, m.client_msg_id,
+		       EXISTS (SELECT 1 FROM blocks b WHERE b.blocker_id = me.user_id AND b.blocked_id = p.id)
 		FROM conversation_members me
 		JOIN conversations c ON c.id = me.conversation_id
 		JOIN conversation_members pm ON pm.conversation_id = c.id AND pm.user_id <> me.user_id
@@ -83,7 +85,7 @@ func (s *Store) ListConversations(ctx context.Context, userID uuid.UUID) ([]Conv
 		)
 		if err := rows.Scan(&cs.ID, &cs.PeerID, &cs.PeerUsername, &cs.PeerDisplayName, &cs.PeerKind,
 			&cs.Unread, &cs.PeerLastReadSeq, &cs.LastActivityAt,
-			&mID, &mSeq, &mSender, &mBody, &mAt, &mCli); err != nil {
+			&mID, &mSeq, &mSender, &mBody, &mAt, &mCli, &cs.BlockedByMe); err != nil {
 			return nil, err
 		}
 		if mID != nil {
