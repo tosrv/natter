@@ -3,6 +3,7 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -28,6 +29,9 @@ func CleanupGuests(ctx context.Context, st *store.Store, hub Disconnector, now f
 	var firstErr error
 	for _, id := range ids {
 		if _, _, err := st.EndGuest(ctx, id); err != nil { // TODO(Task 2): use outcome
+			if errors.Is(err, store.ErrNotFound) {
+				continue // already ended (e.g. concurrent logout)
+			}
 			if firstErr == nil {
 				firstErr = err
 			}

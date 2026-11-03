@@ -291,3 +291,79 @@ func TestSearchExcludesDeactivated(t *testing.T) {
 		t.Fatalf("res=%v err=%v", res, err)
 	}
 }
+
+func TestSendAfterGuestDeactivatedRejected(t *testing.T) {
+	s := storetest.New(t)
+	ctx := context.Background()
+	_, g, conv := guestSetup(t, s)
+	if _, _, err := s.SendMessage(ctx, conv, g.ID, uuid.New(), "first"); err != nil {
+		t.Fatal(err)
+	}
+	tx, err := s.Pool().Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `SELECT 1 FROM conversations WHERE id=$1 FOR UPDATE`, conv); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() {
+		_, _, err := s.SendMessage(ctx, conv, g.ID, uuid.New(), "late")
+		done <- err
+	}()
+	// Wait until SendMessage is blocked on the conversation lock.
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if countRows(t, s, `SELECT count(*) FROM pg_stat_activity WHERE wait_event_type='Lock'`) > 0 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("SendMessage never blocked")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if _, err := tx.Exec(ctx, `UPDATE users SET deactivated_at=now(), username=NULL WHERE id=$1`, g.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("send after deactivation: %v", err)
+	}
+	if n := countRows(t, s, `SELECT count(*) FROM messages WHERE sender_id=$1`, g.ID); n != 1 {
+		t.Fatalf("messages=%d want 1", n)
+	}
+	if n := countRows(t, s, `SELECT last_seq FROM conversations WHERE id=$1`, conv); n != 1 {
+		t.Fatalf("last_seq=%d want 1", n)
+	}
+}
+
+func TestDeleteAccountRejectsGuest(t *testing.T) {
+	s := storetest.New(t)
+	ctx := context.Background()
+	_, g, conv := guestSetup(t, s)
+	before := usedSlots(t, s)
+	if _, err := s.DeleteAccount(ctx, g.ID); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("guest: %v", err)
+	}
+	if _, _, err := s.SendMessage(ctx, conv, g.ID, uuid.New(), "hi"); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := s.EndGuest(ctx, g.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.DeleteAccount(ctx, g.ID); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("deactivated: %v", err)
+	}
+	// A deactivated non-guest row is also refused.
+	u, _, _ := s.UpsertGoogleUser(ctx, "x", "x@x.com", "", false)
+	s.Pool().Exec(ctx, `UPDATE users SET deactivated_at=now() WHERE id=$1`, u.ID)
+	if _, err := s.DeleteAccount(ctx, u.ID); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("deactivated google: %v", err)
+	}
+	if n := usedSlots(t, s); n != before { // before-1 (EndGuest) +1 (google)
+		t.Fatalf("used=%d want %d", n, before)
+	}
+}

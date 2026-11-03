@@ -210,6 +210,17 @@ func (s *Service) DeleteAccount(ctx context.Context, u store.User) ([]store.Dele
 	if u.IsDeveloper {
 		return nil, ErrForbidden
 	}
+	if u.Kind == "guest" { // TODO(Task 2): emit conversation_ended for deactivation
+		_, ended, err := s.st.EndGuest(ctx, u.ID)
+		if err != nil {
+			return nil, mapErr(err)
+		}
+		d := make([]store.DeletedConversation, 0, len(ended))
+		for _, e := range ended {
+			d = append(d, store.DeletedConversation{ConversationID: e.ConversationID, PeerID: e.PeerID})
+		}
+		return d, nil
+	}
 	d, err := s.st.DeleteAccount(ctx, u.ID)
 	return d, mapErr(err)
 }
