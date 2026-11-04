@@ -1,6 +1,6 @@
-# pmess — Personal Messenger
+# natter — Personal Messenger
 
-[![CI](https://github.com/tosrv/pmess/actions/workflows/ci.yml/badge.svg)](https://github.com/tosrv/pmess/actions/workflows/ci.yml)
+[![CI](https://github.com/tosrv/natter/actions/workflows/ci.yml/badge.svg)](https://github.com/tosrv/natter/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
 
 **English** · [Bahasa Indonesia](README.id.md)
@@ -9,7 +9,7 @@ A real-time 1:1 chat app built as a learning project in **real-time systems and 
 
 **Live demo:** <https://chat.rahmattomy.com> — sign in with Google, or continue as a guest to message the developer.
 
-![pmess chat, light theme](docs/screenshots/chat-light-desktop.png)
+![natter chat, light theme](docs/screenshots/chat-light-desktop.png)
 
 ## Features
 
@@ -126,7 +126,7 @@ Local development, all environment variables, E2E tests, deployment, backups and
 
 ## Embeddable widget
 
-Any website can embed a guest chat bubble with two lines (`<script src="https://chat.rahmattomy.com/widget.js" defer></script>` and `<pmess-chat></pmess-chat>`). See [`widget/README.md`](widget/README.md) for attributes, the host-site CSP and operator steps.
+Any website can embed a guest chat bubble with two lines (`<script src="https://chat.rahmattomy.com/widget.js" defer></script>` and `<natter-chat></natter-chat>`). See [`widget/README.md`](widget/README.md) for attributes, the host-site CSP and operator steps.
 
 ## Security & privacy
 

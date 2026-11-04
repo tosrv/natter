@@ -6,13 +6,13 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
   app:
-    image: pmess:dev
+    image: natter:dev
     build:
       context: .
       secrets:
         - extra_ca
   backup:
-    image: pmess:dev
+    image: natter:dev
     build:
       context: .
       secrets:

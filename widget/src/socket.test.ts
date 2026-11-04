@@ -31,7 +31,7 @@ afterEach(() => vi.useRealTimers());
 describe("socket", () => {
   it("sends bearer subprotocols", () => {
     mk();
-    expect(FakeWS.instances[0].protocols).toEqual(["pmess.bearer", "tok"]);
+    expect(FakeWS.instances[0].protocols).toEqual(["natter.bearer", "tok"]);
   });
   it("send returns false before open, true after", () => {
     const { s } = mk();

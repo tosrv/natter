@@ -12,17 +12,17 @@
 
 ## Global Constraints
 
-- Image: `ghcr.io/tosrv/pmess`, tag `latest` dan `sha-<7 karakter SHA>`; publik; push dengan `GITHUB_TOKEN` (`permissions: packages: write`).
+- Image: `ghcr.io/tosrv/natter`, tag `latest` dan `sha-<7 karakter SHA>`; publik; push dengan `GITHUB_TOKEN` (`permissions: packages: write`).
 - Job `image` hanya untuk `push` ke `main` dan `needs: [go-test, web-test, e2e, backup-test]`; PR menjalankan test saja.
 - Watchtower: image `nickfedor/watchtower:<versi terkunci>` (cek tag terbaru yang stabil di GitHub `nicholas-fedor/watchtower` dan Docker Hub; jangan `latest`); flag `--interval 300 --label-enable --cleanup --enable-lifecycle-hooks`; hanya `app` berlabel `com.centurylinklabs.watchtower.enable=true`; `postgres` dan `backup` tidak berlabel.
 - Pre-update hook: label `com.centurylinklabs.watchtower.lifecycle.pre-update=/app/deploy/backup.sh preupdate` pada `app`.
-- Backup: `pg_dump -Fc`, file `pmess-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump` di `BACKUP_DIR` (container: `/backups`, host default `/var/backups/pmess`); harian 02:00 waktu `TZ` (default `UTC`); hari Minggu → `weekly`; retensi 7 daily, 4 weekly, 5 preupdate; hapus file lama hanya setelah dump sukses; dump gagal → exit ≠ 0 dan pesan `ERROR` JSON satu baris ke stderr, file parsial dihapus.
-- Restore: `deploy/restore.sh <file>`: stop app → `pg_restore --clean --if-exists --no-owner -d pmess` → start app → tunggu `/healthz` 200 (maks 60 s).
+- Backup: `pg_dump -Fc`, file `natter-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump` di `BACKUP_DIR` (container: `/backups`, host default `/var/backups/natter`); harian 02:00 waktu `TZ` (default `UTC`); hari Minggu → `weekly`; retensi 7 daily, 4 weekly, 5 preupdate; hapus file lama hanya setelah dump sukses; dump gagal → exit ≠ 0 dan pesan `ERROR` JSON satu baris ke stderr, file parsial dihapus.
+- Restore: `deploy/restore.sh <file>`: stop app → `pg_restore --clean --if-exists --no-owner -d natter` → start app → tunggu `/healthz` 200 (maks 60 s).
 - `/healthz`: `GET`, di luar `/api`, tanpa auth/rate limit; `pool.Ping` timeout 2 s → `200 {"status":"ok"}` / `503 {"status":"unavailable"}`.
 - Log: `slog.NewJSONHandler(os.Stdout)`, level dari `LOG_LEVEL` (`debug|info|warn|error`, default `info`, nilai tak dikenal → `info`). Request log: `method`, `path` (tanpa query), `status`, `duration_ms`, `request_id` (dari `X-Request-Id` atau baru 16 hex; dikembalikan di header respons); `/healthz` di level debug. Tidak pernah mencatat body, query string, `Authorization`, `Cookie`, email, token.
 - Docker logging semua service: driver `json-file`, `max-size: "10m"`, `max-file: "5"`.
 - Healthcheck `app`: memanggil `/healthz` tiap 30 s, 3 kali percobaan.
-- Env baru: `PMESS_TAG` (default `latest`), `LOG_LEVEL` (default `info`), `BACKUP_DIR` (default `/var/backups/pmess`), `TZ` (default `UTC`).
+- Env baru: `NATTER_TAG` (default `latest`), `LOG_LEVEL` (default `info`), `BACKUP_DIR` (default `/var/backups/natter`), `TZ` (default `UTC`).
 - Kerja di branch `feat/ops`; commit + push per task (`git push -u origin feat/ops`); trailer commit: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` dan `Claude-Session: https://claude.ai/code/session_017NqdLCXr2x4X6KWjddprEM`.
 - Bila push file di `.github/workflows/` ditolak proxy, laporkan sebagai BLOCKED_PUSH; jangan ubah history.
 
@@ -110,13 +110,13 @@ README.md, .env.example           dokumentasi ops
 **Interfaces:**
 - Consumes: image dan skrip Task 2.
 - Produces:
-  - `app`: `image: ghcr.io/tosrv/pmess:${PMESS_TAG:-latest}` (tanpa `build`), label enable + pre-update hook, env `PG*`/`BACKUP_DIR=/backups`/`LOG_LEVEL`/`TZ`, volume `${BACKUP_DIR:-/var/backups/pmess}:/backups`, healthcheck `curl -fsS http://127.0.0.1:8080/healthz` 30 s/3x.
+  - `app`: `image: ghcr.io/tosrv/natter:${NATTER_TAG:-latest}` (tanpa `build`), label enable + pre-update hook, env `PG*`/`BACKUP_DIR=/backups`/`LOG_LEVEL`/`TZ`, volume `${BACKUP_DIR:-/var/backups/natter}:/backups`, healthcheck `curl -fsS http://127.0.0.1:8080/healthz` 30 s/3x.
   - `backup`: image app yang sama dengan `entrypoint: ["/app/deploy/backup-cron.sh"]`, tanpa label watchtower (atau `enable=false`), volume backup, env PG*.
   - `watchtower`: `nickfedor/watchtower:<versi terkunci>`, volume `/var/run/docker.sock`, `command: --interval 300 --label-enable --cleanup --enable-lifecycle-hooks`.
   - Semua service: `logging` json-file 10m×5.
   - `docker-compose.dev.yml`: `app` dan `backup` `build: .` (+ CA secret lama).
   - Nginx: `location = /healthz { proxy_pass http://127.0.0.1:8080; }`.
-  - README bagian "Operasional": setup GHCR publik (ubah visibility package ke public sekali), deploy pertama, cara kerja Watchtower, rollback via `PMESS_TAG`, backup (lokasi, jadwal, retensi, `scp` ke lokal), restore (`deploy/restore.sh`), UptimeRobot (monitor HTTP ke `/healthz`, interval 5 menit, alert email, uji dengan `docker compose stop app`), risiko backup hanya di VPS.
+  - README bagian "Operasional": setup GHCR publik (ubah visibility package ke public sekali), deploy pertama, cara kerja Watchtower, rollback via `NATTER_TAG`, backup (lokasi, jadwal, retensi, `scp` ke lokal), restore (`deploy/restore.sh`), UptimeRobot (monitor HTTP ke `/healthz`, interval 5 menit, alert email, uji dengan `docker compose stop app`), risiko backup hanya di VPS.
 
 - [ ] **Step 1:** `docker compose -f docker-compose.yml config` dengan `.env` sementara (POSTGRES_PASSWORD=test) → valid; pastikan hanya `app` yang punya label enable (`docker compose config | grep watchtower.enable`).
 - [ ] **Step 2:** Jalankan stack dev (`docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build` bila sandbox mengizinkan; jika build ditolak, catat dan verifikasi dengan `config` saja) → `curl -fsS 127.0.0.1:8080/healthz` → `{"status":"ok"}`; `docker compose exec app /app/deploy/backup.sh preupdate` → file muncul di dir backup; `docker compose ps` menunjukkan `app` healthy. Tear down `down -v`, hapus `.env` sementara.
@@ -134,7 +134,7 @@ README.md, .env.example           dokumentasi ops
   - `web-test`: `actions/setup-node` (node 22, cache npm, `web/package-lock.json`), `npm ci`, `npx vitest run`, `npm run build` di `web/`.
   - `e2e`: service `postgres:16` (port 5432, password `pg`), setup Go+Node, `npm ci`, `npx playwright install --with-deps chromium`, `npm run build`, jalankan server di background (`DATABASE_URL`, `E2E_FAKE_LOGIN=1`, `COOKIE_SECURE=false`, `DEVELOPER_EMAIL=dev@e2e.test`, `STATIC_DIR=web/dist`, `LISTEN_ADDR=:8099`), tunggu `/healthz`, `E2E_BASE_URL=http://localhost:8099 npx playwright test`; upload `web/test-results` sebagai artifact bila gagal.
   - `backup-test`: `bash deploy/test-backup.sh`.
-  - `image`: `if: github.event_name == 'push' && github.ref == 'refs/heads/main'`, `needs` keempat job, `permissions: contents: read, packages: write`, `docker/login-action` (ghcr.io, `github.actor`, `secrets.GITHUB_TOKEN`), `docker/build-push-action` dengan tag `ghcr.io/tosrv/pmess:latest` dan `ghcr.io/tosrv/pmess:sha-${GITHUB_SHA::7}` (hitung lewat step `id: vars`).
+  - `image`: `if: github.event_name == 'push' && github.ref == 'refs/heads/main'`, `needs` keempat job, `permissions: contents: read, packages: write`, `docker/login-action` (ghcr.io, `github.actor`, `secrets.GITHUB_TOKEN`), `docker/build-push-action` dengan tag `ghcr.io/tosrv/natter:latest` dan `ghcr.io/tosrv/natter:sha-${GITHUB_SHA::7}` (hitung lewat step `id: vars`).
   - `concurrency: ci-${{ github.ref }}` dengan `cancel-in-progress: true`.
   - Semua action dipin ke versi mayor yang ada (mis. `actions/checkout@v4`, `actions/setup-go@v5`, `actions/setup-node@v4`, `docker/login-action@v3`, `docker/build-push-action@v6`, `actions/upload-artifact@v4`).
 

@@ -10,9 +10,9 @@ import (
 	"github.com/coder/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/auth"
-	"github.com/tosrv/pmess/internal/chat"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/auth"
+	"github.com/tosrv/natter/internal/chat"
+	"github.com/tosrv/natter/internal/store"
 )
 
 type conn struct {

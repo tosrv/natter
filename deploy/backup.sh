@@ -32,9 +32,9 @@ log() {
 # prune <kind> <keep>: hapus file kind tertua di luar <keep> terbaru (urut nama/timestamp).
 prune() {
   local kind=$1 keep=$2 f
-  local re="^pmess-([0-9]{8})-([0-9]{4})-${kind}(-([0-9]+))?\\.dump$"
+  local re="^natter-([0-9]{8})-([0-9]{4})-${kind}(-([0-9]+))?\\.dump$"
   local -a entries=()
-  for f in "$BACKUP_DIR"/pmess-*-"$kind"*.dump; do
+  for f in "$BACKUP_DIR"/natter-*-"$kind"*.dump; do
     [ -f "$f" ] || continue
     f=${f##*/}
     if [[ $f =~ $re ]]; then
@@ -51,7 +51,7 @@ prune() {
 prune_all() {
   # File 0-byte = reservasi yang terputus; bukan backup, jangan dihitung.
   local z
-  for z in "$BACKUP_DIR"/pmess-*.dump; do
+  for z in "$BACKUP_DIR"/natter-*.dump; do
     [ -f "$z" ] && [ ! -s "$z" ] || continue
     rm -f -- "$z"
     log INFO "empty backup file removed" file "${z##*/}"
@@ -80,7 +80,7 @@ kind=$mode
 if [ "$mode" = daily ] && [ "$(date +%u)" = 7 ]; then kind=weekly; fi
 
 stamp="$(date +%Y%m%d-%H%M)"
-base="pmess-$stamp-$kind"
+base="natter-$stamp-$kind"
 # Reservasi atomik (noclobber = O_EXCL): aman bila dua proses jalan di menit yang sama.
 target="$BACKUP_DIR/$base.dump"
 n=2

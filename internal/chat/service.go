@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/store"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tosrv/pmess/internal/store/storetest"
+	"github.com/tosrv/natter/internal/store/storetest"
 )
 
 func TestMigrateCreatesSchema(t *testing.T) {

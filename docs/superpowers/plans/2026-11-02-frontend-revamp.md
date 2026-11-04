@@ -19,7 +19,7 @@
 - Email tidak pernah dikirim ke pengguna lain; display name dan isi pesan selalu dirender sebagai teks.
 - Status pesan: `sending` (ikon jam), `sent` (satu centang), `read` (dua centang bertumpuk, biru muda `#bfe9ff` di gelembung oranye). Tidak ada status "sampai di perangkat".
 - Palet B: aksen `#e2552f`; terang: latar `#fff7f1`, teks `#2a1d17`, muted `#7a5f53`; font Nunito (Google Fonts) dengan fallback `system-ui, sans-serif`. Gelap: latar hangat gelap (mis. `#1c1512`), teks `#f3e7e1`, aksen tetap terbaca (mis. `#ff7a52`).
-- Tema: `localStorage` key `pmess.theme` = `light|dark|system` (try/catch), default `system`, kelas `.dark` pada `<html>`.
+- Tema: `localStorage` key `natter.theme` = `light|dark|system` (try/catch), default `system`, kelas `.dark` pada `<html>`.
 - Breakpoint dua kolom chat: lebar ≥ 768px; di bawahnya satu panel dengan tombol kembali.
 - Semua teks UI baru di `en.json` dan `id.json` (test kesamaan key wajib lulus).
 - Semua test Go dengan `-race`. Kerja di branch `feat/revamp`; commit + push per task (`git push -u origin feat/revamp`). Trailer commit:

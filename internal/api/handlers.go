@@ -7,10 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/auth"
-	"github.com/tosrv/pmess/internal/chat"
-	"github.com/tosrv/pmess/internal/ratelimit"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/auth"
+	"github.com/tosrv/natter/internal/chat"
+	"github.com/tosrv/natter/internal/ratelimit"
+	"github.com/tosrv/natter/internal/store"
 )
 
 const maxUsernameChanges = 3

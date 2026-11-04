@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [preact()],
   define: { "process.env.NODE_ENV": JSON.stringify("production") },
   build: {
-    lib: { entry: "src/main.ts", name: "PmessWidget", formats: ["iife"], fileName: () => "widget.js" },
+    lib: { entry: "src/main.ts", name: "NatterWidget", formats: ["iife"], fileName: () => "widget.js" },
     cssCodeSplit: false,
     minify: "esbuild",
   },

@@ -1,4 +1,4 @@
-# Contoh server block Nginx untuk pmess (TLS di Nginx, app di 127.0.0.1:8080).
+# Contoh server block Nginx untuk natter (TLS di Nginx, app di 127.0.0.1:8080).
 # Ganti chat.example.com dan path sertifikat.
 
 server {

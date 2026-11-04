@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tosrv/pmess/internal/logging"
+	"github.com/tosrv/natter/internal/logging"
 )
 
 func TestNewLoggerLevels(t *testing.T) {

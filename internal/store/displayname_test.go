@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/store"
-	"github.com/tosrv/pmess/internal/store/storetest"
+	"github.com/tosrv/natter/internal/store"
+	"github.com/tosrv/natter/internal/store/storetest"
 )
 
 func TestMigration0002Constraints(t *testing.T) {

@@ -50,7 +50,7 @@ export function createController({ api, session, socketFactory }: Deps) {
     const e = err as { status?: number; code?: string };
     if (e?.code === "limit_reached" || e?.status === 429) return set({ phase: "full" });
     if (e?.status === 401) return end();
-    console.warn("[pmess]", err);
+    console.warn("[natter]", err);
     set({ phase: "unavailable" });
   }
 

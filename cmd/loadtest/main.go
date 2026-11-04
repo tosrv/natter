@@ -18,8 +18,8 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/realtime"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/realtime"
+	"github.com/tosrv/natter/internal/store"
 )
 
 type client struct {

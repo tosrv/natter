@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "pmess",
+    "name": "natter",
     "tagline": "Pesan pribadi yang sederhana."
   },
   "common": {
@@ -46,19 +46,19 @@
     "ft6": "Inggris & Indonesia",
     "fd6": "Ganti bahasa kapan saja.",
     "trustTitle": "Jujur soal datamu",
-    "trustSub": "pmess adalah proyek sederhana. Begini persisnya datamu diperlakukan.",
+    "trustSub": "natter adalah proyek sederhana. Begini persisnya datamu diperlakukan.",
     "tr1": "Tidak terenkripsi end-to-end. Admin server bisa membaca pesan.",
     "tr2": "Percakapan dihapus setelah 1 bulan tidak aktif.",
     "tr3": "Akun tamu dinonaktifkan 30 menit setelah pesan terakhirnya; percakapannya disimpan hingga 1 bulan.",
     "faqTitle": "Pertanyaan yang sering diajukan",
-    "q1": "Apakah pmess gratis?",
+    "q1": "Apakah natter gratis?",
     "a1": "Ya. Masuk dengan Google atau lanjut sebagai tamu tanpa biaya.",
     "q2": "Apa yang bisa dilakukan tamu?",
     "a2": "Tamu mendapat akun sementara untuk langsung ngobrol. Akun ini berakhir otomatis dan tidak bisa dipakai lagi, jadi masuk dengan Google kalau ingin terus memakai chat-mu.",
     "q3": "Bisakah saya menghapus akun?",
     "a3": "Bisa. Buka Pengaturan lalu hapus akun kapan saja.",
     "q4": "Apakah pesan saya terenkripsi?",
-    "a4": "Tidak end-to-end. Jangan bagikan informasi sensitif lewat pmess.",
+    "a4": "Tidak end-to-end. Jangan bagikan informasi sensitif lewat natter.",
     "ctaTitle": "Siap ngobrol?",
     "ctaSub": "Mulainya kurang dari satu menit.",
     "ctaGuest": "Coba sebagai tamu",
@@ -130,7 +130,7 @@
     "guest": "Saat sesi tamu berakhir, akunnya dinonaktifkan dan tidak bisa dipakai lagi. Percakapan disimpan di sisi developer hingga 1 bulan sejak pesan terakhir, lalu dihapus otomatis. Tamu yang tidak mengirim pesan dihapus seketika.",
     "retention": "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
     "contact": "Membagikan info kontak sebagai tamu bersifat sukarela. Info tersebut disimpan bersama percakapan hingga 1 bulan agar developer bisa menghubungimu, lalu ikut terhapus.",
-    "intro": "Kebijakan ini menjelaskan data apa yang dikumpulkan pmess, bagaimana data itu digunakan, dan berapa lama disimpan. pmess adalah proyek perpesanan kecil yang dikelola secara independen, jadi kami berusaha membuatnya singkat dan jelas.",
+    "intro": "Kebijakan ini menjelaskan data apa yang dikumpulkan natter, bagaimana data itu digunakan, dan berapa lama disimpan. natter adalah proyek perpesanan kecil yang dikelola secara independen, jadi kami berusaha membuatnya singkat dan jelas.",
     "updated": "Terakhir diperbarui: 3 November 2026",
     "sections": [
       {
@@ -151,7 +151,7 @@
       {
         "h": "3. Keamanan pesan",
         "p": [
-          "Pesan tidak terenkripsi end-to-end. Pesan disimpan di server kami, dan admin server dapat membacanya melalui database. Jangan bagikan kata sandi, data keuangan, atau informasi sensitif lainnya di pmess."
+          "Pesan tidak terenkripsi end-to-end. Pesan disimpan di server kami, dan admin server dapat membacanya melalui database. Jangan bagikan kata sandi, data keuangan, atau informasi sensitif lainnya di natter."
         ]
       },
       {
@@ -178,7 +178,7 @@
       {
         "h": "7. Cloudflare Turnstile",
         "p": [
-          "Saat kamu lanjut sebagai tamu, kami memakai Cloudflare Turnstile untuk memastikan kamu bukan bot. Turnstile memproses data dari browsermu, seperti alamat IP dan karakteristik browser, untuk membuat keputusan tersebut. Data ini ditangani Cloudflare sesuai kebijakan privasinya sendiri dan tidak disimpan oleh pmess."
+          "Saat kamu lanjut sebagai tamu, kami memakai Cloudflare Turnstile untuk memastikan kamu bukan bot. Turnstile memproses data dari browsermu, seperti alamat IP dan karakteristik browser, untuk membuat keputusan tersebut. Data ini ditangani Cloudflare sesuai kebijakan privasinya sendiri dan tidak disimpan oleh natter."
         ]
       },
       {
@@ -192,18 +192,18 @@
   "terms": {
     "title": "Syarat Layanan",
     "updated": "Terakhir diperbarui: 3 November 2026",
-    "intro": "Dengan memakai pmess, kamu menyetujui syarat ini. Sengaja dibuat singkat.",
+    "intro": "Dengan memakai natter, kamu menyetujui syarat ini. Sengaja dibuat singkat.",
     "sections": [
       {
         "h": "1. Layanan",
         "p": [
-          "pmess adalah proyek pribadi yang disediakan apa adanya, tanpa jaminan ketersediaan, keandalan, atau bahwa data akan tersimpan. Layanan bisa berubah atau berhenti kapan saja."
+          "natter adalah proyek pribadi yang disediakan apa adanya, tanpa jaminan ketersediaan, keandalan, atau bahwa data akan tersimpan. Layanan bisa berubah atau berhenti kapan saja."
         ]
       },
       {
         "h": "2. Penggunaan yang diperbolehkan",
         "p": [
-          "Dilarang memakai pmess untuk spam, pelecehan, atau konten ilegal.",
+          "Dilarang memakai natter untuk spam, pelecehan, atau konten ilegal.",
           "Developer berhak menghapus akun yang melanggar aturan ini tanpa pemberitahuan."
         ]
       },
@@ -224,13 +224,13 @@
       {
         "h": "5. Kapasitas",
         "p": [
-          "pmess dibatasi hingga 300 akun. Bila batas tercapai, pendaftaran baru dihentikan sementara sampai ada tempat kosong."
+          "natter dibatasi hingga 300 akun. Bila batas tercapai, pendaftaran baru dihentikan sementara sampai ada tempat kosong."
         ]
       },
       {
         "h": "6. Perubahan syarat",
         "p": [
-          "Syarat ini bisa berubah. Bila berubah, kami akan memperbarui tanggal di bagian atas halaman ini. Terus memakai pmess berarti kamu menerima syarat yang diperbarui."
+          "Syarat ini bisa berubah. Bila berubah, kami akan memperbarui tanggal di bagian atas halaman ini. Terus memakai natter berarti kamu menerima syarat yang diperbarui."
         ]
       }
     ]

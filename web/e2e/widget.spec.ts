@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Cross-origin embed test: the spec serves a tiny host page on HOST_PORT
-// (default 8081, a different origin from the pmess server) that loads
+// (default 8081, a different origin from the natter server) that loads
 // ${E2E_BASE_URL}/widget.js. The server must list the host origin in
 // ALLOWED_ORIGINS (e.g. ALLOWED_ORIGINS=http://localhost:8099,http://localhost:8081).
 // With E2E_TURNSTILE=1 the server uses Turnstile test keys and the widget
@@ -27,7 +27,7 @@ const template = fs.readFileSync(path.join(here, "fixtures", "host.html"), "utf8
 let server: http.Server;
 
 test.beforeAll(async () => {
-  const html = template.replaceAll("__PMESS_BASE__", BASE);
+  const html = template.replaceAll("__NATTER_BASE__", BASE);
   server = http.createServer((req, res) => {
     if (req.url?.split("?")[0] === "/host.html") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
@@ -47,7 +47,7 @@ test.afterAll(async () => {
 });
 
 function widget(page: Page) {
-  const host = page.locator("pmess-chat");
+  const host = page.locator("natter-chat");
   return {
     launcher: host.locator("button.pm-launch"),
     panel: host.getByRole("dialog"),
@@ -106,7 +106,7 @@ test("guest chats from an embedded widget on another origin", async ({ browser }
 
   // End the guest session the same way the app's Settings does (DELETE /api/me),
   // using the bearer token the widget stored on the host origin.
-  const token = await g.evaluate((k) => localStorage.getItem(k), `pmess:${BASE}`);
+  const token = await g.evaluate((k) => localStorage.getItem(k), `natter:${BASE}`);
   expect(token, "widget token in host localStorage").toBeTruthy();
   const del = await gctx.request.delete(`${BASE}/api/me`, { headers: { Authorization: `Bearer ${token}` } });
   expect(del.status(), `end guest: ${del.status()}`).toBe(204);

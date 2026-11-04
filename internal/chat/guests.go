@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/store"
 )
 
 // GuestNotifier is told how a guest ended so online peers can be informed

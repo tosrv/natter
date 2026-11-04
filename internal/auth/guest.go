@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tosrv/pmess/internal/chat"
+	"github.com/tosrv/natter/internal/chat"
 )
 
 // Guest creates a guest account with a conversation to the developer.

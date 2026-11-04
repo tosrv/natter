@@ -10,15 +10,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tosrv/pmess/internal/api"
-	"github.com/tosrv/pmess/internal/auth"
-	"github.com/tosrv/pmess/internal/chat"
-	"github.com/tosrv/pmess/internal/config"
-	"github.com/tosrv/pmess/internal/jobs"
-	"github.com/tosrv/pmess/internal/logging"
-	"github.com/tosrv/pmess/internal/ratelimit"
-	"github.com/tosrv/pmess/internal/realtime"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/api"
+	"github.com/tosrv/natter/internal/auth"
+	"github.com/tosrv/natter/internal/chat"
+	"github.com/tosrv/natter/internal/config"
+	"github.com/tosrv/natter/internal/jobs"
+	"github.com/tosrv/natter/internal/logging"
+	"github.com/tosrv/natter/internal/ratelimit"
+	"github.com/tosrv/natter/internal/realtime"
+	"github.com/tosrv/natter/internal/store"
 )
 
 func main() {

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tosrv/pmess/internal/chat"
+	"github.com/tosrv/natter/internal/chat"
 )
 
 const turnstileVerifyURL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"

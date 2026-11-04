@@ -1,4 +1,4 @@
-module github.com/tosrv/pmess
+module github.com/tosrv/natter
 
 go 1.24.0
 

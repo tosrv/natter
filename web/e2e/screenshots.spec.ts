@@ -44,12 +44,12 @@ test("screenshots", async ({ browser }) => {
   for (const theme of THEMES) {
     for (const [vp, size] of Object.entries(VIEWPORTS)) {
       const ctx = await browser.newContext({ viewport: size, storageState: await rctx.storageState() });
-      await ctx.addInitScript((t) => { try { localStorage.setItem("pmess.theme", t); localStorage.setItem("pmess.lang", "en"); } catch { /* */ } }, theme);
+      await ctx.addInitScript((t) => { try { localStorage.setItem("natter.theme", t); localStorage.setItem("natter.lang", "en"); } catch { /* */ } }, theme);
       const p = await ctx.newPage();
       const shot = (name: string) => p.screenshot({ path: path.join(OUT, `${name}-${theme}-${vp}.png`) });
 
       const anon = await browser.newContext({ viewport: size });
-      await anon.addInitScript((t) => { try { localStorage.setItem("pmess.theme", t); localStorage.setItem("pmess.lang", "en"); } catch { /* */ } }, theme);
+      await anon.addInitScript((t) => { try { localStorage.setItem("natter.theme", t); localStorage.setItem("natter.lang", "en"); } catch { /* */ } }, theme);
       const lp = await anon.newPage();
       await lp.goto("/");
       await expect(lp.getByRole("button", { name: "Continue as guest" })).toBeVisible();

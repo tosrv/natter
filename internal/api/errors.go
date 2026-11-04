@@ -3,7 +3,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/tosrv/pmess/internal/auth"
+	"github.com/tosrv/natter/internal/auth"
 )
 
 // WriteError maps *chat.Error to its status and the standard error JSON;

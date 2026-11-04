@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tosrv/pmess/internal/api"
+	"github.com/tosrv/natter/internal/api"
 )
 
 func logOne(t *testing.T, b *bytes.Buffer) map[string]any {

@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/chat"
-	"github.com/tosrv/pmess/internal/store"
-	"github.com/tosrv/pmess/internal/store/storetest"
+	"github.com/tosrv/natter/internal/chat"
+	"github.com/tosrv/natter/internal/store"
+	"github.com/tosrv/natter/internal/store/storetest"
 )
 
 const devEmail = "dev@example.com"

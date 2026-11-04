@@ -3,7 +3,7 @@ package config_test
 import (
 	"testing"
 
-	"github.com/tosrv/pmess/internal/config"
+	"github.com/tosrv/natter/internal/config"
 )
 
 func TestLoadRequiresDeveloperEmail(t *testing.T) {

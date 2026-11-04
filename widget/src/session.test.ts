@@ -7,11 +7,11 @@ describe("session", () => {
     const s = createSession("https://chat.example", st);
     expect(s.get()).toBeNull();
     s.set("tok");
-    expect(st.getItem("pmess:https://chat.example")).toBe("tok");
+    expect(st.getItem("natter:https://chat.example")).toBe("tok");
     expect(s.get()).toBe("tok");
     s.clear();
     expect(s.get()).toBeNull();
-    expect(st.getItem("pmess:https://chat.example")).toBeNull();
+    expect(st.getItem("natter:https://chat.example")).toBeNull();
   });
   it("falls back to memory when storage throws", () => {
     const bad = { getItem() { throw new Error("x"); }, setItem() { throw new Error("x"); }, removeItem() { throw new Error("x"); } } as unknown as Storage;

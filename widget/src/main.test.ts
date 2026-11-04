@@ -5,11 +5,11 @@ describe("main", () => {
     await import("./main");
     vi.resetModules();
     await expect(import("./main")).resolves.toBeDefined();
-    expect(customElements.get("pmess-chat")).toBeDefined();
+    expect(customElements.get("natter-chat")).toBeDefined();
   });
   it("renders launcher with aria-label in shadow root", async () => {
     await import("./main");
-    const el = document.createElement("pmess-chat");
+    const el = document.createElement("natter-chat");
     el.setAttribute("lang", "en");
     document.body.appendChild(el);
     await new Promise((r) => setTimeout(r, 0));

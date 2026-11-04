@@ -1,6 +1,6 @@
-# pmess — Personal Messenger
+# natter — Personal Messenger
 
-[![CI](https://github.com/tosrv/pmess/actions/workflows/ci.yml/badge.svg)](https://github.com/tosrv/pmess/actions/workflows/ci.yml)
+[![CI](https://github.com/tosrv/natter/actions/workflows/ci.yml/badge.svg)](https://github.com/tosrv/natter/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
 
 [English](README.md) · **Bahasa Indonesia**
@@ -9,7 +9,7 @@ Aplikasi chat 1:1 real-time yang dibuat sebagai proyek belajar **sistem real-tim
 
 **Demo:** <https://chat.rahmattomy.com> — masuk dengan Google, atau lanjut sebagai tamu untuk mengirim pesan ke developer.
 
-![Chat pmess, tema terang](docs/screenshots/chat-light-desktop.png)
+![Chat natter, tema terang](docs/screenshots/chat-light-desktop.png)
 
 ## Fitur
 
@@ -126,7 +126,7 @@ Mode dev lokal, semua variabel lingkungan, test E2E, deploy, backup, dan restore
 
 ## Widget yang bisa disematkan
 
-Situs mana pun bisa menyematkan bubble chat tamu dengan dua baris (`<script src="https://chat.rahmattomy.com/widget.js" defer></script>` dan `<pmess-chat></pmess-chat>`). Atribut, CSP situs host, dan langkah operator ada di [`widget/README.md`](widget/README.md) (bahasa Inggris).
+Situs mana pun bisa menyematkan bubble chat tamu dengan dua baris (`<script src="https://chat.rahmattomy.com/widget.js" defer></script>` dan `<natter-chat></natter-chat>`). Atribut, CSP situs host, dan langkah operator ada di [`widget/README.md`](widget/README.md) (bahasa Inggris).
 
 ## Keamanan & privasi
 
