@@ -58,8 +58,8 @@ test("revamp: onboarding, search, ticks, settings, delete account", async ({ bro
   // (d) Settings: dark theme persists; language switch; display name change.
   await A.page.getByRole("link", { name: "Settings" }).click();
   await expect(A.page).toHaveURL(/\/settings$/);
-  await A.page.getByRole("button", { name: "Dark", exact: true }).click();
-  await expect(A.page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await A.page.getByRole("radio", { name: "Dark", exact: true }).click();
+  await expect(A.page.getByRole("radio", { name: "Dark", exact: true })).toHaveAttribute("aria-checked", "true");
   await expect(A.page.locator("html")).toHaveClass(/\bdark\b/);
   await A.page.reload();
   await expect(A.page.locator("html")).toHaveClass(/\bdark\b/);

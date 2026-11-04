@@ -78,7 +78,7 @@ export default function Chat() {
               ) : active.blocked_by_me ? (
                 <div className="flex items-center justify-between gap-3 border-t bg-card p-3">
                   <p className="text-sm text-muted-foreground">{t("chat.youBlocked")}</p>
-                  <Button size="sm" variant="outline" className="shrink-0 rounded-full" onClick={() => void c.setPeerBlocked(active.peer_id, false)}>{t("chat.unblock")}</Button>
+                  <Button size="sm" variant="outline" className="shrink-0" onClick={() => void c.setPeerBlocked(active.peer_id, false)}>{t("chat.unblock")}</Button>
                 </div>
               ) : (
                 <Composer onSend={(b) => c.send(active.id, b)} onTyping={() => c.sendTyping(active.id)} />

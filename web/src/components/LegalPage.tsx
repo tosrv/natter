@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import LanguageToggle from "@/components/LanguageToggle";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSwitch from "@/components/ThemeSwitch";
 
 type LegalSection = { h: string; p: string[] };
 
@@ -17,7 +17,7 @@ export default function LegalPage({ ns }: { ns: "terms" | "privacy" }) {
           <Link to="/" className="flex items-center gap-2 text-lg font-extrabold text-primary">
             <MessageCircle className="size-5" aria-hidden /> {t("app.name")}
           </Link>
-          <div className="flex items-center gap-1"><ThemeToggle /><LanguageToggle /></div>
+          <div className="flex items-center gap-1"><ThemeSwitch /><LanguageToggle /></div>
         </div>
       </header>
 

@@ -29,7 +29,7 @@ export default function UserSearch({ onPick, onUnauthorized }: {
 
   return (
     <div className="space-y-1 p-3">
-      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("chat.searchPlaceholder")} aria-label={t("chat.searchPlaceholder")} className="rounded-full border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
+      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("chat.searchPlaceholder")} aria-label={t("chat.searchPlaceholder")} className="border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
       {err && <p className="text-sm text-destructive">{errorMessage(err)}</p>}
       {hits && hits.length === 0 && <p className="text-sm text-muted-foreground">{t("chat.noResults")}</p>}
       {hits && hits.length > 0 && (

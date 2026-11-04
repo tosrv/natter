@@ -33,7 +33,7 @@ export default function BlockedList() {
       {items.map((u) => (
         <li key={u.id} className="flex items-center justify-between gap-2">
           <span className="min-w-0 truncate"><span className="font-semibold">{u.display_name || u.username}</span> <span className="text-xs text-muted-foreground">@{u.username}</span></span>
-          <Button size="sm" variant="outline" className="shrink-0 rounded-full" disabled={busyId === u.id} onClick={() => void unblock(u.id)}>{t("chat.unblock")}</Button>
+          <Button size="sm" variant="outline" className="shrink-0" disabled={busyId === u.id} onClick={() => void unblock(u.id)}>{t("chat.unblock")}</Button>
         </li>
       ))}
     </ul>

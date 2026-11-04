@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import LanguageToggle from "@/components/LanguageToggle";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSwitch from "@/components/ThemeSwitch";
 import GuestStartDialog from "@/components/GuestStartDialog";
 import LegalNote from "@/components/LegalNote";
 import { getConfig, getMe } from "@/lib/api";
@@ -71,7 +71,7 @@ export default function Landing() {
               <a key={id} href={`#${id}`} className="transition-colors hover:text-foreground">{t(key)}</a>
             ))}
           </nav>
-          <div className="flex items-center gap-1"><ThemeToggle /><LanguageToggle /></div>
+          <div className="flex items-center gap-1"><ThemeSwitch /><LanguageToggle /></div>
         </div>
       </header>
 
@@ -84,11 +84,11 @@ export default function Landing() {
             </div>
             {err && <p role="alert" className="rounded-2xl border border-destructive bg-card p-3 text-sm text-destructive">{errorMessage(err)}</p>}
             <div className="flex flex-col gap-3 sm:max-w-sm">
-              <Button asChild size="lg" className="gap-3 rounded-full">
+              <Button asChild size="lg" className="gap-3">
                 <a href="/api/auth/google/login"><span className="flex size-6 items-center justify-center rounded-full bg-white"><GoogleIcon /></span> {t("landing.google")}</a>
               </Button>
               <div className="flex flex-col gap-1">
-                <Button variant="outline" size="lg" className="rounded-full" onClick={guest} disabled={guestDisabled}>{t("landing.guest")}</Button>
+                <Button variant="outline" size="lg" className="" onClick={guest} disabled={guestDisabled}>{t("landing.guest")}</Button>
                 <span className="text-center text-xs text-muted-foreground">{t("landing.guestNote")}</span>
               </div>
               {configFailed && <p role="alert" className="text-center text-xs text-destructive">{t("landing.configFailed")}</p>}
@@ -173,10 +173,10 @@ export default function Landing() {
           <h2 className="text-3xl font-extrabold tracking-tight">{t("landing.ctaTitle")}</h2>
           <p className="opacity-90">{t("landing.ctaSub")}</p>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" variant="secondary" className="gap-3 rounded-full">
+            <Button asChild size="lg" variant="secondary" className="gap-3">
               <a href="/api/auth/google/login"><GoogleIcon /> {t("landing.google")}</a>
             </Button>
-            <Button size="lg" variant="ghost" className="rounded-full border border-primary-foreground/40 hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={guest} disabled={guestDisabled}>
+            <Button size="lg" variant="ghost" className=" border border-primary-foreground/40 hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={guest} disabled={guestDisabled}>
               {t("landing.ctaGuest")}
             </Button>
           </div>
