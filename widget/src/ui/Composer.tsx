@@ -23,7 +23,11 @@ export function Composer({ lang, onSend, onTyping }: { lang: Lang; onSend: (b: s
           if (now - last.current > 3000) { last.current = now; onTyping(); }
         }}
       />
-      <button type="submit">{t(lang, "send")}</button>
+      <button type="submit" disabled={!v.trim()} aria-label={t(lang, "send")} title={t(lang, "send")}>
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m5 12 7-7 7 7M12 19V5" />
+        </svg>
+      </button>
     </form>
   );
 }

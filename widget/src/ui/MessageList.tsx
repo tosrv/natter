@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 import type { ViewState } from "../controller";
 import { t, type Lang } from "../i18n";
+import { Ticks } from "./Ticks";
 
 export function MessageList({ s, lang }: { s: ViewState; lang: Lang }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -13,11 +14,18 @@ export function MessageList({ s, lang }: { s: ViewState; lang: Lang }) {
         return (
           <div key={m.id} class={me ? "pm-msg pm-me" : "pm-msg"}>
             {m.body}
-            {me && <span class="pm-tick" title={m.seq <= peerReadSeq ? t(lang, "seen") : undefined}>{m.seq <= peerReadSeq ? "✓✓" : "✓"}</span>}
+            {me && (m.seq <= peerReadSeq
+              ? <Ticks status="read" label={t(lang, "seen")} />
+              : <Ticks status="sent" label={t(lang, "sent")} />)}
           </div>
         );
       })}
-      {outbox.map((o) => <div key={o.client_msg_id} class="pm-msg pm-me pm-pend">{o.body}</div>)}
+      {outbox.map((o) => (
+        <div key={o.client_msg_id} class="pm-msg pm-me pm-pend">
+          {o.body}
+          <Ticks status="sending" label={t(lang, "sending")} />
+        </div>
+      ))}
       {peerTyping && <div class="pm-typing">{t(lang, "typing")}</div>}
     </div>
   );

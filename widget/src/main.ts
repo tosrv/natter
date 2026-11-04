@@ -34,7 +34,8 @@ class NatterChat extends HTMLElement {
         root.appendChild(style);
       }
       const color = this.getAttribute("color");
-      if (color) this.style.setProperty("--pm-color", color);
+      // A custom accent keeps white text and the light read-tick in both themes.
+      if (color) for (const [k, v] of [["--pm-color", color], ["--pm-me", color], ["--pm-on", "#fff"], ["--pm-read", "#bfe9ff"]]) this.style.setProperty(k, v);
       const session = createSession(server);
       const api = createApi(server, () => session.get());
       const ws = server.replace(/^http/, "ws") + "/api/ws";

@@ -17,6 +17,7 @@ export function Panel({ ctl, lang, onClose }: { ctl: Controller; lang: Lang; onC
         {!s.chat.online && <div class="pm-banner">{t(lang, "connecting")}</div>}
         <MessageList s={s} lang={lang} />
         <Composer lang={lang} onSend={ctl.send} onTyping={ctl.typing} />
+        <p class="pm-brand">chat by <a href="https://chat.rahmattomy.com" target="_blank" rel="noopener">natter</a></p>
       </>;
       break;
     case "ended":
