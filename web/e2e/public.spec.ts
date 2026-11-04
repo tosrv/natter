@@ -91,13 +91,15 @@ test("guest with Turnstile test key", async ({ browser }) => {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   await page.goto("/");
+  await page.getByRole("button", { name: "Continue as guest" }).first().click();
   // Turnstile renders its iframe inside a closed shadow root, so assert on the
-  // effect instead: the guest button only enables once the widget issued a token.
-  await expect(page.locator("[data-testid=turnstile]")).toBeAttached();
-  const btn = page.getByRole("button", { name: "Continue as guest" });
+  // effect instead: "Start chat" only enables once the widget issued a token.
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator("[data-testid=turnstile]")).toBeAttached();
+  const btn = dialog.getByRole("button", { name: "Start chat" });
   await expect(btn).toBeEnabled({ timeout: 30_000 });
   await btn.click();
-  await expect(page.getByRole("dialog")).toContainText("How can the developer reach you?");
+  await expect(page).toHaveURL(/\/chat/);
   await ctx.close();
 });
 
@@ -121,12 +123,13 @@ test("security headers and no CSP violations", async ({ browser }) => {
   expect(h["x-content-type-options"]).toBe("nosniff");
   expect(h["x-frame-options"]).toBe("DENY");
   expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin");
-  // Turnstile keeps talking to Cloudflare, so "networkidle" never settles on the
-  // landing page. Wait for concrete state instead: with Turnstile on, the guest
-  // button enables only after Cloudflare's script and iframe loaded.
+  // Turnstile keeps talking to Cloudflare, so "networkidle" never settles.
+  // Wait for concrete state instead: with Turnstile on, open the guest dialog;
+  // "Start chat" enables only after Cloudflare's script and iframe loaded.
   await page.waitForLoadState("load");
   if (process.env.E2E_TURNSTILE === "1") {
-    await expect(page.getByRole("button", { name: "Continue as guest" }).first()).toBeEnabled({ timeout: 30_000 });
+    await page.getByRole("button", { name: "Continue as guest" }).first().click();
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Start chat" })).toBeEnabled({ timeout: 30_000 });
   }
   expect(await violations()).toEqual([]);
 
