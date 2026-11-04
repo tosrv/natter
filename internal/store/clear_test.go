@@ -115,3 +115,25 @@ func mkUsersN(t *testing.T, s *store.Store) uuid.UUID {
 	}
 	return u.ID
 }
+
+func TestClearEmptyConversation(t *testing.T) {
+	s := storetest.New(t)
+	ctx := context.Background()
+	u := mkUsers(t, s, 2)
+	conv, err := s.GetOrCreateConversation(ctx, u[0], u[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.ClearConversation(ctx, conv, u[0]); err != nil {
+		t.Fatal(err)
+	}
+	if hasConv(t, s, u[0], conv) || !hasConv(t, s, u[1], conv) {
+		t.Fatal("empty conv visibility wrong after clear")
+	}
+	if _, _, err := s.SendMessage(ctx, conv, u[1], uuid.New(), "back"); err != nil {
+		t.Fatal(err)
+	}
+	if !hasConv(t, s, u[0], conv) {
+		t.Fatal("new message did not restore conversation")
+	}
+}

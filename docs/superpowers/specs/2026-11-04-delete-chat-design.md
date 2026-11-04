@@ -18,8 +18,10 @@ Pengguna (Google maupun tamu) bisa menghapus sebuah chat **dari sisinya sendiri*
 Migrasi `0005_cleared_seq`:
 
 ```sql
-ALTER TABLE conversation_members ADD COLUMN cleared_seq bigint NOT NULL DEFAULT 0;
+ALTER TABLE conversation_members ADD COLUMN cleared_seq bigint;
 ```
+
+`NULL` = never cleared (so clearing a zero-message chat still hides it; `0` would be ambiguous).
 
 Down: `DROP COLUMN cleared_seq`. Tidak ada data yang dihapus; retensi 1 bulan berjalan seperti sekarang.
 

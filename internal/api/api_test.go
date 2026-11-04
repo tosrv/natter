@@ -525,7 +525,7 @@ func TestClearGuestConversationAPI(t *testing.T) {
 func TestClearEndedGuestConversation(t *testing.T) {
 	e, _ := setupN(t)
 	ctx := context.Background()
-	dev, dtok := e.user(t, "d", devEmail, "devuser")
+	_, dtok := e.user(t, "d", devEmail, "devuser")
 	g, conv, err := e.svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
@@ -536,7 +536,6 @@ func TestClearEndedGuestConversation(t *testing.T) {
 	if _, _, err := e.svc.EndGuest(ctx, g.ID); err != nil {
 		t.Fatal(err)
 	}
-	_ = dev
 	if w := e.do("DELETE", "/api/conversations/"+conv.String(), dtok, ""); w.Code != 204 {
 		t.Fatalf("%d %s", w.Code, w.Body)
 	}

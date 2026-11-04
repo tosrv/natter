@@ -525,11 +525,10 @@ func TestNotifyConversationCleared(t *testing.T) {
 	e := setup(t, 20, nil)
 	a, b, ta, tb, conv := e.pair(t)
 	// The hub keeps one connection per user: a second dial replaces the first.
-	ca1 := e.dial(t, ta)
+	e.dial(t, ta)
 	c1 := waitRegistered(t, e.hub, a.ID, nil)
 	ca := e.dial(t, ta)
 	waitRegistered(t, e.hub, a.ID, c1)
-	_ = ca1
 	cb := e.dial(t, tb)
 	waitRegistered(t, e.hub, b.ID, nil)
 	e.hub.NotifyConversationCleared(a.ID, conv)
