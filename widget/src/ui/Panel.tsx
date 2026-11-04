@@ -10,7 +10,7 @@ export function Panel({ ctl, lang, onClose }: { ctl: Controller; lang: Lang; onC
   let body;
   switch (s.phase) {
     case "turnstile":
-      body = <Turnstile siteKey={s.siteKey ?? ""} onToken={(tk) => ctl.startGuest(tk)} />;
+      body = <Turnstile siteKey={s.siteKey ?? ""} onToken={(tk) => ctl.startGuest(tk)} onError={ctl.fail} />;
       break;
     case "chat":
       body = <>

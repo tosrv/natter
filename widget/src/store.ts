@@ -16,6 +16,7 @@ export type Event =
   | { t: "history"; messages: Message[] }
   | { t: "read"; seq: number }
   | { t: "typing"; on: boolean }
+  | { t: "drop"; client_msg_id: string }
   | { t: "ended" }
   | { t: "online"; on: boolean };
 
@@ -60,6 +61,8 @@ export function reduce(s: State, e: Event): State {
       return e.seq > s.peerReadSeq ? { ...s, peerReadSeq: e.seq } : s;
     case "typing":
       return { ...s, peerTyping: e.on };
+    case "drop":
+      return { ...s, outbox: s.outbox.filter((o) => o.client_msg_id !== e.client_msg_id) };
     case "ended":
       return { ...s, ended: true };
     case "online":

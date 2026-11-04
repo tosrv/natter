@@ -3,7 +3,7 @@ import { initial, reduce, lastSeq, type State, type Event } from "./store";
 import type { SocketOpts } from "./socket";
 
 export type Phase = "idle" | "loading" | "turnstile" | "chat" | "ended" | "full" | "unavailable";
-export interface ViewState { phase: Phase; chat: State; siteKey?: string; peerId?: string }
+export interface ViewState { phase: Phase; chat: State; siteKey?: string; meId?: string }
 
 type Api = ReturnType<typeof createApi>;
 interface Session { get(): string | null; set(t: string): void; clear(): void }
@@ -34,7 +34,7 @@ export function createController({ api, session, socketFactory }: Deps) {
 
   function markRead() {
     if (!isOpen || !sock || !conv || vs.phase !== "chat") return;
-    const inc = vs.chat.messages.filter((m) => m.sender_id === vs.peerId);
+    const inc = vs.chat.messages.filter((m) => m.sender_id !== vs.meId);
     const seq = inc.length ? inc[inc.length - 1].seq : 0;
     if (seq > lastRead && sock.send({ type: "read", conversation_id: conv, seq })) lastRead = seq;
   }
@@ -74,8 +74,27 @@ export function createController({ api, session, socketFactory }: Deps) {
       case "typing": return typingOn();
       case "read": return ev({ t: "read", seq: f.seq });
       case "conversation_ended": case "conversation_deleted": return end();
-      case "error": if (f.code === "peer_ended") end(); return;
+      case "error": return onError(f);
     }
+  }
+
+  const retries = new Map<string, number>();
+  function onError(f: { code?: string; client_msg_id?: string }) {
+    if (f.code === "peer_ended") return end();
+    const id = f.client_msg_id;
+    if (!id) return;
+    const n = retries.get(id) ?? 0;
+    if (f.code === "rate_limited" && n < 3) {
+      retries.set(id, n + 1);
+      setTimeout(() => {
+        const o = vs.chat.outbox.find((x) => x.client_msg_id === id);
+        if (o) sendItem(o);
+      }, 10000 * 2 ** n);
+      return;
+    }
+    // Give up on this message (mirrors web useChat outbox.fail).
+    retries.delete(id);
+    ev({ t: "drop", client_msg_id: id });
   }
 
   let typingTimer: ReturnType<typeof setTimeout> | undefined;
@@ -85,12 +104,12 @@ export function createController({ api, session, socketFactory }: Deps) {
     typingTimer = setTimeout(() => ev({ t: "typing", on: false }), 5000);
   }
 
-  async function startChat(convId: string, peerId: string | undefined, peerRead: number) {
+  async function startChat(convId: string, meId: string, peerRead: number) {
     conv = convId;
     lastRead = 0;
     let chat = initial();
     chat = reduce(chat, { t: "read", seq: peerRead });
-    set({ phase: "chat", chat, peerId });
+    set({ phase: "chat", chat, meId });
     await catchUp();
     sock?.close();
     sock = socketFactory({
@@ -115,16 +134,17 @@ export function createController({ api, session, socketFactory }: Deps) {
     subscribe(cb: () => void) { subs.add(cb); return () => { subs.delete(cb); }; },
     async open() {
       isOpen = true;
+      if (vs.phase === "full" || vs.phase === "unavailable") vs = { ...vs, phase: "idle" };
       if (vs.phase !== "idle") { markRead(); return; }
       set({ phase: "loading" });
       try {
         if (session.get()) {
           try {
-            const cs = await api.conversations();
+            const [cs, me] = await Promise.all([api.conversations(), api.me()]);
             const c = cs[0];
             if (c) {
               if (c.peer_ended) { end(); return; }
-              await startChat(c.id, c.peer_id, c.peer_last_read_seq);
+              await startChat(c.id, me.id, c.peer_last_read_seq);
               return;
             }
             session.clear();
@@ -137,18 +157,13 @@ export function createController({ api, session, socketFactory }: Deps) {
       } catch (e) { fail(e); }
     },
     close() { isOpen = false; },
+    fail,
     async startGuest(turnstileToken: string) {
       set({ phase: "loading" });
       try {
         const g = await api.createGuest(turnstileToken);
         session.set(g.token);
-        let peer: string | undefined;
-        let read = 0;
-        try {
-          const c = (await api.conversations()).find((x) => x.id === g.conversation_id);
-          peer = c?.peer_id; read = c?.peer_last_read_seq ?? 0;
-        } catch { /* fall back to sender id comparison */ }
-        await startChat(g.conversation_id, peer, read);
+        await startChat(g.conversation_id, g.id, 0);
       } catch (e) { fail(e); }
     },
     send(body: string) {

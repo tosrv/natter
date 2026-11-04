@@ -18,3 +18,4 @@ button{font:inherit;cursor:pointer}
 .pm-comp input{flex:1;min-width:0;padding:8px 10px;border:1px solid #ccc;border-radius:8px;font:inherit}
 .pm-comp button,.pm-btn{border:0;border-radius:8px;padding:8px 12px;background:var(--pm-color);color:#fff}
 @media (max-width:480px){:host{right:12px;bottom:12px}.pm-panel{position:fixed;inset:0;width:auto;height:auto;max-height:none;border-radius:0}}
+@media (prefers-color-scheme:dark){:host{color:#eee}.pm-panel{background:#1c1c20}.pm-msg{background:#2c2c33}.pm-me{background:var(--pm-color)}.pm-note{color:#bbb}.pm-typing{color:#aaa}.pm-comp{border-color:#333}.pm-comp input{background:#2c2c33;color:#eee;border-color:#444}.pm-banner{background:#5b4a14;color:#fde68a}}

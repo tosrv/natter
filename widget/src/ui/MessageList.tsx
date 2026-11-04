@@ -6,11 +6,10 @@ export function MessageList({ s, lang }: { s: ViewState; lang: Lang }) {
   const ref = useRef<HTMLDivElement>(null);
   const { messages, outbox, peerReadSeq, peerTyping } = s.chat;
   useEffect(() => { const el = ref.current; if (el) el.scrollTop = el.scrollHeight; }, [messages.length, outbox.length, peerTyping]);
-  const mine = (sender: string, cid?: string) => (s.peerId ? sender !== s.peerId : !!cid);
   return (
     <div class="pm-list" ref={ref} role="log" aria-live="polite">
       {messages.map((m) => {
-        const me = mine(m.sender_id, m.client_msg_id);
+        const me = m.sender_id === s.meId;
         return (
           <div key={m.id} class={me ? "pm-msg pm-me" : "pm-msg"}>
             {m.body}

@@ -38,6 +38,7 @@ export function createApi(server: string, getToken: () => string | null) {
     config: () => req<{ turnstile_site_key: string }>("GET", "/config"),
     createGuest: (turnstileToken: string) =>
       req<{ token: string; conversation_id: string; id: string }>("POST", "/auth/guest", { turnstile_token: turnstileToken }),
+    me: () => req<{ id: string }>("GET", "/me"),
     conversations: () => req<Conversation[]>("GET", "/conversations"),
     messagesAfter: async (convId: string, afterSeq: number, limit?: number): Promise<Message[]> => {
       const qs = new URLSearchParams({ after_seq: String(afterSeq) });
