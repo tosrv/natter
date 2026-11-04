@@ -23,6 +23,8 @@ import (
 const (
 	SessionCookie = "pm_session"
 	StateCookie   = "pm_oauth_state"
+	// WSSubprotocol is the Sec-WebSocket-Protocol marker preceding the token.
+	WSSubprotocol = "pmess.bearer"
 	googleTTL     = 30 * 24 * time.Hour
 	guestTTL      = 24 * time.Hour
 	stateTTL      = 10 * time.Minute
@@ -96,6 +98,16 @@ func token(c *gin.Context) string {
 	if h := c.GetHeader("Authorization"); strings.HasPrefix(h, "Bearer ") {
 		if t := strings.TrimSpace(h[len("Bearer "):]); t != "" {
 			return t
+		}
+	}
+	if c.Request.URL.Path == "/api/ws" {
+		if v := c.GetHeader("Sec-WebSocket-Protocol"); v != "" {
+			parts := strings.Split(v, ",")
+			if len(parts) >= 2 && strings.TrimSpace(parts[0]) == WSSubprotocol {
+				if t := strings.TrimSpace(parts[1]); t != "" {
+					return t
+				}
+			}
 		}
 	}
 	if v, err := c.Cookie(SessionCookie); err == nil {

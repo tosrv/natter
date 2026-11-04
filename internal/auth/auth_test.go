@@ -46,9 +46,11 @@ func setupOrigins(t *testing.T, origins []string) *env {
 	r.GET("/api/auth/google/callback", a.GoogleCallback)
 	r.POST("/api/auth/guest", a.Guest)
 	r.POST("/api/auth/logout", a.Middleware(), a.Logout)
-	r.GET("/api/whoami", a.Middleware(), func(c *gin.Context) {
+	whoami := func(c *gin.Context) {
 		c.String(200, auth.CurrentUser(c).ID.String())
-	})
+	}
+	r.GET("/api/whoami", a.Middleware(), whoami)
+	r.GET("/api/ws", a.Middleware(), whoami)
 	return &env{st, svc, a, r}
 }
 
@@ -533,4 +535,22 @@ func TestGuestTokenNoOrigin(t *testing.T) {
 	if _, ok := guestBody(t, guestWithOrigin(e, ""))["token"]; ok {
 		t.Fatal("token returned without origin")
 	}
+}
+
+func TestMiddlewareSubprotocolToken(t *testing.T) {
+	e := setup(t)
+	u := devUser(t, e)
+	tok, err := e.st.CreateSession(context.Background(), u.ID, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hdr := auth.WSSubprotocol + ", " + tok
+	req := httptest.NewRequest("GET", "/api/ws", nil)
+	req.Header.Set("Sec-WebSocket-Protocol", hdr)
+	if w := do(e.r, req); w.Code != 200 || w.Body.String() != u.ID.String() {
+		t.Fatalf("ws: %d %s", w.Code, w.Body)
+	}
+	req = httptest.NewRequest("GET", "/api/whoami", nil)
+	req.Header.Set("Sec-WebSocket-Protocol", hdr)
+	wantErr(t, do(e.r, req), 401, "unauthorized")
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -61,5 +62,29 @@ func TestHSTSOnlyWhenSecure(t *testing.T) {
 		if !secure && got != "" {
 			t.Errorf("insecure: HSTS = %q", got)
 		}
+	}
+}
+
+func TestWidgetJSHeaders(t *testing.T) {
+	dir := t.TempDir()
+	if err := writeFile(filepath.Join(dir, "widget.js"), "console.log(1)"); err != nil {
+		t.Fatal(err)
+	}
+	st := storetest.New(t)
+	svc := chat.New(st, devEmail)
+	a := auth.New(st, svc, config.Config{DeveloperEmail: devEmail, TrustedProxy: "127.0.0.1"}, ratelimit.New(5, time.Hour, nil))
+	h := api.NewRouter(api.Deps{Auth: a, Chat: svc, SearchLimiter: ratelimit.New(30, time.Minute, nil), StaticDir: dir})
+	w := get(h, "/widget.js", nil)
+	if w.Code != 200 {
+		t.Fatalf("status %d", w.Code)
+	}
+	if got := w.Header().Get("Cross-Origin-Resource-Policy"); got != "cross-origin" {
+		t.Fatalf("CORP %q", got)
+	}
+	if got := w.Header().Get("Cache-Control"); got != "public, max-age=300" {
+		t.Fatalf("CC %q", got)
+	}
+	if got := w.Header().Get("Content-Type"); !strings.HasPrefix(got, "text/javascript") {
+		t.Fatalf("CT %q", got)
 	}
 }

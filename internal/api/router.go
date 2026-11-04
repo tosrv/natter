@@ -85,6 +85,11 @@ func NewRouter(d Deps) *gin.Engine {
 		if st, err := os.Stat(f); err != nil || st.IsDir() {
 			f = filepath.Join(d.StaticDir, "index.html")
 		}
+		if p == "/widget.js" {
+			hd := c.Writer.Header()
+			hd.Set("Cross-Origin-Resource-Policy", "cross-origin")
+			hd.Set("Cache-Control", "public, max-age=300")
+		}
 		c.File(f)
 	})
 	return r

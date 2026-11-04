@@ -495,3 +495,28 @@ func TestNotifyGuestEnded(t *testing.T) {
 		t.Fatalf("conversation_id = %v, want %v", f.ConversationID, other)
 	}
 }
+
+func TestWSSubprotocolAuth(t *testing.T) {
+	e := setup(t, 20, nil)
+	_, _, ta, _, _ := e.pair(t)
+	url := "ws" + strings.TrimPrefix(e.srv.URL, "http") + "/api/ws"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	h := http.Header{}
+	h.Set("Origin", "http://ok.example")
+	c, _, err := websocket.Dial(ctx, url, &websocket.DialOptions{HTTPHeader: h, Subprotocols: []string{auth.WSSubprotocol, ta}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.CloseNow()
+	if c.Subprotocol() != auth.WSSubprotocol {
+		t.Fatalf("subprotocol %q", c.Subprotocol())
+	}
+	_, resp, err := websocket.Dial(ctx, url, &websocket.DialOptions{HTTPHeader: h, Subprotocols: []string{auth.WSSubprotocol, "bogus"}})
+	if err == nil {
+		t.Fatal("bad token accepted")
+	}
+	if resp == nil || resp.StatusCode != 401 {
+		t.Fatalf("resp %v", resp)
+	}
+}
