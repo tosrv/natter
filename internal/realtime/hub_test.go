@@ -340,7 +340,7 @@ func TestDisconnectDeletedGuest(t *testing.T) {
 	if _, err := e.svc.LoginGoogle(ctx, "devsub", devEmail, ""); err != nil {
 		t.Fatal(err)
 	}
-	g, _, err := e.svc.CreateGuest(ctx)
+	g, _, err := e.svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -468,7 +468,7 @@ func TestNotifyGuestEnded(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g, conv, err := e.svc.CreateGuest(ctx)
+	g, conv, err := e.svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

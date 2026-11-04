@@ -70,7 +70,7 @@ func TestSessionGoneAfterGuestDeleted(t *testing.T) {
 	s := storetest.New(t)
 	ctx := context.Background()
 	dev, _, _ := s.UpsertGoogleUser(ctx, "sub-d", "d@example.com", "", true)
-	g, _, err := s.CreateGuest(ctx, dev.ID)
+	g, _, err := s.CreateGuest(ctx, dev.ID, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

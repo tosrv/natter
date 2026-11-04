@@ -34,7 +34,7 @@ func setupTS(t *testing.T, h http.HandlerFunc) *env {
 }
 
 func guestTok(e *env, ip, tok string) *httptest.ResponseRecorder {
-	body := `{"turnstile_token":"` + tok + `"}`
+	body := `{"turnstile_token":"` + tok + `","display_name":"Budi"}`
 	req := httptest.NewRequest("POST", "/api/auth/guest", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.RemoteAddr = ip + ":1000"
@@ -152,4 +152,10 @@ func TestGuestTurnstileOversized(t *testing.T) {
 	if calls.Load() != 0 {
 		t.Fatalf("siteverify called %d times", calls.Load())
 	}
+}
+
+func TestGuestMissingNameNoTurnstile(t *testing.T) {
+	e := setup(t) // Turnstile disabled
+	devUser(t, e)
+	wantErr(t, guestNamed(e, "10.6.6.6", ""), 400, "display_name_invalid")
 }

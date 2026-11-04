@@ -83,6 +83,13 @@
     "displayNamePlaceholder": "Your name",
     "displayNameHint": "1–40 characters. Letters, numbers, spaces and . - ' _"
   },
+  "guestStart": {
+    "name": "Your name",
+    "contact": "Contact (optional) — email, WhatsApp…",
+    "start": "Start chat",
+    "cancel": "Cancel",
+    "nameError": "Use 1–40 letters, numbers, spaces or . - ' _"
+  },
   "chat": {
     "title": "Chat",
     "logout": "Log out",
@@ -102,10 +109,6 @@
     "newMessage": "New message from {{name}}",
     "back": "Back",
     "connecting": "Reconnecting…",
-    "contactTitle": "How can the developer reach you?",
-    "contactHint": "Your answer is kept with this conversation for up to 1 month so the developer can reach you.",
-    "contactPlaceholder": "Email, phone, or anything else",
-    "skip": "Skip",
     "loadFailed": "Could not load your chats.",
     "sendFailed": "Message could not be sent (rate limited). Try again later.",
     "conversationDeleted": "This conversation was deleted.",

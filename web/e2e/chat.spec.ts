@@ -1,4 +1,5 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import { startGuest } from "./guest";
 
 // Unique per run so the suite can be re-run against the same database.
 const run = Date.now().toString(36).slice(-7);
@@ -54,21 +55,20 @@ test("two users chat in realtime, guest contacts the developer", async ({ browse
   await expect(A.page.getByRole("heading", { name: /Obrolan/ })).toBeVisible();
   await expect(A.page.getByPlaceholder("Tulis pesan…")).toBeVisible();
 
-  // Guest: contact dialog appears, answer reaches the developer; no search box.
+  // Guest: start dialog (name + contact); contact reaches the developer; no search box.
   const gctx = await browser.newContext();
   const g = await gctx.newPage();
-  await g.goto("/");
-  await g.getByRole("button", { name: "Continue as guest" }).click();
-  const dialog = g.getByRole("dialog");
-  await expect(dialog).toContainText("How can the developer reach you?");
-  const contact = `contact-${run}@example.com`;
-  await dialog.getByRole("textbox").fill(contact);
-  await dialog.getByRole("button", { name: "Send" }).click();
-  await expect(dialog).toBeHidden();
+  const contact = `e2e-${run}@example.com`;
+  const guestName = `E2E Guest ${run}`;
+  await startGuest(g, { name: guestName, contact });
   await expect(g.locator("p.whitespace-pre-wrap", { hasText: contact })).toBeVisible();
   await expect(g.getByPlaceholder("Search username…")).toHaveCount(0);
 
-  await expect(dev.page.getByText(contact).first()).toBeVisible();
+  // Developer sees the guest's chosen name in the list and the contact as its first message.
+  const conv = dev.page.getByRole("button", { name: new RegExp(guestName) });
+  await expect(conv).toBeVisible();
+  await conv.click();
+  await expect(dev.page.locator("p.whitespace-pre-wrap", { hasText: contact })).toBeVisible();
 
   for (const c of [dev.ctx, A.ctx, B.ctx, gctx]) await c.close();
 });

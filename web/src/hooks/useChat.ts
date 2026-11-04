@@ -64,7 +64,6 @@ export function useChat() {
   const [pending, setPending] = useState<ClientMsg[]>([]);
   const [typingUntil, setTypingUntil] = useState<Record<string, number>>({});
   const [online, setOnline] = useState(true);
-  const [contactOpen, setContactOpen] = useState(false);
   const [, tick] = useState(0);
   const [bootError, setBootError] = useState(false);
   const [bootAttempt, setBootAttempt] = useState(0);
@@ -72,6 +71,7 @@ export function useChat() {
 
   const outbox = useRef(new Outbox());
   const sock = useRef<ChatSocket | null>(null);
+  const sendRef = useRef<(convId: string, body: string) => void>(() => {});
   const activeRef = useRef<string | null>(null);
   const msgsRef = useRef(msgs);
   const convsRef = useRef(convs);
@@ -103,7 +103,7 @@ export function useChat() {
   // Bootstrap: profile, conversations, socket.
   useEffect(() => {
     let alive = true;
-    const newGuest = (location.state as { newGuest?: boolean } | null)?.newGuest === true;
+    const guestContact = (location.state as { guestContact?: string } | null)?.guestContact?.trim();
     setBootError(false);
     getMe().then(async (m) => {
       if (!alive) return;
@@ -112,9 +112,9 @@ export function useChat() {
       const c = await refreshConvs();
       if (!alive) return;
       if (m.kind === "guest" && c[0]) setActiveId(c[0].id);
-      if (m.kind === "guest" && newGuest) {
-        setContactOpen(true);
-        nav(".", { replace: true, state: null }); // show the dialog only once
+      if (m.kind === "guest" && guestContact && c[0]) {
+        sendRef.current(c[0].id, guestContact); // first message: the contact the guest shared
+        nav(".", { replace: true, state: null }); // send it only once
       }
       const s = new ChatSocket(outbox.current);
       sock.current = s;
@@ -258,6 +258,7 @@ export function useChat() {
     setPending(outbox.current.pending());
     sock.current?.send({ type: "send", ...m }); // if offline, resent on reconnect
   }, []);
+  sendRef.current = send;
 
   const sendTyping = useCallback((convId: string) => {
     sock.current?.send({ type: "typing", conversation_id: convId });
@@ -294,6 +295,5 @@ export function useChat() {
   return {
     me, convs, activeId, setActiveId, messages, pending: pendingFor, pendingIds, typing, online,
     bootError, retryBoot, send, sendTyping, openPeer, setPeerBlocked, markRead, logout, toLanding,
-    contactOpen, setContactOpen,
   };
 }

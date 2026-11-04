@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import LanguageToggle from "@/components/LanguageToggle";
 import ThemeToggle from "@/components/ThemeToggle";
-import TurnstileWidget from "@/components/TurnstileWidget";
+import GuestStartDialog from "@/components/GuestStartDialog";
 import LegalNote from "@/components/LegalNote";
-import { toast } from "sonner";
-import { ApiError, createGuest, getConfig, getMe } from "@/lib/api";
+import { getConfig, getMe } from "@/lib/api";
 import { errorMessage } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { AtSign, CheckCheck, Languages, LogIn, MessageCircle, MoreHorizontal, Send, ShieldAlert, SunMoon, Zap } from "lucide-react";
@@ -17,12 +16,10 @@ export default function Landing() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const [err, setErr] = useState<string | null>(params.get("error"));
-  const [busy, setBusy] = useState(false);
+  const [guestOpen, setGuestOpen] = useState(false);
   // undefined = loading, "" = Turnstile disabled, "error" = config unavailable (fail closed)
   const [siteKey, setSiteKey] = useState<string | undefined>();
   const [configFailed, setConfigFailed] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const resetWidget = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (params.has("error")) window.history.replaceState(null, "", window.location.pathname);
@@ -46,26 +43,8 @@ export default function Landing() {
     return () => { alive = false; };
   }, []);
 
-  const needsToken = !!siteKey;
-  const guestDisabled = busy || configFailed || siteKey === undefined || (needsToken && !token);
-
-  async function guest() {
-    if (guestDisabled) return;
-    setBusy(true);
-    setErr(null);
-    try {
-      await createGuest(needsToken ? token ?? undefined : undefined);
-      nav("/chat", { state: { newGuest: true } });
-    } catch (e) {
-      const code = e instanceof ApiError ? e.code : "internal";
-      setErr(code);
-      if (code === "captcha_failed") toast.error(errorMessage(code));
-      // A Turnstile token is single-use: always get a fresh one after a failure.
-      resetWidget.current?.();
-      setToken(null);
-      setBusy(false);
-    }
-  }
+  const guestDisabled = configFailed || siteKey === undefined;
+  const guest = () => { if (!guestDisabled) { setErr(null); setGuestOpen(true); } };
 
   const navLinks = [
     ["how", "landing.navHow"], ["features", "landing.navFeat"], ["privacy", "landing.navData"], ["faq", "landing.navFaq"],
@@ -113,11 +92,6 @@ export default function Landing() {
                 <span className="text-center text-xs text-muted-foreground">{t("landing.guestNote")}</span>
               </div>
               {configFailed && <p role="alert" className="text-center text-xs text-destructive">{t("landing.configFailed")}</p>}
-              {needsToken && (
-                <div className="flex justify-center">
-                  <TurnstileWidget siteKey={siteKey!} onToken={setToken} onReady={(r) => { resetWidget.current = r; }} />
-                </div>
-              )}
               <LegalNote className="text-center text-xs text-muted-foreground" />
             </div>
           </div>
@@ -208,6 +182,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <GuestStartDialog open={guestOpen} onClose={() => setGuestOpen(false)} siteKey={siteKey ?? ""} />
 
       <footer className="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 border-t px-4 py-4 text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} {t("app.name")}. {t("landing.rights")}</span>

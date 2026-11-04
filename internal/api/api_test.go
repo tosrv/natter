@@ -388,7 +388,7 @@ func TestDeleteMeGuestDeactivates(t *testing.T) {
 	e, n := setupN(t)
 	ctx := context.Background()
 	dev, _ := e.user(t, "d", devEmail, "devuser")
-	g, conv, err := e.svc.CreateGuest(ctx)
+	g, conv, err := e.svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -433,7 +433,7 @@ func TestEndGuestAndClearAlreadyEnded(t *testing.T) {
 	a := auth.New(st, svc, cfg, ratelimit.New(5, time.Hour, nil))
 	d := api.Deps{Auth: a, Chat: svc, Notifier: n}
 	ctx := context.Background()
-	g, _, err := svc.CreateGuest(ctx)
+	g, _, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

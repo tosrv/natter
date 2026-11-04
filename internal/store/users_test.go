@@ -96,7 +96,7 @@ func TestEndGuestFreesSlot(t *testing.T) {
 	if got, err := s.GetDeveloper(ctx); err != nil || got.ID != dev.ID {
 		t.Fatalf("GetDeveloper: %v %v", got.ID, err)
 	}
-	g, convID, err := s.CreateGuest(ctx, dev.ID)
+	g, convID, err := s.CreateGuest(ctx, dev.ID, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

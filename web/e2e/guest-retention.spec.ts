@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { startGuest } from "./guest";
 
 // Unique per run so the suite can be re-run against the same database.
 const run = Date.now().toString(36).slice(-7);
@@ -15,14 +16,8 @@ test("ended guest keeps its conversation visible to the developer", async ({ bro
 
   const gctx = await browser.newContext();
   const g = await gctx.newPage();
-  await g.goto("/");
-  await g.getByRole("button", { name: "Continue as guest" }).click();
-  const dialog = g.getByRole("dialog");
-  await expect(dialog).toContainText("Your answer is kept with this conversation for up to 1 month so the developer can reach you.");
   const contact = `contact-${run}@example.com`;
-  await dialog.getByRole("textbox").fill(contact);
-  await dialog.getByRole("button", { name: "Send" }).click();
-  await expect(dialog).toBeHidden();
+  await startGuest(g, { contact });
   await expect(g.locator("p.whitespace-pre-wrap", { hasText: contact })).toBeVisible();
 
   // Developer sees the guest's contact; open the conversation.

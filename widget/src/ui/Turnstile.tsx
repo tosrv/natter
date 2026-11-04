@@ -21,7 +21,7 @@ function load(): Promise<void> {
   return loading;
 }
 
-export function Turnstile({ siteKey, onToken, onError }: { siteKey: string; onToken: (t: string) => void; onError: (e: unknown) => void }) {
+export function Turnstile({ siteKey, onToken, onError, onReady }: { siteKey: string; onToken: (t: string) => void; onError: (e: unknown) => void; onReady?: (reset: () => void) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let id: string | undefined;
@@ -30,8 +30,9 @@ export function Turnstile({ siteKey, onToken, onError }: { siteKey: string; onTo
       if (alive && ref.current && window.turnstile) id = window.turnstile.render(ref.current, {
         sitekey: siteKey, callback: onToken,
         "error-callback": () => onError(new Error("turnstile error")),
-        "expired-callback": () => { if (id) window.turnstile?.reset?.(id); },
+        "expired-callback": () => { onToken(""); if (id) window.turnstile?.reset?.(id); },
       });
+      if (id) onReady?.(() => { if (id) window.turnstile?.reset?.(id); });
     }, onError);
     return () => { alive = false; if (id) window.turnstile?.remove?.(id); };
   }, [siteKey]);

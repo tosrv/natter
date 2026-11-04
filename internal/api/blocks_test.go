@@ -46,7 +46,7 @@ func TestBlocksAPI(t *testing.T) {
 		t.Fatalf("self: %d %s", w.Code, w.Body)
 	}
 	e.user(t, "dev", devEmail, "devuser")
-	gu, _, err := e.svc.CreateGuest(context.Background())
+	gu, _, err := e.svc.CreateGuest(context.Background(), "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

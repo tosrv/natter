@@ -17,7 +17,7 @@ func endedGuest(t *testing.T) (*store.Store, *chat.Service, store.User, store.Us
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	dev := googleUser(t, svc, "d", devEmail, "dev")
-	g, conv, err := svc.CreateGuest(ctx)
+	g, conv, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestBlockedEndedGuestStillListed(t *testing.T) {
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	dev := googleUser(t, svc, "d", devEmail, "dev")
-	g, conv, err := svc.CreateGuest(ctx)
+	g, conv, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,10 +122,34 @@ func TestDeleteAccountRejectsGuest(t *testing.T) {
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	googleUser(t, svc, "d", devEmail, "dev")
-	g, _, err := svc.CreateGuest(ctx)
+	g, _, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	_, err = svc.DeleteAccount(ctx, g)
 	wantCode(t, err, "forbidden")
+}
+
+func TestCreateGuestInvalidName(t *testing.T) {
+	ctx := context.Background()
+	st := storetest.New(t)
+	svc := chat.New(st, devEmail)
+	googleUser(t, svc, "d", devEmail, "dev")
+	var before int
+	q := `SELECT used FROM user_slots WHERE id=1`
+	if err := st.Pool().QueryRow(ctx, q).Scan(&before); err != nil {
+		t.Fatal(err)
+	}
+	_, _, err := svc.CreateGuest(ctx, "  ")
+	wantCode(t, err, "display_name_invalid")
+	var after, users int
+	if err := st.Pool().QueryRow(ctx, q).Scan(&after); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Pool().QueryRow(ctx, `SELECT count(*) FROM users WHERE kind='guest'`).Scan(&users); err != nil {
+		t.Fatal(err)
+	}
+	if after != before || users != 0 {
+		t.Fatalf("slots %d->%d guests %d", before, after, users)
+	}
 }

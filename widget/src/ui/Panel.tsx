@@ -1,6 +1,6 @@
 import type { Controller } from "../controller";
 import { t, type Lang } from "../i18n";
-import { Turnstile } from "./Turnstile";
+import { GuestForm } from "./GuestForm";
 import { MessageList } from "./MessageList";
 import { Composer } from "./Composer";
 import { Ended } from "./Ended";
@@ -10,7 +10,7 @@ export function Panel({ ctl, lang, onClose }: { ctl: Controller; lang: Lang; onC
   let body;
   switch (s.phase) {
     case "turnstile":
-      body = <Turnstile siteKey={s.siteKey ?? ""} onToken={(tk) => ctl.startGuest(tk)} onError={ctl.fail} />;
+      body = <GuestForm ctl={ctl} lang={lang} siteKey={s.siteKey ?? ""} nameError={!!s.nameError} />;
       break;
     case "chat":
       body = <>

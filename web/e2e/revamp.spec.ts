@@ -1,4 +1,5 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import { startGuest } from "./guest";
 
 // Unique per run so the suite can be re-run against the same database.
 const run = Date.now().toString(36).slice(-7);
@@ -96,18 +97,13 @@ test("revamp: onboarding, search, ticks, settings, delete account", async ({ bro
   await B.ctx.close();
 });
 
-test("revamp: guest sees contact dialog and limited settings", async ({ browser }) => {
+test("revamp: guest starts from the dialog and sees limited settings", async ({ browser }) => {
   const dev = await login(browser, { sub: "e2e-dev", email: "dev@e2e.test", username: "dev" });
   await dev.ctx.close();
 
   const ctx = await browser.newContext();
   const g = await ctx.newPage();
-  await g.goto("/");
-  await g.getByRole("button", { name: "Continue as guest" }).click();
-  const dialog = g.getByRole("dialog");
-  await expect(dialog).toContainText("How can the developer reach you?");
-  await dialog.getByRole("button", { name: "Skip" }).click();
-  await expect(dialog).toBeHidden();
+  await startGuest(g); // default random name, no contact
 
   await g.goto("/settings");
   await expect(g.getByRole("heading", { name: "Settings" })).toBeVisible();

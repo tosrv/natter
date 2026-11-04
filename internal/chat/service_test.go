@@ -49,7 +49,7 @@ func usedSlots(t *testing.T, st *store.Store) int {
 func TestGuestBeforeDeveloper(t *testing.T) {
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
-	_, _, err := svc.CreateGuest(context.Background())
+	_, _, err := svc.CreateGuest(context.Background(), "Guest Test")
 	wantCode(t, err, "developer_unavailable")
 	if n := usedSlots(t, st); n != 0 {
 		t.Fatalf("used=%d", n)
@@ -65,7 +65,7 @@ func TestGuestOnlyDeveloper(t *testing.T) {
 		t.Fatal("expected developer")
 	}
 	other := googleUser(t, svc, "o", "o@example.com", "other")
-	g, conv, err := svc.CreateGuest(ctx)
+	g, conv, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestSendToDeletedGuest(t *testing.T) {
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	dev := googleUser(t, svc, "d", devEmail, "dev")
-	g, conv, err := svc.CreateGuest(ctx)
+	g, conv, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

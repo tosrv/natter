@@ -19,6 +19,10 @@ const dict = {
     full: "We are busy right now, please try again later.",
     unavailable: "Chat is unavailable.",
     typing: "typing...",
+    guestName: "Your name",
+    guestNameError: "Use 1–40 letters, numbers, spaces or . - ' _",
+    guestContact: "Contact (optional) — email, WhatsApp…",
+    startChat: "Start chat",
   },
   id: {
     title: "Obrolan",
@@ -38,6 +42,10 @@ const dict = {
     full: "Sedang penuh, coba lagi nanti.",
     unavailable: "Chat tidak tersedia.",
     typing: "mengetik...",
+    guestName: "Nama kamu",
+    guestNameError: "Pakai 1–40 huruf, angka, spasi, atau . - ' _",
+    guestContact: "Kontak (opsional) — email, WhatsApp…",
+    startChat: "Mulai chat",
   },
 } as const;
 

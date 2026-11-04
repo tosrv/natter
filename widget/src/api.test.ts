@@ -8,13 +8,13 @@ describe("api", () => {
   it("createGuest posts turnstile_token with credentials omit", async () => {
     const f = vi.fn().mockResolvedValue(json(200, { token: "t", conversation_id: "c", id: "u" }));
     vi.stubGlobal("fetch", f);
-    const r = await createApi("https://s.example", () => null).createGuest("ts1");
+    const r = await createApi("https://s.example", () => null).createGuest("ts1", "Budi");
     expect(r.token).toBe("t");
     const [url, init] = f.mock.calls[0];
     expect(url).toBe("https://s.example/api/auth/guest");
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("omit");
-    expect(JSON.parse(init.body)).toEqual({ turnstile_token: "ts1" });
+    expect(JSON.parse(init.body)).toEqual({ display_name: "Budi", turnstile_token: "ts1" });
   });
   it("conversations sends bearer token", async () => {
     const f = vi.fn().mockResolvedValue(json(200, []));

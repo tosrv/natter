@@ -24,3 +24,9 @@ button{font:inherit;cursor:pointer}
 .pm-btn{border:0;border-radius:8px;padding:8px 12px;background:var(--pm-color);color:var(--pm-on)}
 @media (max-width:480px){:host{right:12px;bottom:12px}.pm-panel{position:fixed;inset:0;width:auto;height:auto;max-height:none;border-radius:0}}
 @media (prefers-color-scheme:dark){:host{color:#eee;--pm-color:#1f2937;--pm-me:#374151;--pm-read:#53bdeb}.pm-panel{background:#1c1c20}.pm-msg{background:#2c2c33}.pm-note{color:#bbb}.pm-typing{color:#aaa}.pm-comp{border-color:#333}.pm-banner{background:#5b4a14;color:#fde68a}}
+.pm-guest{display:flex;flex-direction:column;gap:10px;padding:16px 12px;overflow-y:auto}
+.pm-guest label{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.pm-guest input,.pm-guest textarea{padding:8px;border:1px solid #ccc;border-radius:8px;background:transparent;color:inherit;font:inherit;resize:none}
+.pm-guest .pm-err{color:#dc2626;font-size:12px}
+.pm-guest .pm-go{padding:10px;border:0;border-radius:8px;background:var(--pm-color);color:var(--pm-on);font:inherit;cursor:pointer}
+.pm-guest .pm-go:disabled{opacity:.5;cursor:default}
