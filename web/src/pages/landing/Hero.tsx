@@ -19,8 +19,3 @@ export default function Hero({ onGoogle, onGuest, guestDisabled, productShot, ch
     </section>
   );
 }
-
-/** Temporary slot until real screenshots land (Task 5). */
-export function ProductShotPlaceholder() {
-  return <div aria-hidden className="aspect-[16/10] w-full rounded-2xl border bg-surface shadow-2xl shadow-black/[0.03]" />;
-}

@@ -120,3 +120,17 @@ test("revamp: guest starts from the dialog and sees limited settings", async ({ 
   await expect(g.getByRole("button", { name: "Continue as guest" }).first()).toBeVisible();
   await ctx.close();
 });
+
+test("dark theme shows dark product shot", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => { try { localStorage.setItem("natter.lang", "en"); localStorage.removeItem("natter.theme"); } catch { /* */ } });
+  await page.goto("/");
+  const hero = page.locator("#top");
+  const before = await hero.boundingBox();
+  await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll<HTMLImageElement>("#top img")).filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r; }))));
+  expect(await hero.boundingBox()).toEqual(before);
+  await page.getByRole("radio", { name: "Dark" }).first().click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator('#top img[src*="desktop-dark"]')).toBeVisible();
+  await expect(page.locator('#top img[src*="desktop-light"]')).toBeHidden();
+});
