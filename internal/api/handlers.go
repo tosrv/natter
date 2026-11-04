@@ -197,3 +197,20 @@ func (h *handlers) messages(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"messages": ms})
 }
+
+func (h *handlers) clearConversation(c *gin.Context) {
+	cid, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		WriteError(c, chat.ErrNotFound)
+		return
+	}
+	u := auth.CurrentUser(c)
+	if err := h.chat.ClearConversation(c.Request.Context(), u, cid); err != nil {
+		WriteError(c, err)
+		return
+	}
+	if h.notifier != nil {
+		h.notifier.NotifyConversationCleared(u.ID, cid)
+	}
+	c.Status(http.StatusNoContent)
+}

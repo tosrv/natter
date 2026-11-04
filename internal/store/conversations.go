@@ -60,7 +60,7 @@ type ConversationSummary struct {
 func (s *Store) ListConversations(ctx context.Context, userID uuid.UUID) ([]ConversationSummary, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT c.id, p.id, coalesce(p.username,''), p.display_name, p.kind,
-		       c.last_seq - me.last_read_seq, pm.last_read_seq,
+		       c.last_seq - GREATEST(me.last_read_seq, COALESCE(me.cleared_seq, 0)), pm.last_read_seq,
 		       coalesce(c.last_activity_at, c.created_at),
 		       m.id, m.seq, m.sender_id, m.body, m.created_at, m.client_msg_id,
 		       EXISTS (SELECT 1 FROM blocks b WHERE b.blocker_id = me.user_id AND b.blocked_id = p.id),
@@ -70,7 +70,7 @@ func (s *Store) ListConversations(ctx context.Context, userID uuid.UUID) ([]Conv
 		JOIN conversation_members pm ON pm.conversation_id = c.id AND pm.user_id <> me.user_id
 		JOIN users p ON p.id = pm.user_id
 		LEFT JOIN messages m ON m.conversation_id = c.id AND m.seq = c.last_seq
-		WHERE me.user_id = $1
+		WHERE me.user_id = $1 AND (me.cleared_seq IS NULL OR c.last_seq > me.cleared_seq)
 		ORDER BY coalesce(c.last_activity_at, c.created_at) DESC, c.id`, userID)
 	if err != nil {
 		return nil, err
@@ -97,4 +97,20 @@ func (s *Store) ListConversations(ctx context.Context, userID uuid.UUID) ([]Conv
 		out = append(out, cs)
 	}
 	return out, rows.Err()
+}
+
+// ClearConversation hides the conversation's history for userID only (delete
+// for me). Idempotent; non-member → ErrNotFound.
+func (s *Store) ClearConversation(ctx context.Context, convID, userID uuid.UUID) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE conversation_members cm
+		SET cleared_seq = GREATEST(COALESCE(cm.cleared_seq, 0), c.last_seq)
+		FROM conversations c
+		WHERE c.id = cm.conversation_id AND cm.conversation_id=$1 AND cm.user_id=$2`, convID, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }

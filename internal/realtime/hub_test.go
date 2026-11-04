@@ -288,8 +288,8 @@ func TestSlowConsumerDropped(t *testing.T) {
 	}
 	waitClosed(t, cb, 3*time.Second)
 	ctx := context.Background()
-	older, err1 := e.st.ListMessages(ctx, conv, 0, 101, 100) // seq 1..100
-	newer, err2 := e.st.ListMessages(ctx, conv, 100, 0, 100) // seq 101..200
+	older, err1 := e.st.ListMessages(ctx, conv, b.ID, 0, 101, 100) // seq 1..100
+	newer, err2 := e.st.ListMessages(ctx, conv, b.ID, 100, 0, 100) // seq 101..200
 	if err1 != nil || err2 != nil {
 		t.Fatal(err1, err2)
 	}
@@ -518,5 +518,25 @@ func TestWSSubprotocolAuth(t *testing.T) {
 	}
 	if resp == nil || resp.StatusCode != 401 {
 		t.Fatalf("resp %v", resp)
+	}
+}
+
+func TestNotifyConversationCleared(t *testing.T) {
+	e := setup(t, 20, nil)
+	a, b, ta, tb, conv := e.pair(t)
+	// The hub keeps one connection per user: a second dial replaces the first.
+	e.dial(t, ta)
+	c1 := waitRegistered(t, e.hub, a.ID, nil)
+	ca := e.dial(t, ta)
+	waitRegistered(t, e.hub, a.ID, c1)
+	cb := e.dial(t, tb)
+	waitRegistered(t, e.hub, b.ID, nil)
+	e.hub.NotifyConversationCleared(a.ID, conv)
+	f := must(t, ca, "conversation_cleared")
+	if f.ConversationID == nil || *f.ConversationID != conv {
+		t.Fatalf("conversation_id = %v, want %v", f.ConversationID, conv)
+	}
+	if f, err := readFrame(t, cb, 300*time.Millisecond); err == nil {
+		t.Fatalf("B got frame %+v", f)
 	}
 }

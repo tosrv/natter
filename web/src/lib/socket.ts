@@ -7,6 +7,7 @@ export type ServerFrame =
   | { type: "typing"; conversation_id: string; user_id: string }
   | { type: "read"; conversation_id: string; user_id: string; seq: number }
   | { type: "conversation_deleted"; conversation_id: string }
+  | { type: "conversation_cleared"; conversation_id: string }
   | { type: "conversation_ended"; conversation_id: string }
   | { type: "error"; code: string; message?: string; client_msg_id?: string };
 

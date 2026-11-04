@@ -125,7 +125,11 @@
     "blockBody": "Anda tidak akan menerima pesan dari pengguna ini dan mereka tidak bisa mengirim pesan kepada Anda. Anda bisa membuka blokir kapan saja.",
     "youBlocked": "Anda memblokir pengguna ini",
     "blockedToast": "Pengguna diblokir",
-    "unblockedToast": "Blokir dibuka"
+    "unblockedToast": "Blokir dibuka",
+    "deleteChat": "Hapus chat",
+    "deleteTitle": "Hapus chat ini?",
+    "deleteBody": "Chat ini dihapus dari daftarmu. Lawan bicara tetap menyimpan riwayatnya.",
+    "deleteConfirm": "Hapus"
   },
   "privacy": {
     "title": "Kebijakan Privasi",

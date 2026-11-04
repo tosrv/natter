@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import Avatar from "@/components/Avatar";
 import BlockMenu from "@/components/BlockMenu";
 
-export default function ChatHeader({ peerId, name, username, typing, onBack, blocked, ended, onBlock, onUnblock }: {
+export default function ChatHeader({ peerId, name, username, typing, onBack, blocked, ended, onBlock, onUnblock, onDelete }: {
   peerId: string; name: string; username: string; typing: boolean; onBack?: () => void;
   blocked?: boolean; ended?: boolean; onBlock?: () => Promise<void> | void; onUnblock?: () => Promise<void> | void;
+  onDelete?: () => Promise<void> | void;
 }) {
   const { t } = useTranslation();
   return (
@@ -26,7 +27,7 @@ export default function ChatHeader({ peerId, name, username, typing, onBack, blo
             : blocked && <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase">{t("chat.blocked")}</span>}
         </p>
       </div>
-      {onBlock && onUnblock && <BlockMenu name={name} blocked={!!blocked} onBlock={onBlock} onUnblock={onUnblock} />}
+      {(onDelete || (onBlock && onUnblock)) && <BlockMenu name={name} blocked={!!blocked} onBlock={onBlock} onUnblock={onUnblock} onDelete={onDelete} />}
     </div>
   );
 }

@@ -159,8 +159,17 @@ func (s *Service) Messages(ctx context.Context, u store.User, convID uuid.UUID, 
 	if _, err := s.peer(ctx, u, convID); err != nil {
 		return nil, err
 	}
-	ms, err := s.st.ListMessages(ctx, convID, afterSeq, beforeSeq, limit)
+	ms, err := s.st.ListMessages(ctx, convID, u.ID, afterSeq, beforeSeq, limit)
 	return ms, mapErr(err)
+}
+
+// ClearConversation hides convID's history for u only. Any member may clear,
+// including blocked or ended conversations.
+func (s *Service) ClearConversation(ctx context.Context, u store.User, convID uuid.UUID) error {
+	if err := ready(u); err != nil {
+		return err
+	}
+	return mapErr(s.st.ClearConversation(ctx, convID, u.ID))
 }
 
 // MarkRead stores u's read position; notifyPeer is false when u and the

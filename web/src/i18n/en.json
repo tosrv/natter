@@ -125,7 +125,11 @@
     "blockBody": "You will no longer receive messages from this user and they will not be able to message you. You can unblock them at any time.",
     "youBlocked": "You blocked this user",
     "blockedToast": "User blocked",
-    "unblockedToast": "User unblocked"
+    "unblockedToast": "User unblocked",
+    "deleteChat": "Delete chat",
+    "deleteTitle": "Delete this chat?",
+    "deleteBody": "This chat is removed from your list. The other person keeps their history.",
+    "deleteConfirm": "Delete"
   },
   "privacy": {
     "title": "Privacy Policy",

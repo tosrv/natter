@@ -99,10 +99,15 @@ func (s *Store) SendMessage(ctx context.Context, convID, senderID, clientMsgID u
 	return m, dup, nil
 }
 
+// clearedSeqSQL is the viewer's cleared_seq for conversation $1 (viewer is $3).
+const clearedSeqSQL = `coalesce((SELECT cleared_seq FROM conversation_members
+	WHERE conversation_id=$1 AND user_id=$3), 0)`
+
 // ListMessages pages a conversation. afterSeq>0: messages with seq>afterSeq
 // ascending. Otherwise the newest messages (below beforeSeq if >0), returned
-// ascending. limit is clamped to 1..100.
-func (s *Store) ListMessages(ctx context.Context, convID uuid.UUID, afterSeq, beforeSeq int64, limit int) ([]Message, error) {
+// ascending. Messages at or below viewerID's cleared_seq are never returned.
+// limit is clamped to 1..100.
+func (s *Store) ListMessages(ctx context.Context, convID, viewerID uuid.UUID, afterSeq, beforeSeq int64, limit int) ([]Message, error) {
 	if limit < 1 {
 		limit = 1
 	}
@@ -115,14 +120,15 @@ func (s *Store) ListMessages(ctx context.Context, convID uuid.UUID, afterSeq, be
 	)
 	if afterSeq > 0 {
 		rows, err = s.pool.Query(ctx, `SELECT `+msgCols+` FROM messages
-			WHERE conversation_id=$1 AND seq>$2 ORDER BY seq ASC LIMIT $3`, convID, afterSeq, limit)
+			WHERE conversation_id=$1 AND seq>$2 AND seq>`+clearedSeqSQL+` ORDER BY seq ASC LIMIT $4`,
+			convID, afterSeq, viewerID, limit)
 	} else {
 		if beforeSeq <= 0 {
 			beforeSeq = 1<<63 - 1
 		}
 		rows, err = s.pool.Query(ctx, `SELECT * FROM (SELECT `+msgCols+` FROM messages
-			WHERE conversation_id=$1 AND seq<$2 ORDER BY seq DESC LIMIT $3) t ORDER BY seq ASC`,
-			convID, beforeSeq, limit)
+			WHERE conversation_id=$1 AND seq<$2 AND seq>`+clearedSeqSQL+` ORDER BY seq DESC LIMIT $4) t ORDER BY seq ASC`,
+			convID, beforeSeq, viewerID, limit)
 	}
 	if err != nil {
 		return nil, err

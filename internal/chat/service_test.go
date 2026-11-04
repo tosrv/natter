@@ -186,3 +186,33 @@ func TestSetUsernameRules(t *testing.T) {
 		t.Fatalf("res=%v err=%v", res, err)
 	}
 }
+
+func TestClearConversation(t *testing.T) {
+	ctx := context.Background()
+	st := storetest.New(t)
+	svc := chat.New(st, devEmail)
+	a := googleUser(t, svc, "a", "a@x.com", "alice")
+	b := googleUser(t, svc, "b", "b@x.com", "bobby")
+	c := googleUser(t, svc, "c", "c@x.com", "carol")
+	conv, err := svc.OpenConversation(ctx, a, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := svc.Send(ctx, b, conv, uuid.New(), "hi"); err != nil {
+		t.Fatal(err)
+	}
+	wantCode(t, svc.ClearConversation(ctx, c, conv), "not_found")
+	// Blocked members may still clear.
+	if err := svc.Block(ctx, a, b.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.ClearConversation(ctx, a, conv); err != nil {
+		t.Fatal(err)
+	}
+	if ms, err := svc.Messages(ctx, a, conv, 0, 0, 50); err != nil || len(ms) != 0 {
+		t.Fatalf("A msgs=%v err=%v", ms, err)
+	}
+	if ms, err := svc.Messages(ctx, b, conv, 0, 0, 50); err != nil || len(ms) != 1 {
+		t.Fatalf("B msgs=%v err=%v", ms, err)
+	}
+}

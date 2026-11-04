@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { handlePeerEnded, markEnded, removeConversation, setBlocked, type ChatState } from "./useChat";
+import { clearConversationMessages, handlePeerEnded, markEnded, removeConversation, setBlocked, type ChatState } from "./useChat";
 import { Outbox } from "@/lib/outbox";
 import type { ConversationSummary, Message } from "@/lib/api";
 
@@ -51,5 +51,39 @@ describe("markEnded / handlePeerEnded", () => {
     expect(r.state.convs[0].peer_ended).toBe(true);
     expect(r.dropped.sort()).toEqual([x.client_msg_id, z.client_msg_id].sort());
     expect(o.pending()).toEqual([y]);
+  });
+});
+
+describe("clearConversationMessages (guest delete)", () => {
+  const base: ChatState = { convs: [conv("a"), conv("b")], msgs: { a: [msg("a")], b: [msg("b")] }, activeId: "a" };
+  it("keeps the conversation and active id but empties its messages", () => {
+    const s = clearConversationMessages(base, "a");
+    expect(s.convs.map((c) => c.id)).toEqual(["a", "b"]);
+    expect(s.activeId).toBe("a");
+    expect(s.msgs.a).toEqual([]);
+    expect(s.msgs.b).toHaveLength(1);
+  });
+  it("is idempotent", () => {
+    const once = clearConversationMessages(base, "a");
+    expect(clearConversationMessages(once, "a")).toEqual(once);
+  });
+  it("removeConversation is idempotent", () => {
+    const once = removeConversation(base, "a");
+    expect(removeConversation(once, "a")).toEqual(once);
+  });
+});
+
+describe("guest clear vs deleted", () => {
+  const base: ChatState = { convs: [conv("a")], msgs: { a: [msg("a")] }, activeId: "a" };
+  it("clearing history leaves the outbox untouched", () => {
+    const ob = new Outbox();
+    ob.add("a", "hi");
+    clearConversationMessages(base, "a");
+    expect(ob.pending()).toHaveLength(1);
+  });
+  it("conversation_deleted (removeConversation) still removes the conversation regardless of user kind", () => {
+    const s = removeConversation(base, "a");
+    expect(s.convs).toEqual([]);
+    expect(s.activeId).toBeNull();
   });
 });
