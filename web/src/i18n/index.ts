@@ -28,6 +28,7 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 document.documentElement.lang = i18n.language;
+i18n.on("languageChanged", (l) => { document.documentElement.lang = l; });
 
 export function errorMessage(code: string): string {
   return i18n.exists(`errors.${code}`) ? i18n.t(`errors.${code}`) : i18n.t("errors.unknown");
