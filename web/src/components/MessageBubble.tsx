@@ -14,10 +14,10 @@ export default function MessageBubble({ mine, body, createdAt, status }: {
   return (
     <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
       <div className={cn("max-w-[80%] rounded-2xl px-3 py-2 shadow-sm",
-        mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-card text-card-foreground border")}>
+        mine ? "rounded-br-sm bg-primary-solid text-primary-foreground" : "rounded-bl-sm bg-card text-card-foreground border")}>
         {/* Rendered as plain text; never HTML. */}
         <p className="whitespace-pre-wrap break-words">{body}</p>
-        <p className={cn("mt-0.5 flex items-center justify-end gap-1 text-[11px]", mine ? "opacity-85" : "text-muted-foreground")}>
+        <p className={cn("mt-0.5 flex items-center justify-end gap-1 text-[11px]", mine ? "" : "text-muted-foreground")}>
           <span>{hhmm(createdAt)}</span>
           {status && <StatusTicks status={status} />}
         </p>

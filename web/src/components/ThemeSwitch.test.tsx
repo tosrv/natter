@@ -64,4 +64,16 @@ describe("ThemeSwitch", () => {
     key(radio("Light"), "ArrowLeft");
     expect(radio("System").getAttribute("aria-checked")).toBe("true");
   });
+  it("End selects System, Home selects Light", () => {
+    render(<ThemeSwitch />);
+    key(radio("Light"), "End");
+    expect(radio("System").getAttribute("aria-checked")).toBe("true");
+    key(radio("System"), "Home");
+    expect(radio("Light").getAttribute("aria-checked")).toBe("true");
+  });
+  it("uses roving tabindex", () => {
+    localStorage.setItem("natter.theme", "dark");
+    render(<ThemeSwitch />);
+    expect(radios().map((r) => r.getAttribute("tabindex"))).toEqual(["-1", "0", "-1"]);
+  });
 });

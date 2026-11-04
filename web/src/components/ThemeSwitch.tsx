@@ -21,10 +21,14 @@ export default function ThemeSwitch({ className }: { className?: string }) {
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, i: number) {
-    const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-    if (!step) return;
+    let idx: number;
+    if (e.key === "Home") idx = 0;
+    else if (e.key === "End") idx = OPTIONS.length - 1;
+    else if (e.key === "ArrowRight" || e.key === "ArrowDown") idx = (i + 1) % OPTIONS.length;
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") idx = (i - 1 + OPTIONS.length) % OPTIONS.length;
+    else return;
     e.preventDefault();
-    const next = OPTIONS[(i + step + OPTIONS.length) % OPTIONS.length].pref;
+    const next = OPTIONS[idx].pref;
     choose(next);
     const group = e.currentTarget.parentElement;
     requestAnimationFrame(() => group?.querySelector<HTMLButtonElement>(`[data-pref="${next}"]`)?.focus());

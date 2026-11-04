@@ -27,7 +27,7 @@ export default function ConversationList({ items, activeId, onSelect }: {
               {c.last_message && <span className="block truncate text-sm text-muted-foreground">{c.last_message.body}</span>}
             </span>
             {c.unread > 0 && c.id !== activeId && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground" aria-label={t("chat.unread")}>{c.unread}</span>
+              <span className="rounded-full bg-primary-solid px-2 py-0.5 text-xs font-bold text-primary-foreground" aria-label={t("chat.unread")}>{c.unread}</span>
             )}
           </button>
         </li>

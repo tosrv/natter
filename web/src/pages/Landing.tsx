@@ -88,7 +88,7 @@ export default function Landing() {
                 <a href="/api/auth/google/login"><span className="flex size-6 items-center justify-center rounded-full bg-white"><GoogleIcon /></span> {t("landing.google")}</a>
               </Button>
               <div className="flex flex-col gap-1">
-                <Button variant="outline" size="lg" className="" onClick={guest} disabled={guestDisabled}>{t("landing.guest")}</Button>
+                <Button variant="outline" size="lg" onClick={guest} disabled={guestDisabled}>{t("landing.guest")}</Button>
                 <span className="text-center text-xs text-muted-foreground">{t("landing.guestNote")}</span>
               </div>
               {configFailed && <p role="alert" className="text-center text-xs text-destructive">{t("landing.configFailed")}</p>}
@@ -98,10 +98,10 @@ export default function Landing() {
 
           <div aria-hidden className="mx-auto w-full max-w-sm overflow-hidden rounded-3xl border bg-card shadow-xl">
             <div className="flex items-center gap-3 border-b px-4 py-3">
-              <div className="flex size-9 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">A</div>
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/15 font-bold text-primary-text">A</div>
               <div className="text-left">
                 <p className="text-sm font-semibold">Alya</p>
-                <p className="text-xs text-primary">{t("landing.online")}</p>
+                <p className="text-xs text-primary-text">{t("landing.online")}</p>
               </div>
             </div>
             <div className="flex flex-col gap-2 p-4 text-left text-sm">
@@ -119,8 +119,8 @@ export default function Landing() {
         <ol className="grid gap-4 md:grid-cols-3">
           {steps.map(({ icon: Icon, title, desc }, i) => (
             <li key={title} className="flex flex-col gap-2 rounded-2xl border bg-card p-5">
-              <span className="flex items-center gap-2 text-sm font-semibold text-primary">
-                <span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">{i + 1}</span>
+              <span className="flex items-center gap-2 text-sm font-semibold text-primary-text">
+                <span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-text-foreground">{i + 1}</span>
                 <Icon className="size-4" aria-hidden />
               </span>
               <h3 className="font-bold">{title}</h3>
@@ -134,7 +134,7 @@ export default function Landing() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {grid.map(({ icon: Icon, n }) => (
             <div key={n} className="flex gap-3 rounded-2xl border bg-card p-5">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary"><Icon className="size-5" aria-hidden /></span>
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-text"><Icon className="size-5" aria-hidden /></span>
               <div>
                 <h3 className="font-bold">{t(`landing.ft${n}`)}</h3>
                 <p className="text-sm text-muted-foreground">{t(`landing.fd${n}`)}</p>
@@ -148,11 +148,11 @@ export default function Landing() {
         <ul className="flex flex-col gap-3 rounded-2xl border bg-card p-5">
           {[1, 2, 3].map((n) => (
             <li key={n} className="flex items-start gap-3 text-sm">
-              <ShieldAlert className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden /> {t(`landing.tr${n}`)}
+              <ShieldAlert className="mt-0.5 size-4 shrink-0 text-primary-text" aria-hidden /> {t(`landing.tr${n}`)}
             </li>
           ))}
         </ul>
-        <Link to="/privacy" className="mt-3 inline-block text-sm text-primary underline">{t("landing.info")}</Link>
+        <Link to="/privacy" className="mt-3 inline-block text-sm text-primary-text underline">{t("landing.info")}</Link>
       </Section>
 
       <Section id="faq" title={t("landing.faqTitle")}>
@@ -160,7 +160,7 @@ export default function Landing() {
           {[1, 2, 3, 4].map((n) => (
             <details key={n} className="group rounded-2xl border bg-card p-5">
               <summary className="cursor-pointer list-none font-semibold marker:hidden">
-                <span className="flex items-center justify-between gap-2">{t(`landing.q${n}`)}<span className="text-primary transition-transform group-open:rotate-45">+</span></span>
+                <span className="flex items-center justify-between gap-2">{t(`landing.q${n}`)}<span className="text-primary-text transition-transform group-open:rotate-45">+</span></span>
               </summary>
               <p className="mt-2 text-sm text-muted-foreground">{t(`landing.a${n}`)}</p>
             </details>
@@ -169,14 +169,14 @@ export default function Landing() {
       </Section>
 
       <section className="mx-auto w-full max-w-5xl px-4 py-12">
-        <div className="flex flex-col items-center gap-4 rounded-3xl bg-primary px-6 py-10 text-center text-primary-foreground">
+        <div className="flex flex-col items-center gap-4 rounded-3xl bg-primary-solid px-6 py-10 text-center text-primary-foreground">
           <h2 className="text-3xl font-extrabold tracking-tight">{t("landing.ctaTitle")}</h2>
           <p className="opacity-90">{t("landing.ctaSub")}</p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" variant="secondary" className="gap-3">
               <a href="/api/auth/google/login"><GoogleIcon /> {t("landing.google")}</a>
             </Button>
-            <Button size="lg" variant="ghost" className=" border border-primary-foreground/40 hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={guest} disabled={guestDisabled}>
+            <Button size="lg" variant="ghost" className="border border-primary-foreground/40 hover:bg-primary-foreground/10 hover:text-primary-foreground" onClick={guest} disabled={guestDisabled}>
               {t("landing.ctaGuest")}
             </Button>
           </div>
@@ -209,9 +209,9 @@ function Section({ id, title, sub, children }: { id: string; title: string; sub?
 function Bubble({ out, read, children }: { out?: boolean; read?: boolean; children: React.ReactNode }) {
   return (
     <div className={cn("max-w-[80%] rounded-2xl px-3 py-2 shadow-sm",
-      out ? "self-end rounded-br-sm bg-primary text-primary-foreground" : "self-start rounded-bl-sm border bg-background")}>
+      out ? "self-end rounded-br-sm bg-primary-solid text-primary-foreground" : "self-start rounded-bl-sm border bg-background")}>
       {children}
-      {read && <CheckCheck className="ml-1 inline size-3.5 opacity-80" />}
+      {read && <CheckCheck className="ml-1 inline size-3.5" />}
     </div>
   );
 }
