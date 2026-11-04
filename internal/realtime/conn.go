@@ -30,7 +30,7 @@ type conn struct {
 // Handler upgrades an authenticated request; requires auth.Middleware.
 func (h *Hub) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ws, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{OriginPatterns: h.origins})
+		ws, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{OriginPatterns: h.origins, Subprotocols: []string{auth.WSSubprotocol}})
 		if err != nil {
 			return // Accept already wrote the HTTP error
 		}

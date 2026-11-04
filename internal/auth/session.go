@@ -23,6 +23,8 @@ import (
 const (
 	SessionCookie = "pm_session"
 	StateCookie   = "pm_oauth_state"
+	// WSSubprotocol is the Sec-WebSocket-Protocol marker preceding the token.
+	WSSubprotocol = "pmess.bearer"
 	googleTTL     = 30 * 24 * time.Hour
 	guestTTL      = 24 * time.Hour
 	stateTTL      = 10 * time.Minute
@@ -98,6 +100,16 @@ func token(c *gin.Context) string {
 			return t
 		}
 	}
+	if c.Request.URL.Path == "/api/ws" {
+		if v := c.GetHeader("Sec-WebSocket-Protocol"); v != "" {
+			parts := strings.Split(v, ",")
+			if len(parts) >= 2 && strings.TrimSpace(parts[0]) == WSSubprotocol {
+				if t := strings.TrimSpace(parts[1]); t != "" {
+					return t
+				}
+			}
+		}
+	}
 	if v, err := c.Cookie(SessionCookie); err == nil {
 		return v
 	}
@@ -140,14 +152,14 @@ func (a *Auth) setCookie(c *gin.Context, name, value string, maxAge int) {
 	})
 }
 
-func (a *Auth) startSession(c *gin.Context, u store.User, ttl time.Duration) bool {
+func (a *Auth) startSession(c *gin.Context, u store.User, ttl time.Duration) (string, bool) {
 	tok, err := a.st.CreateSession(c.Request.Context(), u.ID, ttl)
 	if err != nil {
 		WriteError(c, err)
-		return false
+		return "", false
 	}
 	a.setCookie(c, SessionCookie, tok, int(ttl/time.Second))
-	return true
+	return tok, true
 }
 
 // ClearSession expires the session cookie.

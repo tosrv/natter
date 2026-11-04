@@ -52,6 +52,15 @@ The "Continue as guest" button is protected by Turnstile; the server verifies th
 
 For local dev/E2E leave both empty (captcha off). Cloudflare's always-pass test keys: site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`. The Playwright test for the real widget runs only with `E2E_TURNSTILE=1` and needs access to `challenges.cloudflare.com` (CI sets this up).
 
+## Embeddable widget (host sites)
+
+To let a website embed `<pmess-chat>` (see [`widget/README.md`](../widget/README.md)), for each host site:
+
+1. Add `https://<site>` to `ALLOWED_ORIGINS` in the VPS `.env` (comma-separated), then run `docker compose up -d` to restart the app with the new env.
+2. Cloudflare dashboard → **Turnstile** → the pmess widget → add the site's hostname.
+3. Verify the script is served cross-origin: `curl -I https://chat.rahmattomy.com/widget.js` must show `Cross-Origin-Resource-Policy: cross-origin`.
+4. If the host site has a Content-Security-Policy, it must allow `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com` and `frame-src https://challenges.cloudflare.com`. Styles use constructable stylesheets, so no `style-src` change is needed on modern browsers; older browsers fall back to an inline `<style>` element, which needs `style-src 'unsafe-inline'`.
+
 ## Security headers
 
 The server adds these to every response: `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `X-Frame-Options: DENY`, and `Strict-Transport-Security: max-age=31536000` only when `COOKIE_SECURE=true`. **Do not add the same headers in Nginx** (`add_header`), or they will be duplicated; the policy lives in `internal/api/security.go`.

@@ -34,12 +34,17 @@ func (a *Auth) Guest(c *gin.Context) {
 		WriteError(c, err)
 		return
 	}
-	if !a.startSession(c, u, guestTTL) {
+	tok, ok := a.startSession(c, u, guestTTL)
+	if !ok {
 		return
 	}
 	name := ""
 	if u.Username != nil {
 		name = *u.Username
 	}
-	c.JSON(http.StatusCreated, gin.H{"id": u.ID, "username": name, "conversation_id": conv})
+	resp := gin.H{"id": u.ID, "username": name, "conversation_id": conv}
+	if embedOrigin(c, a.cfg.AllowedOrigins, a.cfg.CookieSecure) {
+		resp["token"] = tok
+	}
+	c.JSON(http.StatusCreated, resp)
 }

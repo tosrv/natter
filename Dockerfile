@@ -10,6 +10,15 @@ RUN --mount=type=secret,id=extra_ca \
 COPY web/ ./
 RUN npm run build
 
+FROM node:22 AS widget
+WORKDIR /src/widget
+COPY widget/package.json widget/package-lock.json ./
+RUN --mount=type=secret,id=extra_ca \
+    if [ -s /run/secrets/extra_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/extra_ca; fi; \
+    npm ci
+COPY widget/ ./
+RUN npm run build
+
 FROM golang:1.24 AS go
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -46,6 +55,7 @@ RUN --mount=type=secret,id=extra_ca \
 WORKDIR /app
 COPY --from=go /out/server /app/server
 COPY --from=web /src/web/dist /app/web
+COPY --from=widget /src/widget/dist/widget.js /app/web/widget.js
 COPY --chmod=0755 deploy/*.sh /app/deploy/
 ENV STATIC_DIR=/app/web LISTEN_ADDR=:8080 BACKUP_DIR=/backups
 EXPOSE 8080
