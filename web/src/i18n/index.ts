@@ -4,7 +4,7 @@ import en from "./en.json";
 import id from "./id.json";
 
 export type Lang = "en" | "id";
-const KEY = "pmess.lang";
+const KEY = "natter.lang";
 
 export function detectLang(): Lang {
   try {

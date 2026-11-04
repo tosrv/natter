@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/store"
 )
 
 // Error is a client-facing error with a stable code and HTTP status.

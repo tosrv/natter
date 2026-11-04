@@ -3,7 +3,7 @@
 - **Tanggal:** 2026-11-02
 - **Status:** Menunggu review pemilik produk
 - **Sumber:** PRD "Personal Messenger (MVP / v0)"
-- **Repo:** `tosrv/pmess`
+- **Repo:** `tosrv/natter`
 
 ## 1. Ringkasan
 

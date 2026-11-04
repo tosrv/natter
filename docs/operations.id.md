@@ -1,4 +1,4 @@
-# Panduan Operasional pmess
+# Panduan Operasional natter
 
 > English version: [operations.md](operations.md) · Kembali ke [README](../README.id.md)
 
@@ -24,7 +24,7 @@ Salin `.env.example` ke `.env` lalu isi. `.env` tidak boleh di-commit.
 
 | Variabel | Wajib | Default | Keterangan |
 |---|---|---|---|
-| `DATABASE_URL` | ya | – | URL Postgres, mis. `postgres://pmess:PASSWORD@localhost:5432/pmess?sslmode=disable`. Di `docker compose` dibangun otomatis dari `POSTGRES_PASSWORD` |
+| `DATABASE_URL` | ya | – | URL Postgres, mis. `postgres://natter:PASSWORD@localhost:5432/natter?sslmode=disable`. Di `docker compose` dibangun otomatis dari `POSTGRES_PASSWORD` |
 | `POSTGRES_PASSWORD` | ya (compose) | – | Password Postgres untuk `docker compose`; compose menolak jalan bila kosong |
 | `GOOGLE_CLIENT_ID` | ya (login Google) | – | Dari Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | ya (login Google) | – | Rahasia — jangan di-commit |
@@ -46,7 +46,7 @@ Salin `.env.example` ke `.env` lalu isi. `.env` tidak boleh di-commit.
 Tombol "Lanjut sebagai tamu" dilindungi Turnstile; verifikasi server dilakukan sebelum rate limit dan slot. Bila Cloudflare tidak terjangkau, login tamu gagal tertutup (503 `captcha_unavailable`).
 
 1. Dashboard Cloudflare → **Turnstile** → **Add widget**.
-2. Isi nama (mis. `pmess`), hostname `chat.rahmattomy.com`, mode **Managed**.
+2. Isi nama (mis. `natter`), hostname `chat.rahmattomy.com`, mode **Managed**.
 3. Salin **site key** dan **secret key** ke `.env` di VPS (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`).
 4. `docker compose up -d` agar container app memuat env baru.
 
@@ -54,10 +54,10 @@ Untuk dev/E2E lokal kosongkan keduanya (captcha mati). Test key Cloudflare yang 
 
 ## Widget yang disematkan (situs host)
 
-Agar sebuah situs bisa menyematkan `<pmess-chat>` (lihat [`widget/README.md`](../widget/README.md)), untuk setiap situs host:
+Agar sebuah situs bisa menyematkan `<natter-chat>` (lihat [`widget/README.md`](../widget/README.md)), untuk setiap situs host:
 
 1. Tambah `https://<situs>` ke `ALLOWED_ORIGINS` di `.env` VPS (dipisah koma), lalu jalankan `docker compose up -d` agar app restart dengan env baru.
-2. Dashboard Cloudflare → **Turnstile** → widget pmess → tambah hostname situs.
+2. Dashboard Cloudflare → **Turnstile** → widget natter → tambah hostname situs.
 3. Cek skrip disajikan lintas origin: `curl -I https://chat.rahmattomy.com/widget.js` harus menampilkan `Cross-Origin-Resource-Policy: cross-origin`.
 4. Bila situs host punya Content-Security-Policy, izinkan `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com`, dan `frame-src https://challenges.cloudflare.com`. Gaya memakai constructable stylesheet, sehingga `style-src` tidak perlu diubah di browser modern; browser lama memakai elemen `<style>` inline sebagai cadangan, yang membutuhkan `style-src 'unsafe-inline'`.
 
@@ -73,11 +73,11 @@ Pengguna terdaftar dapat memblokir lawan bicara dari menu percakapan (atau membu
 
 ```bash
 # 1. Postgres (file dev mempublikasikan 127.0.0.1:5432)
-echo POSTGRES_PASSWORD=pmess >> .env
+echo POSTGRES_PASSWORD=natter >> .env
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres
 
 # 2. Backend (terminal 1)
-export DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable'
+export DATABASE_URL='postgres://natter:natter@localhost:5432/natter?sslmode=disable'
 export TRUSTED_PROXY=127.0.0.1
 export DEVELOPER_EMAIL=you@example.com
 export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...
@@ -128,7 +128,7 @@ cd web && npm test
 **Load test (kriteria 2, latensi < 1 detik)** — butuh server berjalan dan Postgres terjangkau dari host (stack dev, lihat di atas):
 
 ```bash
-DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable' go run ./cmd/loadtest
+DATABASE_URL='postgres://natter:natter@localhost:5432/natter?sslmode=disable' go run ./cmd/loadtest
 # mencetak p50/p95/max; exit 0 + "OK" bila tidak ada pesan hilang/duplikat
 ```
 
@@ -152,18 +152,18 @@ Contoh server block lengkap ada di [`deploy/nginx.conf.example`](../deploy/nginx
 
 ## Operasional
 
-Alur: push ke `main` -> CI (test + backup-test) -> image `ghcr.io/tosrv/pmess` (`latest` dan `sha-<7 karakter>`) -> Watchtower di VPS menariknya otomatis. `docker-compose.yml` adalah compose produksi (image dari GHCR, tanpa `build`).
+Alur: push ke `main` -> CI (test + backup-test) -> image `ghcr.io/tosrv/natter` (`latest` dan `sha-<7 karakter>`) -> Watchtower di VPS menariknya otomatis. `docker-compose.yml` adalah compose produksi (image dari GHCR, tanpa `build`).
 
 ### Setup GHCR (sekali)
 
-Setelah job `image` pertama sukses: GitHub -> profil/organisasi -> **Packages** -> `pmess` -> **Package settings** -> **Change visibility** -> **Public**. Setelah itu VPS menarik image tanpa login. Image tidak berisi secret (semua config lewat `.env`).
+Setelah job `image` pertama sukses: GitHub -> profil/organisasi -> **Packages** -> `natter` -> **Package settings** -> **Change visibility** -> **Public**. Setelah itu VPS menarik image tanpa login. Image tidak berisi secret (semua config lewat `.env`).
 
 ### Deploy pertama di VPS
 
 ```bash
-git clone https://github.com/tosrv/pmess.git && cd pmess
+git clone https://github.com/tosrv/natter.git && cd natter
 cp .env.example .env            # isi POSTGRES_PASSWORD, GOOGLE_*, DEVELOPER_EMAIL, dst.
-sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess   # uid 65532 = user di dalam container
+sudo install -d -o 65532 -g 65532 -m 700 /var/backups/natter   # uid 65532 = user di dalam container
 docker compose up -d
 docker compose ps               # app harus healthy
 curl -fsS http://127.0.0.1:8080/healthz
@@ -179,19 +179,19 @@ Catatan: container `backup` memakai image yang sama tetapi tidak diperbarui otom
 
 ### Rollback
 
-Set `PMESS_TAG=sha-<versi lama>` di `.env`, lalu `docker compose up -d app backup`. Selama `PMESS_TAG` bukan `latest`, Watchtower tidak memperbarui `app` (tag tetap sama). Kembali ke `PMESS_TAG=latest` untuk mengikuti pembaruan lagi. Rollback image **tidak** membatalkan migrasi; bila migrasi bermasalah, restore dari backup `preupdate`.
+Set `NATTER_TAG=sha-<versi lama>` di `.env`, lalu `docker compose up -d app backup`. Selama `NATTER_TAG` bukan `latest`, Watchtower tidak memperbarui `app` (tag tetap sama). Kembali ke `NATTER_TAG=latest` untuk mengikuti pembaruan lagi. Rollback image **tidak** membatalkan migrasi; bila migrasi bermasalah, restore dari backup `preupdate`.
 
 ### Backup
 
-- **Lokasi:** `/var/backups/pmess` di host (ubah dengan `BACKUP_DIR`), terpasang di container sebagai `/backups`. Folder harus dibuat dengan `sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess`.
+- **Lokasi:** `/var/backups/natter` di host (ubah dengan `BACKUP_DIR`), terpasang di container sebagai `/backups`. Folder harus dibuat dengan `sudo install -d -o 65532 -g 65532 -m 700 /var/backups/natter`.
 - **Jadwal:** service `backup` menjalankan `pg_dump -Fc` tiap hari pukul 02:00 waktu `TZ` (default `UTC`); hari Minggu diberi label `weekly`. Backup `preupdate` dibuat Watchtower sebelum tiap update.
-- **Nama file:** `pmess-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump`.
+- **Nama file:** `natter-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump`.
 - **Retensi:** 7 `daily`, 4 `weekly`, 5 `preupdate`; yang lebih lama dihapus hanya setelah backup baru sukses.
 - **Gagal backup:** tercatat sebagai log JSON `level=ERROR` (`docker compose logs backup`); tidak ada alert terpisah.
 - **Salin ke komputer sendiri (manual, disarankan rutin):**
 
 ```bash
-scp 'user@vps:/var/backups/pmess/pmess-*.dump' ./backup-pmess/
+scp 'user@vps:/var/backups/natter/natter-*.dump' ./backup-natter/
 ```
 
 > **Risiko:** backup hanya ada di VPS. Bila VPS hilang atau diretas, backup ikut hilang. Salin berkala dengan `scp` di atas.
@@ -201,7 +201,7 @@ scp 'user@vps:/var/backups/pmess/pmess-*.dump' ./backup-pmess/
 Dijalankan di host dari root repo. Urutan: hentikan `watchtower` (dinyalakan lagi saat skrip selesai, juga bila gagal) -> safety dump `preupdate` dari kondisi saat ini (bila `app` berjalan) -> hentikan `app` -> `pg_restore --single-transaction` (gagal = rollback penuh, database lama utuh) -> nyalakan `app` -> tunggu `/healthz` OK maks 60 detik. Service `backup` tidak disentuh.
 
 ```bash
-deploy/restore.sh /var/backups/pmess/pmess-YYYYMMDD-HHMM-daily.dump --yes
+deploy/restore.sh /var/backups/natter/natter-YYYYMMDD-HHMM-daily.dump --yes
 ```
 
 Bila safety dump gagal, skrip berhenti sebelum menyentuh apa pun; tambahkan `--no-safety-dump` sebagai argumen ketiga (`... --yes --no-safety-dump`) untuk melewatinya. Tanpa `--yes` skrip menolak jalan. Pakai `sudo` bila folder backup hanya terbaca uid 65532.

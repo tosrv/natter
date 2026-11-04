@@ -1,5 +1,5 @@
 export function createSession(server: string, storage?: Storage) {
-  const key = `pmess:${server}`;
+  const key = `natter:${server}`;
   let mem: string | null = null;
   let st: Storage | undefined = storage;
   if (!st) {

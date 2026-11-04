@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "pmess",
+    "name": "natter",
     "tagline": "A simple personal messenger."
   },
   "common": {
@@ -46,19 +46,19 @@
     "ft6": "English & Indonesian",
     "fd6": "Switch language any time.",
     "trustTitle": "Honest about your data",
-    "trustSub": "pmess is a simple project. Here's exactly how your data is handled.",
+    "trustSub": "natter is a simple project. Here's exactly how your data is handled.",
     "tr1": "Not end-to-end encrypted. Server administrators can read messages.",
     "tr2": "Conversations are deleted after 1 month of inactivity.",
     "tr3": "Guest accounts are deactivated 30 minutes after their last message; their conversation is kept up to 1 month.",
     "faqTitle": "Frequently asked questions",
-    "q1": "Is pmess free?",
+    "q1": "Is natter free?",
     "a1": "Yes. Sign in with Google or continue as a guest at no cost.",
     "q2": "What can a guest do?",
     "a2": "Guests get a temporary account to chat right away. It ends automatically and cannot be used again, so sign in with Google if you want to keep using your chats.",
     "q3": "Can I delete my account?",
     "a3": "Yes. Open Settings and delete your account at any time.",
     "q4": "Are my messages encrypted?",
-    "a4": "Not end-to-end. Don't share sensitive information over pmess.",
+    "a4": "Not end-to-end. Don't share sensitive information over natter.",
     "ctaTitle": "Ready to chat?",
     "ctaSub": "It takes less than a minute to get started.",
     "ctaGuest": "Try as guest",
@@ -130,7 +130,7 @@
     "guest": "When a guest session ends, the account is deactivated and can no longer be used. The conversation stays on the developer's side for up to 1 month after the last message, then is deleted automatically. A guest who sent no message is deleted immediately.",
     "retention": "Conversations are deleted after 1 month of inactivity.",
     "contact": "Sharing contact information as a guest is voluntary. It is kept with the conversation for up to 1 month so the developer can reach you, then deleted with it.",
-    "intro": "This policy explains what data pmess collects, how it is used, and how long it is kept. pmess is a small, independently run messaging project, so we aim to keep this short and plain.",
+    "intro": "This policy explains what data natter collects, how it is used, and how long it is kept. natter is a small, independently run messaging project, so we aim to keep this short and plain.",
     "updated": "Last updated: November 3, 2026",
     "sections": [
       {
@@ -151,7 +151,7 @@
       {
         "h": "3. Message security",
         "p": [
-          "Messages are not end-to-end encrypted. They are stored on our server, and server administrators can read them through the database. Please do not share passwords, financial details or other sensitive information on pmess."
+          "Messages are not end-to-end encrypted. They are stored on our server, and server administrators can read them through the database. Please do not share passwords, financial details or other sensitive information on natter."
         ]
       },
       {
@@ -178,7 +178,7 @@
       {
         "h": "7. Cloudflare Turnstile",
         "p": [
-          "When you continue as a guest, we use Cloudflare Turnstile to check that you are not a bot. Turnstile processes data from your browser, such as your IP address and browser characteristics, to make this decision. This data is handled by Cloudflare under its own privacy policy and is not stored by pmess."
+          "When you continue as a guest, we use Cloudflare Turnstile to check that you are not a bot. Turnstile processes data from your browser, such as your IP address and browser characteristics, to make this decision. This data is handled by Cloudflare under its own privacy policy and is not stored by natter."
         ]
       },
       {
@@ -192,18 +192,18 @@
   "terms": {
     "title": "Terms of Service",
     "updated": "Last updated: November 3, 2026",
-    "intro": "By using pmess you agree to these terms. They are short on purpose.",
+    "intro": "By using natter you agree to these terms. They are short on purpose.",
     "sections": [
       {
         "h": "1. The service",
         "p": [
-          "pmess is a personal project provided as is, without any guarantee of availability, reliability or that data will be kept. It may change or stop at any time."
+          "natter is a personal project provided as is, without any guarantee of availability, reliability or that data will be kept. It may change or stop at any time."
         ]
       },
       {
         "h": "2. Acceptable use",
         "p": [
-          "Do not use pmess for spam, harassment, or any illegal content.",
+          "Do not use natter for spam, harassment, or any illegal content.",
           "The developer may delete accounts that break these rules, without notice."
         ]
       },
@@ -224,13 +224,13 @@
       {
         "h": "5. Capacity",
         "p": [
-          "pmess is limited to 300 accounts. When the limit is reached, new sign-ups are paused until space is available."
+          "natter is limited to 300 accounts. When the limit is reached, new sign-ups are paused until space is available."
         ]
       },
       {
         "h": "6. Changes to these terms",
         "p": [
-          "These terms may change. When they do, we will update the date at the top of this page. Continuing to use pmess means you accept the updated terms."
+          "These terms may change. When they do, we will update the date at the top of this page. Continuing to use natter means you accept the updated terms."
         ]
       }
     ]

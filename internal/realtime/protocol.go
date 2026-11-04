@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/store"
 )
 
 // Frame is the single JSON envelope for every WS frame.

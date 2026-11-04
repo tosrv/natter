@@ -1,6 +1,6 @@
 .superpowers/
 /bin/
-/pmess
+/natter
 *.test
 *.out
 node_modules/

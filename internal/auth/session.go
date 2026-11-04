@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tosrv/pmess/internal/chat"
-	"github.com/tosrv/pmess/internal/config"
-	"github.com/tosrv/pmess/internal/ratelimit"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/chat"
+	"github.com/tosrv/natter/internal/config"
+	"github.com/tosrv/natter/internal/ratelimit"
+	"github.com/tosrv/natter/internal/store"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -24,7 +24,7 @@ const (
 	SessionCookie = "pm_session"
 	StateCookie   = "pm_oauth_state"
 	// WSSubprotocol is the Sec-WebSocket-Protocol marker preceding the token.
-	WSSubprotocol = "pmess.bearer"
+	WSSubprotocol = "natter.bearer"
 	googleTTL     = 30 * 24 * time.Hour
 	guestTTL      = 24 * time.Hour
 	stateTTL      = 10 * time.Minute

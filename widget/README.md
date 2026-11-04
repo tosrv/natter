@@ -1,6 +1,6 @@
-# pmess embeddable chat widget
+# natter embeddable chat widget
 
-A small chat bubble (`<pmess-chat>` custom element, Shadow DOM, Preact) that lets visitors of any website message the pmess owner as a guest.
+A small chat bubble (`<natter-chat>` custom element, Shadow DOM, Preact) that lets visitors of any website message the natter owner as a guest.
 
 ## Install
 
@@ -8,14 +8,14 @@ Add two lines to your page:
 
 ```html
 <script src="https://chat.rahmattomy.com/widget.js" defer></script>
-<pmess-chat></pmess-chat>
+<natter-chat></natter-chat>
 ```
 
 ### Attributes (all optional)
 
 | Attribute | Default | Notes |
 |---|---|---|
-| `server` | origin of `widget.js` | pmess server for REST and WebSocket calls |
+| `server` | origin of `widget.js` | natter server for REST and WebSocket calls |
 | `lang` | from the browser language | `en` or `id` |
 | `color` | built-in accent | primary color, any CSS color |
 
@@ -43,7 +43,7 @@ Styles are applied with constructable stylesheets (`adoptedStyleSheets`), so no 
 
 - Guest only: no Google login in the widget.
 - The session token is kept in the host site's `localStorage` (in-memory fallback when storage is unavailable).
-- Single owner: every conversation goes to the one pmess owner. No multi-tenant support, no API key.
+- Single owner: every conversation goes to the one natter owner. No multi-tenant support, no API key.
 
 ## Development
 

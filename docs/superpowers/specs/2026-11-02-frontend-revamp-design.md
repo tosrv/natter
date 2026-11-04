@@ -1,4 +1,4 @@
-# Design Doc: Perombakan Frontend (pmess v1)
+# Design Doc: Perombakan Frontend (natter v1)
 
 - **Tanggal:** 2026-11-02
 - **Status:** Menunggu review pemilik produk
@@ -8,7 +8,7 @@
 
 ## 1. Tujuan
 
-Membuat tampilan pmess layak dipakai publik dan dipamerkan sebagai portfolio. Caranya: landing dan halaman chat dirombak dengan arah visual "Friendly bubbles", ditambah halaman Settings, display name, dan hapus akun.
+Membuat tampilan natter layak dipakai publik dan dipamerkan sebagai portfolio. Caranya: landing dan halaman chat dirombak dengan arah visual "Friendly bubbles", ditambah halaman Settings, display name, dan hapus akun.
 
 ## 2. Keputusan
 
@@ -45,7 +45,7 @@ Membuat tampilan pmess layak dipakai publik dan dipamerkan sebagai portfolio. Ca
 
 - **Tema:**
   - Warna didefinisikan sebagai variabel CSS di `:root` (terang) dan `.dark` (gelap). Tailwind dan shadcn membaca variabel itu.
-  - Pilihan disimpan di `localStorage` key `pmess.theme` (`light|dark|system`), dibungkus try/catch. Default-nya `system`, mengikuti `prefers-color-scheme`.
+  - Pilihan disimpan di `localStorage` key `natter.theme` (`light|dark|system`), dibungkus try/catch. Default-nya `system`, mengikuti `prefers-color-scheme`.
 - **Pemecahan `Chat.tsx`:**
   - Hook `useChat` memegang socket, outbox, riwayat, typing, dan read. Perilakunya tetap sama dengan MVP, termasuk catch-up berhalaman dan retry `rate_limited`.
   - Komponen tampilan: `ConversationList`, `ChatHeader`, `MessageList`, `MessageBubble`, `StatusTicks`, `Composer`, `Avatar`.

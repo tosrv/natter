@@ -1,4 +1,4 @@
-# pmess Operations Guide
+# natter Operations Guide
 
 > Versi Indonesia: [operations.id.md](operations.id.md) · Back to the [README](../README.md)
 
@@ -24,7 +24,7 @@ Copy `.env.example` to `.env` and fill it in. Never commit `.env`.
 
 | Variable | Required | Default | Notes |
 |---|---|---|---|
-| `DATABASE_URL` | yes | – | Postgres URL, e.g. `postgres://pmess:PASSWORD@localhost:5432/pmess?sslmode=disable`. Built automatically from `POSTGRES_PASSWORD` under `docker compose` |
+| `DATABASE_URL` | yes | – | Postgres URL, e.g. `postgres://natter:PASSWORD@localhost:5432/natter?sslmode=disable`. Built automatically from `POSTGRES_PASSWORD` under `docker compose` |
 | `POSTGRES_PASSWORD` | yes (compose) | – | Postgres password for `docker compose`; compose refuses to run without it |
 | `GOOGLE_CLIENT_ID` | yes (Google login) | – | From Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | yes (Google login) | – | Secret — never commit it |
@@ -46,7 +46,7 @@ Copy `.env.example` to `.env` and fill it in. Never commit `.env`.
 The "Continue as guest" button is protected by Turnstile; the server verifies the token before the rate limiter and before taking a slot. If Cloudflare is unreachable, guest sign-in fails closed (503 `captcha_unavailable`).
 
 1. Cloudflare dashboard → **Turnstile** → **Add widget**.
-2. Name it (e.g. `pmess`), hostname `chat.rahmattomy.com`, mode **Managed**.
+2. Name it (e.g. `natter`), hostname `chat.rahmattomy.com`, mode **Managed**.
 3. Copy the **site key** and **secret key** into `.env` on the VPS (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`).
 4. Run `docker compose up -d` so the app container picks up the new env.
 
@@ -54,10 +54,10 @@ For local dev/E2E leave both empty (captcha off). Cloudflare's always-pass test 
 
 ## Embeddable widget (host sites)
 
-To let a website embed `<pmess-chat>` (see [`widget/README.md`](../widget/README.md)), for each host site:
+To let a website embed `<natter-chat>` (see [`widget/README.md`](../widget/README.md)), for each host site:
 
 1. Add `https://<site>` to `ALLOWED_ORIGINS` in the VPS `.env` (comma-separated), then run `docker compose up -d` to restart the app with the new env.
-2. Cloudflare dashboard → **Turnstile** → the pmess widget → add the site's hostname.
+2. Cloudflare dashboard → **Turnstile** → the natter widget → add the site's hostname.
 3. Verify the script is served cross-origin: `curl -I https://chat.rahmattomy.com/widget.js` must show `Cross-Origin-Resource-Policy: cross-origin`.
 4. If the host site has a Content-Security-Policy, it must allow `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com` and `frame-src https://challenges.cloudflare.com`. Styles use constructable stylesheets, so no `style-src` change is needed on modern browsers; older browsers fall back to an inline `<style>` element, which needs `style-src 'unsafe-inline'`.
 
@@ -73,11 +73,11 @@ Registered users can block a peer from the conversation menu (and unblock from S
 
 ```bash
 # 1. Postgres (the dev file publishes 127.0.0.1:5432)
-echo POSTGRES_PASSWORD=pmess >> .env
+echo POSTGRES_PASSWORD=natter >> .env
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres
 
 # 2. Backend (terminal 1)
-export DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable'
+export DATABASE_URL='postgres://natter:natter@localhost:5432/natter?sslmode=disable'
 export TRUSTED_PROXY=127.0.0.1
 export DEVELOPER_EMAIL=you@example.com
 export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...
@@ -128,7 +128,7 @@ cd web && npm test
 **Load test (latency < 1 s)** — needs a running server and Postgres reachable from the host (dev stack above):
 
 ```bash
-DATABASE_URL='postgres://pmess:pmess@localhost:5432/pmess?sslmode=disable' go run ./cmd/loadtest
+DATABASE_URL='postgres://natter:natter@localhost:5432/natter?sslmode=disable' go run ./cmd/loadtest
 # prints p50/p95/max; exits 0 with "OK" when no message was lost or duplicated
 ```
 
@@ -152,18 +152,18 @@ A complete server block is in [`deploy/nginx.conf.example`](../deploy/nginx.conf
 
 ## Operations
 
-Flow: push to `main` → CI (tests + backup-test) → image `ghcr.io/tosrv/pmess` (`latest` and `sha-<7 chars>`) → Watchtower on the VPS pulls it automatically. `docker-compose.yml` is the production compose file (image from GHCR, no `build`).
+Flow: push to `main` → CI (tests + backup-test) → image `ghcr.io/tosrv/natter` (`latest` and `sha-<7 chars>`) → Watchtower on the VPS pulls it automatically. `docker-compose.yml` is the production compose file (image from GHCR, no `build`).
 
 ### GHCR setup (once)
 
-After the first successful `image` job: GitHub → profile/organization → **Packages** → `pmess` → **Package settings** → **Change visibility** → **Public**. The VPS can then pull without logging in. The image contains no secrets (all config comes from `.env`).
+After the first successful `image` job: GitHub → profile/organization → **Packages** → `natter` → **Package settings** → **Change visibility** → **Public**. The VPS can then pull without logging in. The image contains no secrets (all config comes from `.env`).
 
 ### First deploy on the VPS
 
 ```bash
-git clone https://github.com/tosrv/pmess.git && cd pmess
+git clone https://github.com/tosrv/natter.git && cd natter
 cp .env.example .env            # fill in POSTGRES_PASSWORD, GOOGLE_*, DEVELOPER_EMAIL, etc.
-sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess   # uid 65532 = the user inside the container
+sudo install -d -o 65532 -g 65532 -m 700 /var/backups/natter   # uid 65532 = the user inside the container
 docker compose up -d
 docker compose ps               # app must be healthy
 curl -fsS http://127.0.0.1:8080/healthz
@@ -179,19 +179,19 @@ Note: the `backup` container uses the same image but is not updated automaticall
 
 ### Rollback
 
-Set `PMESS_TAG=sha-<old version>` in `.env`, then `docker compose up -d app backup`. While `PMESS_TAG` isn't `latest`, Watchtower doesn't update `app` (the tag stays the same). Set `PMESS_TAG=latest` to follow updates again. Rolling back the image does **not** undo migrations; if a migration is the problem, restore from the `preupdate` backup.
+Set `NATTER_TAG=sha-<old version>` in `.env`, then `docker compose up -d app backup`. While `NATTER_TAG` isn't `latest`, Watchtower doesn't update `app` (the tag stays the same). Set `NATTER_TAG=latest` to follow updates again. Rolling back the image does **not** undo migrations; if a migration is the problem, restore from the `preupdate` backup.
 
 ### Backups
 
-- **Location:** `/var/backups/pmess` on the host (change with `BACKUP_DIR`), mounted in the containers as `/backups`. Create it with `sudo install -d -o 65532 -g 65532 -m 700 /var/backups/pmess`.
+- **Location:** `/var/backups/natter` on the host (change with `BACKUP_DIR`), mounted in the containers as `/backups`. Create it with `sudo install -d -o 65532 -g 65532 -m 700 /var/backups/natter`.
 - **Schedule:** the `backup` service runs `pg_dump -Fc` daily at 02:00 in `TZ` (default `UTC`); Sunday's run is labelled `weekly`. Watchtower creates a `preupdate` backup before every update.
-- **File names:** `pmess-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump`.
+- **File names:** `natter-YYYYMMDD-HHMM-<daily|weekly|preupdate>.dump`.
 - **Retention:** 7 `daily`, 4 `weekly`, 5 `preupdate`; older ones are deleted only after a new backup succeeds.
 - **Failed backup:** logged as JSON with `level=ERROR` (`docker compose logs backup`); there is no separate alert.
 - **Copy to your own machine (manual, do it regularly):**
 
 ```bash
-scp 'user@vps:/var/backups/pmess/pmess-*.dump' ./backup-pmess/
+scp 'user@vps:/var/backups/natter/natter-*.dump' ./backup-natter/
 ```
 
 > **Risk:** backups live only on the VPS. If the VPS is lost or compromised, the backups go with it. Copy them off regularly with the `scp` above.
@@ -201,7 +201,7 @@ scp 'user@vps:/var/backups/pmess/pmess-*.dump' ./backup-pmess/
 Run on the host from the repo root. Order: stop `watchtower` (restarted when the script ends, even on failure) → safety `preupdate` dump of the current state (if `app` is running) → stop `app` → `pg_restore --single-transaction` (a failure rolls back fully; the old database stays intact) → start `app` → wait up to 60 seconds for `/healthz`. The `backup` service is not touched.
 
 ```bash
-deploy/restore.sh /var/backups/pmess/pmess-YYYYMMDD-HHMM-daily.dump --yes
+deploy/restore.sh /var/backups/natter/natter-YYYYMMDD-HHMM-daily.dump --yes
 ```
 
 If the safety dump fails, the script stops before touching anything; pass `--no-safety-dump` as a third argument (`... --yes --no-safety-dump`) to skip it. Without `--yes` the script refuses to run. Use `sudo` when the backup folder is readable only by uid 65532.

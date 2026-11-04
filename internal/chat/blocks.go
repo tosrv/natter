@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/store"
+	"github.com/tosrv/natter/internal/store"
 )
 
 // notBlocked returns ErrNotFound when a and b are block-related.

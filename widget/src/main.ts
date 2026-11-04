@@ -11,7 +11,7 @@ const scriptSrc = (document.currentScript as HTMLScriptElement | null)?.src;
 let defaultServer = location.origin;
 try { if (scriptSrc) defaultServer = new URL(scriptSrc).origin; } catch { /* keep fallback */ }
 
-class PmessChat extends HTMLElement {
+class NatterChat extends HTMLElement {
   private root?: ShadowRoot;
   connectedCallback() {
     if (this.root) return;
@@ -46,9 +46,9 @@ class PmessChat extends HTMLElement {
       root.appendChild(mount);
       render(h(App, { ctl, lang: pickLang(this.getAttribute("lang")) }), mount);
     } catch (e) {
-      console.warn("[pmess]", e);
+      console.warn("[natter]", e);
     }
   }
 }
 
-if (!customElements.get("pmess-chat")) customElements.define("pmess-chat", PmessChat);
+if (!customElements.get("natter-chat")) customElements.define("natter-chat", NatterChat);

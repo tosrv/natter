@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# restore.sh <file.dump> --yes [--no-safety-dump] — DESTRUKTIF: menimpa database pmess dari dump.
+# restore.sh <file.dump> --yes [--no-safety-dump] — DESTRUKTIF: menimpa database natter dari dump.
 # Dijalankan di host dari root repo; memakai `docker compose` (hormati COMPOSE_FILE).
 set -euo pipefail
 
@@ -14,7 +14,7 @@ fi
 if [ ! -f "$file" ]; then
   echo "error: file not found: $file" >&2; exit 2
 fi
-echo "WARNING: this replaces ALL data in database pmess with $file (app will be stopped)." >&2
+echo "WARNING: this replaces ALL data in database natter with $file (app will be stopped)." >&2
 if [ "$confirm" != "--yes" ]; then
   echo "refusing: pass --yes as second argument to proceed" >&2; exit 2
 fi
@@ -57,7 +57,7 @@ fi
 echo "stopping app" >&2
 docker compose stop app
 echo "restoring $file" >&2
-if ! docker compose exec -T postgres pg_restore --single-transaction --clean --if-exists --no-owner -U pmess -d pmess <"$file"; then
+if ! docker compose exec -T postgres pg_restore --single-transaction --clean --if-exists --no-owner -U natter -d natter <"$file"; then
   echo "error: pg_restore failed; app left stopped" >&2; exit 1
 fi
 echo "starting app" >&2

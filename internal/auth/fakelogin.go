@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tosrv/pmess/internal/chat"
+	"github.com/tosrv/natter/internal/chat"
 )
 
 // FakeLoginEnabled reports whether the E2E-only login route should be

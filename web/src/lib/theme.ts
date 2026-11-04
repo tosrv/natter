@@ -1,5 +1,5 @@
 export type ThemePref = "light" | "dark" | "system";
-const KEY = "pmess.theme";
+const KEY = "natter.theme";
 
 export function getThemePref(): ThemePref {
   try {

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/tosrv/pmess/internal/store"
-	"github.com/tosrv/pmess/internal/store/storetest"
+	"github.com/tosrv/natter/internal/store"
+	"github.com/tosrv/natter/internal/store/storetest"
 )
 
 func TestExpiredGuests(t *testing.T) {

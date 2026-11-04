@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tosrv/pmess/internal/api"
-	"github.com/tosrv/pmess/internal/auth"
-	"github.com/tosrv/pmess/internal/chat"
-	"github.com/tosrv/pmess/internal/config"
-	"github.com/tosrv/pmess/internal/ratelimit"
-	"github.com/tosrv/pmess/internal/store/storetest"
+	"github.com/tosrv/natter/internal/api"
+	"github.com/tosrv/natter/internal/auth"
+	"github.com/tosrv/natter/internal/chat"
+	"github.com/tosrv/natter/internal/config"
+	"github.com/tosrv/natter/internal/ratelimit"
+	"github.com/tosrv/natter/internal/store/storetest"
 )
 
 func TestConfigEndpoint(t *testing.T) {

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Widget `<pmess-chat>` (satu file `widget.js`) yang bisa dipasang di situs lain agar pengunjung chat dengan developer sebagai tamu lewat backend pmess.
+**Goal:** Widget `<natter-chat>` (satu file `widget.js`) yang bisa dipasang di situs lain agar pengunjung chat dengan developer sebagai tamu lewat backend natter.
 
 **Architecture:** Backend Go ditambah dua jalur auth lintas origin (token di respons guest untuk origin yang diizinkan; token WebSocket via subprotocol) dan menyajikan `/widget.js`. Widget: Preact + TypeScript di `widget/`, Vite library build ke satu IIFE, Shadow DOM, token di `localStorage`.
 
@@ -13,9 +13,9 @@
 ## Global Constraints
 
 - `widget.js` ≤ 40 KB gzip (40960 byte); satu file IIFE, tanpa dependensi runtime selain Preact yang ter-bundle.
-- Tidak ada global selain custom element `pmess-chat`; semua CSS di dalam Shadow DOM.
-- Subprotocol: tepat `pmess.bearer`; klien mengirim `["pmess.bearer", token]`.
-- Key localStorage: `pmess:<server origin>`.
+- Tidak ada global selain custom element `natter-chat`; semua CSS di dalam Shadow DOM.
+- Subprotocol: tepat `natter.bearer`; klien mengirim `["natter.bearer", token]`.
+- Key localStorage: `natter:<server origin>`.
 - Token di body guest hanya jika `Origin` ∈ `ALLOWED_ORIGINS` **dan** ≠ origin request (`scheme://Host`).
 - Tanpa iframe; CSP / X-Frame-Options aplikasi tidak diubah.
 - Header `/widget.js`: `Cross-Origin-Resource-Policy: cross-origin`, `Cache-Control: public, max-age=300`.
@@ -61,11 +61,11 @@
 - Test: `internal/auth/auth_test.go`, `internal/realtime/hub_test.go`, `internal/api/router_test.go` (atau file test api yang ada)
 
 **Interfaces:**
-- Produces: konstanta `auth.WSSubprotocol = "pmess.bearer"`. `token(c)` urutan: `Authorization: Bearer` → `Sec-WebSocket-Protocol` (hanya jika path `/api/ws`, nilai di-split koma+trim, elemen pertama `pmess.bearer`, elemen kedua = token) → cookie.
+- Produces: konstanta `auth.WSSubprotocol = "natter.bearer"`. `token(c)` urutan: `Authorization: Bearer` → `Sec-WebSocket-Protocol` (hanya jika path `/api/ws`, nilai di-split koma+trim, elemen pertama `natter.bearer`, elemen kedua = token) → cookie.
 
 - [ ] **Step 1: Test gagal:**
-  - `TestMiddlewareSubprotocolToken` (auth): request `GET /api/ws` dengan header `Sec-WebSocket-Protocol: pmess.bearer, <tok>` → lolos middleware; path lain dengan header yang sama → 401.
-  - `TestWSSubprotocolAuth` (realtime): dial memakai `websocket.DialOptions{Subprotocols: []string{"pmess.bearer", tok}}` tanpa cookie, dengan Origin yang diizinkan → tersambung dan `ws.Subprotocol() == "pmess.bearer"`; token salah → dial gagal dengan status 401.
+  - `TestMiddlewareSubprotocolToken` (auth): request `GET /api/ws` dengan header `Sec-WebSocket-Protocol: natter.bearer, <tok>` → lolos middleware; path lain dengan header yang sama → 401.
+  - `TestWSSubprotocolAuth` (realtime): dial memakai `websocket.DialOptions{Subprotocols: []string{"natter.bearer", tok}}` tanpa cookie, dengan Origin yang diizinkan → tersambung dan `ws.Subprotocol() == "natter.bearer"`; token salah → dial gagal dengan status 401.
   - `TestWidgetJSHeaders` (api): `StaticDir` temp berisi `widget.js` → `GET /widget.js` 200, `Cross-Origin-Resource-Policy: cross-origin`, `Cache-Control: public, max-age=300`, Content-Type diawali `text/javascript`.
 - [ ] **Step 2:** Jalankan ketiganya → FAIL.
 - [ ] **Step 3:** Implementasi: perluas `token()`; `AcceptOptions{OriginPatterns: h.origins, Subprotocols: []string{auth.WSSubprotocol}}`; di NoRoute (atau route eksplisit `GET /widget.js` sebelum NoRoute) set header di atas lalu `c.File`. Pastikan `SecurityHeaders` tidak menimpa CORP (tidak menyetel CORP, jadi aman).
@@ -87,7 +87,7 @@
 - npm scripts: `test` = `vitest run`, `build` = `vite build` (lib, format `iife`, entry `src/main.ts`, `fileName: () => "widget.js"`, CSS di-inline via `?inline` import), `size` = script node yang gagal bila gzip `dist/widget.js` > 40960.
 
 - [ ] **Step 1: Test gagal:**
-  - `session`: set/get/clear memakai key `pmess:https://chat.example`; `falls back to memory when storage throws` (storage palsu yang `throw` di getItem/setItem → set lalu get tetap mengembalikan token).
+  - `session`: set/get/clear memakai key `natter:https://chat.example`; `falls back to memory when storage throws` (storage palsu yang `throw` di getItem/setItem → set lalu get tetap mengembalikan token).
   - `api`: `createGuest` mengirim JSON `{turnstile_token}` ke `${server}/api/auth/guest` dengan `credentials:"omit"`; `conversations` mengirim `Authorization: Bearer abc`; respons 401 `{error:{code:"unauthorized"}}` → reject `ApiError` status 401 code `unauthorized`.
 - [ ] **Step 2:** `cd widget && npm install && npm test` → FAIL.
 - [ ] **Step 3:** Implementasi.
@@ -104,12 +104,12 @@
 - Consumes: `Message`, `createApi().messagesAfter` (Task 3).
 - Produces:
   - `store.ts` (murni, tanpa I/O): `type State {messages: Message[]; outbox: {client_msg_id:string; body:string}[]; peerReadSeq:number; peerTyping:boolean; ended:boolean; online:boolean}`; `initial(): State`; `reduce(s: State, e: Event): State` dengan `Event` = `{t:"queue"; client_msg_id; body}` | `{t:"ack"|"message"; message: Message}` | `{t:"history"; messages: Message[]}` | `{t:"read"; seq:number}` | `{t:"typing"; on:boolean}` | `{t:"ended"}` | `{t:"online"; on:boolean}`; `lastSeq(s): number`. Dedup per `client_msg_id` dan `seq`; `ack`/`message` dengan `client_msg_id` di outbox menghapusnya; pesan diurut per `seq`.
-  - `socket.ts`: `createSocket(opts:{url:string; token:()=>string|null; onFrame:(f:any)=>void; onOpen:()=>void; onClose:(code:number)=>void; WS?: typeof WebSocket; random?: ()=>number}) → {send(frame:object):boolean; close():void}`. Membuka `new WS(url, ["pmess.bearer", token])`; reconnect delay `min(30000, 1000*2^n) * (0.5 + random()/2)`, reset setelah open; berhenti reconnect setelah `close()` atau close code 4401/1008 (auth) — laporkan ke `onClose`.
+  - `socket.ts`: `createSocket(opts:{url:string; token:()=>string|null; onFrame:(f:any)=>void; onOpen:()=>void; onClose:(code:number)=>void; WS?: typeof WebSocket; random?: ()=>number}) → {send(frame:object):boolean; close():void}`. Membuka `new WS(url, ["natter.bearer", token])`; reconnect delay `min(30000, 1000*2^n) * (0.5 + random()/2)`, reset setelah open; berhenti reconnect setelah `close()` atau close code 4401/1008 (auth) — laporkan ke `onClose`.
 - Frame server (lihat `web/src/lib/socket.ts`): `ack`, `message`, `typing`, `read`, `error{code}`, `conversation_ended`. Frame kirim: `{type:"send", conversation_id, client_msg_id, body}`, `{type:"typing", conversation_id}`, `{type:"read", conversation_id, seq}` — salin nama field persis dari `web/src/lib/socket.ts`.
 
 - [ ] **Step 1: Test gagal:**
   - store: queue lalu ack → outbox kosong, satu pesan; `resend after reconnect keeps one copy` (queue, history berisi pesan yang sama, ack duplikat → tetap 1 pesan); `message` urutan seq 3 lalu 2 → terurut; `read` seq 5 → `peerReadSeq` 5 dan tidak turun bila datang seq 4; `ended` → `ended:true`.
-  - socket (FakeWebSocket + `vi.useFakeTimers`): protokol yang dikirim `["pmess.bearer","tok"]`; close tak sengaja → reconnect setelah ≤1000ms, lalu ≤2000ms; setelah `close()` tidak reconnect; `send` saat belum open → `false`.
+  - socket (FakeWebSocket + `vi.useFakeTimers`): protokol yang dikirim `["natter.bearer","tok"]`; close tak sengaja → reconnect setelah ≤1000ms, lalu ≤2000ms; setelah `close()` tidak reconnect; `send` saat belum open → `false`.
 - [ ] **Step 2:** `npm test` → FAIL.
 - [ ] **Step 3:** Implementasi.
 - [ ] **Step 4:** `npm test` → PASS.
@@ -124,8 +124,8 @@
 **Interfaces:**
 - Consumes: Task 3 & 4.
 - Produces:
-  - `controller.ts`: `createController(deps:{api; session; socketFactory}) → {state(): ViewState; subscribe(cb):()=>void; open():Promise<void>; startGuest(turnstileToken:string):Promise<void>; send(body:string):void; typing():void; restart():void}`. `ViewState = {phase:"idle"|"loading"|"turnstile"|"chat"|"ended"|"full"|"unavailable"; chat: State}`. Alur sesuai spec §5: `open()` → token? `conversations()` → `chat`, connect, `messagesAfter(lastSeq)` loop sampai < limit; 401 → `session.clear()` → `turnstile`. Setelah socket open: catch-up lalu kirim ulang outbox. `conversation_ended`/error `peer_ended`/401 → clear token, `ended`. `limit_reached`/429 → `full`. Error lain (fetch gagal/CORS/`captcha_failed`) → `unavailable` + `console.warn("[pmess]", err)`. Kirim frame `read` untuk pesan masuk terbaru saat panel terbuka.
-  - `main.ts`: `if (!customElements.get("pmess-chat")) customElements.define("pmess-chat", PmessChat)`; `server` default = origin dari `document.currentScript.src` (ditangkap saat script dievaluasi), fallback `location.origin`; `attachShadow({mode:"open"})`, suntik `<style>` dari CSS inline, `--pm-color` dari atribut `color`; render `App`.
+  - `controller.ts`: `createController(deps:{api; session; socketFactory}) → {state(): ViewState; subscribe(cb):()=>void; open():Promise<void>; startGuest(turnstileToken:string):Promise<void>; send(body:string):void; typing():void; restart():void}`. `ViewState = {phase:"idle"|"loading"|"turnstile"|"chat"|"ended"|"full"|"unavailable"; chat: State}`. Alur sesuai spec §5: `open()` → token? `conversations()` → `chat`, connect, `messagesAfter(lastSeq)` loop sampai < limit; 401 → `session.clear()` → `turnstile`. Setelah socket open: catch-up lalu kirim ulang outbox. `conversation_ended`/error `peer_ended`/401 → clear token, `ended`. `limit_reached`/429 → `full`. Error lain (fetch gagal/CORS/`captcha_failed`) → `unavailable` + `console.warn("[natter]", err)`. Kirim frame `read` untuk pesan masuk terbaru saat panel terbuka.
+  - `main.ts`: `if (!customElements.get("natter-chat")) customElements.define("natter-chat", NatterChat)`; `server` default = origin dari `document.currentScript.src` (ditangkap saat script dievaluasi), fallback `location.origin`; `attachShadow({mode:"open"})`, suntik `<style>` dari CSS inline, `--pm-color` dari atribut `color`; render `App`.
   - Turnstile: muat `https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit` sekali, `turnstile.render(container, {sitekey, callback})` pada elemen di dalam shadow root.
   - Teks UI dari `i18n.ts` (kunci minimal: `open, close, title, placeholder, send, connecting, ended, newChat, full, unavailable, typing`).
 
@@ -144,11 +144,11 @@
 - Create: `web/e2e/fixtures/host.html`, `web/e2e/widget.spec.ts`
 
 **Interfaces:**
-- Consumes: `/widget.js` (Task 2/5); `host.html` memuat `<script src="http://localhost:8080/widget.js" defer></script><pmess-chat lang="en"></pmess-chat>`.
+- Consumes: `/widget.js` (Task 2/5); `host.html` memuat `<script src="http://localhost:8080/widget.js" defer></script><natter-chat lang="en"></natter-chat>`.
 - Env E2E: `E2E_HOST_URL` default `http://localhost:8081/host.html`.
 
 - [ ] **Step 1: Tulis `widget.spec.ts`** (pola login developer palsu dan Turnstile test key mengikuti `guest-retention.spec.ts`):
-  - tamu di host.html buka panel → Turnstile (test key) → kirim "hi from widget" → developer (konteks browser lain di app pmess) melihat pesan dan membalas → tamu melihat balasan; setelah developer membuka percakapan, pesan tamu bertanda ✓✓.
+  - tamu di host.html buka panel → Turnstile (test key) → kirim "hi from widget" → developer (konteks browser lain di app natter) melihat pesan dan membalas → tamu melihat balasan; setelah developer membuka percakapan, pesan tamu bertanda ✓✓.
   - reload host.html → buka panel → pesan lama masih tampil tanpa Turnstile.
   - developer/servis mengakhiri sesi tamu (pakai mekanisme yang sama dengan `guest-retention.spec.ts`) → widget menampilkan "Start new chat".
 - [ ] **Step 2:** Jalankan lokal (server dengan `E2E_FAKE_LOGIN=1`, `ALLOWED_ORIGINS=http://localhost:8080,http://localhost:8081`, host di 8081): `cd web && npx playwright test widget` → PASS.

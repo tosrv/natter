@@ -5,7 +5,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PG_IMAGE="${PG_IMAGE:-postgres:16}"
-ID="pmess-bt-$$"
+ID="natter-bt-$$"
 NET="$ID-net"
 DB="$ID-db"
 TMP="$(mktemp -d)"
@@ -38,14 +38,14 @@ docker network create "$NET" >/dev/null
 # ---------- (a) Retensi ----------
 echo "== (a) retensi"
 R="$TMP/a"; mkdir -p "$R"
-for i in $(seq 1 10); do echo x >"$R/pmess-202601$(printf %02d "$i")-0200-daily.dump"; done
-for i in $(seq 1 6);  do echo x >"$R/pmess-202602$(printf %02d "$i")-0200-weekly.dump"; done
-for i in $(seq 1 7);  do echo x >"$R/pmess-202603$(printf %02d "$i")-1200-preupdate.dump"; done
+for i in $(seq 1 10); do echo x >"$R/natter-202601$(printf %02d "$i")-0200-daily.dump"; done
+for i in $(seq 1 6);  do echo x >"$R/natter-202602$(printf %02d "$i")-0200-weekly.dump"; done
+for i in $(seq 1 7);  do echo x >"$R/natter-202603$(printf %02d "$i")-1200-preupdate.dump"; done
 touch "$R/notes.txt"
 if [ -f "$HERE/backup.sh" ] && PRUNE_ONLY=1 BACKUP_DIR="$R" bash "$HERE/backup.sh" daily >/dev/null; then
-  want_d="$(for i in $(seq 4 10); do echo "pmess-202601$(printf %02d "$i")-0200-daily.dump"; done)"
-  want_w="$(for i in $(seq 3 6);  do echo "pmess-202602$(printf %02d "$i")-0200-weekly.dump"; done)"
-  want_p="$(for i in $(seq 3 7);  do echo "pmess-202603$(printf %02d "$i")-1200-preupdate.dump"; done)"
+  want_d="$(for i in $(seq 4 10); do echo "natter-202601$(printf %02d "$i")-0200-daily.dump"; done)"
+  want_w="$(for i in $(seq 3 6);  do echo "natter-202602$(printf %02d "$i")-0200-weekly.dump"; done)"
+  want_p="$(for i in $(seq 3 7);  do echo "natter-202603$(printf %02d "$i")-1200-preupdate.dump"; done)"
   got() { find "$R" -maxdepth 1 -name "*-$1.dump" -printf '%f\n' | sort; }
   chk "7 daily terbaru tersisa" "daily: $(got daily | tr '\n' ' ')" [ "$(got daily)" = "$want_d" ]
   chk "4 weekly terbaru tersisa" "weekly: $(got weekly | tr '\n' ' ')" [ "$(got weekly)" = "$want_w" ]
@@ -58,18 +58,18 @@ fi
 # ---------- (a2) File 0-byte ----------
 echo "== (a2) file 0-byte diabaikan"
 Z="$TMP/a2"; mkdir -p "$Z"
-for i in $(seq 1 7); do echo x >"$Z/pmess-202601$(printf %02d "$i")-0200-daily.dump"; done
-: >"$Z/pmess-20260110-0200-daily.dump"
+for i in $(seq 1 7); do echo x >"$Z/natter-202601$(printf %02d "$i")-0200-daily.dump"; done
+: >"$Z/natter-20260110-0200-daily.dump"
 PRUNE_ONLY=1 BACKUP_DIR="$Z" bash "$HERE/backup.sh" daily >/dev/null
-chk "file 0-byte terhapus" "file 0-byte masih ada" [ ! -e "$Z/pmess-20260110-0200-daily.dump" ]
+chk "file 0-byte terhapus" "file 0-byte masih ada" [ ! -e "$Z/natter-20260110-0200-daily.dump" ]
 chk "7 daily baik utuh" "daily baik: $(find "$Z" -type f -printf '%f ' | sort)" [ "$(find "$Z" -name '*-daily.dump' | wc -l)" -eq 7 ]
 
 # ---------- (b) Gagal ----------
 echo "== (b) kegagalan"
 mkdir -p "$TMP/b"
-for i in $(seq 1 8); do echo "old$i" >"$TMP/b/pmess-202601$(printf %02d "$i")-0200-daily.dump"; done
-for i in 1 2; do echo "w$i" >"$TMP/b/pmess-202602$(printf %02d "$i")-0200-weekly.dump"; done
-for i in 1 2; do echo "p$i" >"$TMP/b/pmess-202603$(printf %02d "$i")-1200-preupdate.dump"; done
+for i in $(seq 1 8); do echo "old$i" >"$TMP/b/natter-202601$(printf %02d "$i")-0200-daily.dump"; done
+for i in 1 2; do echo "w$i" >"$TMP/b/natter-202602$(printf %02d "$i")-0200-weekly.dump"; done
+for i in 1 2; do echo "p$i" >"$TMP/b/natter-202603$(printf %02d "$i")-1200-preupdate.dump"; done
 (cd "$TMP/b" && sha256sum ./* | sort) >"$TMP/b.before"
 set +e
 PGHOST=nonexistent.invalid PGPORT=5432 PGUSER=x PGPASSWORD=x PGDATABASE=x BACKUP_DIR=/work/b TZ=UTC PRUNE_ONLY="" \
@@ -98,20 +98,20 @@ dst_check UTC              "2026-11-02 01:59" "2026-11-02 02:00"
 
 # ---------- (c) Siklus ----------
 echo "== (c) siklus"
-docker run -d --name "$DB" --network "$NET" -e POSTGRES_USER=pmess -e POSTGRES_PASSWORD=pw -e POSTGRES_DB=pmess "$PG_IMAGE" >/dev/null
+docker run -d --name "$DB" --network "$NET" -e POSTGRES_USER=natter -e POSTGRES_PASSWORD=pw -e POSTGRES_DB=natter "$PG_IMAGE" >/dev/null
 for _ in $(seq 1 60); do
-  docker exec "$DB" pg_isready -U pmess -d pmess -h 127.0.0.1 >/dev/null 2>&1 && break; sleep 1
+  docker exec "$DB" pg_isready -U natter -d natter -h 127.0.0.1 >/dev/null 2>&1 && break; sleep 1
 done
-export PGHOST="$DB" PGPORT=5432 PGUSER=pmess PGPASSWORD=pw PGDATABASE=pmess TZ=UTC PRUNE_ONLY=""
+export PGHOST="$DB" PGPORT=5432 PGUSER=natter PGPASSWORD=pw PGDATABASE=natter TZ=UTC PRUNE_ONLY=""
 psql_c() { runpg psql -v ON_ERROR_STOP=1 -qAt -c "$1"; }
 psql_c "CREATE TABLE t(x int); INSERT INTO t VALUES (1),(2),(3);"
 mkdir -p "$TMP/c"; chmod 777 "$TMP/c"
 if BACKUP_DIR=/work/c runpg bash /deploy/backup.sh daily >"$TMP/c.out" 2>"$TMP/c.err"; then
-  f="$(find "$TMP/c" -maxdepth 1 -name 'pmess-*.dump' -printf '%f\n' | head -1)"
+  f="$(find "$TMP/c" -maxdepth 1 -name 'natter-*.dump' -printf '%f\n' | head -1)"
   if [ -n "$f" ]; then
     pass "backup dibuat: $f"
     psql_c "DELETE FROM t WHERE x IN (1,2,3); INSERT INTO t VALUES (99);"
-    runpg pg_restore --clean --if-exists --no-owner -d pmess "/work/c/$f"
+    runpg pg_restore --clean --if-exists --no-owner -d natter "/work/c/$f"
     got="$(psql_c "SELECT string_agg(x::text, ',' ORDER BY x) FROM t;")"
     chk "isi setelah restore = 1,2,3" "isi setelah restore = $got" [ "$got" = "1,2,3" ]
   else

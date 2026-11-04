@@ -179,18 +179,18 @@ jobs:
           context: .
           load: true
           push: false
-          tags: pmess:ci
+          tags: natter:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Verify image tools
         run: |
-          out="$(docker run --rm --entrypoint pg_dump pmess:ci --version)"
+          out="$(docker run --rm --entrypoint pg_dump natter:ci --version)"
           echo "$out"
           echo "$out" | grep -Eq 'pg_dump \(PostgreSQL\) 16\.'
-          docker run --rm --entrypoint curl pmess:ci --version | head -n1
+          docker run --rm --entrypoint curl natter:ci --version | head -n1
       - name: Tag and push verified image
         run: |
           for t in latest "sha-${{ steps.vars.outputs.sha7 }}"; do
-            docker tag pmess:ci "ghcr.io/tosrv/pmess:$t"
-            docker push "ghcr.io/tosrv/pmess:$t"
+            docker tag natter:ci "ghcr.io/tosrv/natter:$t"
+            docker push "ghcr.io/tosrv/natter:$t"
           done
