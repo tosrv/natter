@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import Wordmark from "@/components/Wordmark";
-
-export const GITHUB_URL = "https://github.com/tosrv/natter";
+import { GITHUB_URL } from "./links";
 
 export default function Footer() {
   const { t } = useTranslation();

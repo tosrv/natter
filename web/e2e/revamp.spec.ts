@@ -134,3 +134,45 @@ test("dark theme shows dark product shot", async ({ page }) => {
   await expect(page.locator('#top picture:has(source[srcset*="desktop-dark"]) img')).toBeVisible();
   await expect(page.locator('#top picture:has(source[srcset*="desktop-light"]) img')).toBeHidden();
 });
+
+test("dark theme chosen on the landing persists across reload", async ({ page }) => {
+  await page.addInitScript(() => { try { if (!sessionStorage.getItem("seeded")) { sessionStorage.setItem("seeded", "1"); localStorage.setItem("natter.lang", "en"); localStorage.removeItem("natter.theme"); } } catch { /* */ } });
+  await page.goto("/");
+  await page.getByRole("radio", { name: "Dark" }).first().click();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  await page.reload();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  await expect(page.getByRole("radio", { name: "Dark" }).first()).toHaveAttribute("aria-checked", "true");
+});
+
+test("keyboard: skip link, theme switch, Sign in, hero CTAs are reachable with focus", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue as guest" }).first().waitFor();
+  const targets = [
+    page.getByRole("link", { name: "Skip to content" }),
+    page.locator("header").locator('[role=radio][aria-checked=true]'),
+    page.getByRole("link", { name: "Sign in", exact: true }),
+    page.locator("#top").getByRole("link", { name: "Sign in with Google" }),
+    page.locator("#top").getByRole("button", { name: "Continue as guest" }),
+  ];
+  await page.locator("body").press("Tab");
+  for (const [i, target] of targets.entries()) {
+    for (let n = 0; n < 12 && !(await target.evaluate((el) => el === document.activeElement).catch(() => false)); n++) {
+      expect(i === 0 ? n : 0, "skip link must be the first tab stop").toBe(0);
+      await page.keyboard.press("Tab");
+    }
+    await expect(target).toBeFocused();
+  }
+});
+
+test("mobile nav keeps theme and language visible; menu only holds section links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const header = page.locator("header");
+  await expect(header.getByRole("radiogroup")).toBeVisible();
+  await expect(header.getByRole("button", { name: "Language" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await header.getByRole("button", { name: "Menu" }).click();
+  await expect(page.getByRole("menuitem")).toHaveCount(3);
+});

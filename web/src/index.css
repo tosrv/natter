@@ -7,3 +7,7 @@ html { scroll-behavior: smooth; }
 :root.dark,.dark{--background:240 10% 4%;--foreground:0 0% 98%;--card:240 6% 10%;--card-foreground:0 0% 98%;--popover:240 6% 10%;--popover-foreground:0 0% 98%;--primary:14 72% 50%;--primary-solid:14 72% 44%;--primary-text:14 72% 50%;--primary-foreground:0 0% 100%;--secondary:240 4% 16%;--secondary-foreground:0 0% 98%;--muted:240 4% 16%;--muted-foreground:240 5% 65%;--accent:240 4% 16%;--accent-foreground:0 0% 98%;--destructive:0 80% 62%;--destructive-foreground:0 0% 100%;--border:240 4% 16%;--input:240 4% 16%;--ring:14 72% 50%;--surface:240 6% 7%;color-scheme:dark}
 *,::before,::after{border-color:hsl(var(--border))}
 body{@apply bg-background text-foreground antialiased font-sans}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(8px); transition: opacity 250ms ease-out, transform 250ms ease-out; }
+  .reveal.is-visible { opacity: 1; transform: none; }
+}

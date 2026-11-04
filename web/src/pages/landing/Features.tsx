@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import Reveal from "./Reveal";
 import { AtSign, CheckCheck, MoreHorizontal, ShieldCheck, Zap } from "lucide-react";
 
 const ITEMS = [
@@ -11,7 +12,7 @@ export default function Features({ shot }: { shot?: React.ReactNode }) {
     <section className="px-4 py-20 sm:px-6 md:py-24">
       <div className="mx-auto grid max-w-5xl items-center gap-12 md:grid-cols-2 md:gap-16">
         <div>
-          <h2 className="mb-8 text-2xl font-semibold tracking-tight">{t("landing.features.title")}</h2>
+          <Reveal as="h2" className="mb-8 text-2xl font-semibold tracking-tight">{t("landing.features.title")}</Reveal>
           <ul className="space-y-6">
             {ITEMS.map(([k, Icon]) => (
               <li key={k} className="flex gap-4">
@@ -24,7 +25,7 @@ export default function Features({ shot }: { shot?: React.ReactNode }) {
             ))}
           </ul>
         </div>
-        {shot ?? <div aria-hidden className="aspect-[4/3] w-full rounded-xl border bg-surface shadow-sm" />}
+        <Reveal>{shot ?? <div aria-hidden className="aspect-[4/3] w-full rounded-xl border bg-surface shadow-sm" />}</Reveal>
       </div>
     </section>
   );
