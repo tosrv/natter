@@ -13,6 +13,10 @@ const dict = {
     retry: "Retry",
     ended: "This conversation has ended.",
     seen: "Seen",
+    newChat: "Start a new chat",
+    full: "We are busy right now, please try again later.",
+    unavailable: "Chat is unavailable.",
+    typing: "typing...",
   },
   id: {
     title: "Obrolan",
@@ -26,6 +30,10 @@ const dict = {
     retry: "Coba lagi",
     ended: "Percakapan ini telah berakhir.",
     seen: "Dilihat",
+    newChat: "Mulai chat baru",
+    full: "Sedang penuh, coba lagi nanti.",
+    unavailable: "Chat tidak tersedia.",
+    typing: "mengetik...",
   },
 } as const;
 
