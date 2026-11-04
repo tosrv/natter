@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  ApiError, blockUser, getMe, unblockUser, listConversations, listMessages, logout as apiLogout, openConversation,
+  ApiError, blockUser, deleteConversation, getMe, unblockUser, listConversations, listMessages, logout as apiLogout, openConversation,
   type ConversationSummary, type Me, type Message,
 } from "@/lib/api";
 import { Outbox, mergeMessages, type ClientMsg } from "@/lib/outbox";
@@ -30,6 +30,11 @@ export function removeConversation(s: ChatState, convId: string): ChatState {
     msgs,
     activeId: s.activeId === convId ? null : s.activeId,
   };
+}
+
+/** Pure: keep the conversation (guest chat) but empty its cached messages. */
+export function clearConversationMessages(s: ChatState, convId: string): ChatState {
+  return { ...s, msgs: { ...s.msgs, [convId]: [] } };
 }
 
 /** Pure: set blocked_by_me on the conversation whose id or peer_id matches. */
@@ -78,9 +83,20 @@ export function useChat() {
   const lastReadSent = useRef<Record<string, number>>({});
   const historyLoaded = useRef<Record<string, boolean>>({});
   const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const meRef = useRef<Me | null>(null);
+  const deletingRef = useRef<Set<string>>(new Set());
+  meRef.current = me;
   activeRef.current = activeId;
   msgsRef.current = msgs;
   convsRef.current = convs;
+
+  // Guest "delete chat": the conversation stays open, only its history and pending sends are emptied. Idempotent.
+  function applyCleared(id: string) {
+    const next = clearConversationMessages({ convs: convsRef.current, msgs: msgsRef.current, activeId: activeRef.current }, id);
+    setMsgs(next.msgs); msgsRef.current = next.msgs;
+    for (const cid of outbox.current.dropConversation(id)) delete rateRetries.current[cid];
+    setPending(outbox.current.pending());
+  }
 
   const toLanding = useCallback(() => nav("/", { replace: true }), [nav]);
   const handleErr = useCallback((e: unknown) => {
@@ -154,6 +170,7 @@ export function useChat() {
       s.on("conversation_deleted", (f) => {
         const id = (f as Extract<ServerFrame, { type: "conversation_deleted" }>).conversation_id;
         const wasActive = activeRef.current === id;
+        if (m.kind === "guest") { applyCleared(id); return; }
         const next = removeConversation({ convs: convsRef.current, msgs: msgsRef.current, activeId: activeRef.current }, id);
         setConvs(next.convs); setMsgs(next.msgs); setActiveId(next.activeId);
         convsRef.current = next.convs; msgsRef.current = next.msgs; activeRef.current = next.activeId;
@@ -162,7 +179,7 @@ export function useChat() {
         setPending(outbox.current.pending());
         clearTimeout(typingTimers.current[id]); delete typingTimers.current[id];
         setTypingUntil((tu) => { const n = { ...tu }; delete n[id]; return n; });
-        if (wasActive) toast(t("chat.conversationDeleted"));
+        if (wasActive && !deletingRef.current.has(id)) toast(t("chat.conversationDeleted"));
       });
       s.on("conversation_ended", (f) => {
         const id = (f as Extract<ServerFrame, { type: "conversation_ended" }>).conversation_id;
@@ -272,6 +289,23 @@ export function useChat() {
     } catch (e) { handleErr(e); }
   }, [handleErr, t]);
 
+  const deleteChat = useCallback(async (id: string) => {
+    deletingRef.current.add(id);
+    try {
+      await deleteConversation(id);
+      if (meRef.current?.kind === "guest") applyCleared(id);
+      else {
+        const next = removeConversation({ convs: convsRef.current, msgs: msgsRef.current, activeId: activeRef.current }, id);
+        setConvs(next.convs); setMsgs(next.msgs); setActiveId(next.activeId);
+        convsRef.current = next.convs; msgsRef.current = next.msgs; activeRef.current = next.activeId;
+        delete historyLoaded.current[id]; delete lastReadSent.current[id];
+        for (const cid of outbox.current.dropConversation(id)) delete rateRetries.current[cid];
+        setPending(outbox.current.pending());
+      }
+    } catch (e) { handleErr(e); }
+    finally { setTimeout(() => deletingRef.current.delete(id), 2000); }
+  }, [handleErr]);
+
   const openPeer = useCallback(async (peerId: string) => {
     try {
       const { id } = await openConversation(peerId);
@@ -294,6 +328,6 @@ export function useChat() {
 
   return {
     me, convs, activeId, setActiveId, messages, pending: pendingFor, pendingIds, typing, online,
-    bootError, retryBoot, send, sendTyping, openPeer, setPeerBlocked, markRead, logout, toLanding,
+    bootError, retryBoot, send, sendTyping, openPeer, setPeerBlocked, deleteChat, markRead, logout, toLanding,
   };
 }

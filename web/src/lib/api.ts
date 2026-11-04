@@ -72,4 +72,5 @@ export const setDisplayName = (display_name: string) => request<Me>("PUT", "/me/
 export const deleteAccount = () => request<void>("DELETE", "/me");
 export const blockUser = (user_id: string) => request<void>("POST", "/blocks", { user_id });
 export const unblockUser = (user_id: string) => request<void>("DELETE", `/blocks/${encodeURIComponent(user_id)}`);
+export const deleteConversation = (id: string) => request<void>("DELETE", `/conversations/${encodeURIComponent(id)}`);
 export const listBlocks = () => request<BlockedUser[]>("GET", "/blocks");
