@@ -3,7 +3,7 @@ import { initial, reduce, lastSeq, type State, type Event } from "./store";
 import type { SocketOpts } from "./socket";
 
 export type Phase = "idle" | "loading" | "turnstile" | "chat" | "ended" | "full" | "unavailable";
-export interface ViewState { phase: Phase; chat: State; siteKey?: string; meId?: string }
+export interface ViewState { phase: Phase; chat: State; siteKey?: string; meId?: string; nameError?: boolean }
 
 type Api = ReturnType<typeof createApi>;
 interface Session { get(): string | null; set(t: string): void; clear(): void }
@@ -133,7 +133,7 @@ export function createController({ api, session, socketFactory }: Deps) {
   async function toTurnstile() {
     set({ phase: "loading", chat: initial() });
     const cfg = await api.config();
-    set({ phase: "turnstile", siteKey: cfg.turnstile_site_key });
+    set({ phase: "turnstile", siteKey: cfg.turnstile_site_key, nameError: false });
   }
 
   return {
@@ -165,13 +165,21 @@ export function createController({ api, session, socketFactory }: Deps) {
     },
     close() { isOpen = false; },
     fail,
-    async startGuest(turnstileToken: string) {
-      set({ phase: "loading" });
+    // Stays in the "turnstile" phase while submitting so the form keeps its
+    // input; the form tracks its own busy state via the returned promise.
+    async startGuest(turnstileToken: string, displayName: string, contact?: string) {
+      set({ nameError: false });
       try {
-        const g = await api.createGuest(turnstileToken);
+        const g = await api.createGuest(turnstileToken, displayName);
         session.set(g.token);
         await startChat(g.conversation_id, g.id, 0);
-      } catch (e) { fail(e); }
+        // Queue only: the socket's onOpen flushes the outbox (avoids a double send).
+        const c = contact?.trim();
+        if (c) ev({ t: "queue", client_msg_id: uuid(), body: c });
+      } catch (e) {
+        if ((e as { code?: string })?.code === "display_name_invalid") set({ phase: "turnstile", nameError: true });
+        else fail(e);
+      }
     },
     send(body: string) {
       const b = body.trim();

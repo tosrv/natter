@@ -45,9 +45,40 @@ describe("controller", () => {
   it("startGuest stores token then chat", async () => {
     const t = setup({}, null);
     await t.c.open();
-    await t.c.startGuest("ts");
+    await t.c.startGuest("ts", "Budi");
     expect(t.session.set).toHaveBeenCalledWith("new");
     expect(t.c.state().phase).toBe("chat");
+  });
+  it("startGuest passes name and queues contact", async () => {
+    const t = setup({}, null);
+    await t.c.open();
+    await t.c.startGuest("tk", "Budi", "wa 0812");
+    expect(t.api.createGuest).toHaveBeenCalledWith("tk", "Budi");
+    expect(t.c.state().chat.outbox.map((o) => o.body)).toEqual(["wa 0812"]);
+  });
+  it("whitespace contact is not sent", async () => {
+    const t = setup({}, null);
+    await t.c.open();
+    await t.c.startGuest("tk", "Budi", "   ");
+    expect(t.c.state().chat.outbox).toEqual([]);
+  });
+  it("contact queued before socket open is sent after open", async () => {
+    const t = setup({}, null);
+    await t.c.open();
+    await t.c.startGuest("tk", "Budi", "wa 0812");
+    expect(t.sockets[0].send).not.toHaveBeenCalled();
+    t.sockets[0].opts.onOpen();
+    await new Promise((r) => setTimeout(r, 0));
+    const sends = t.sockets[0].send.mock.calls.filter((c: any[]) => c[0].type === "send");
+    expect(sends.length).toBe(1);
+    expect(sends[0][0].body).toBe("wa 0812");
+  });
+  it("invalid name resets turnstile", async () => {
+    const t = setup({ createGuest: vi.fn(async () => { throw new ApiError("display_name_invalid", 400); }) }, null);
+    await t.c.open();
+    await t.c.startGuest("tk", "x");
+    expect(t.c.state().phase).toBe("turnstile");
+    expect(t.c.state().nameError).toBe(true);
   });
   it("conversation_ended → ended and token cleared", async () => {
     const t = setup();
@@ -84,7 +115,7 @@ describe("controller", () => {
   it("limit_reached → full", async () => {
     const t = setup({ createGuest: vi.fn(async () => { throw new ApiError("limit_reached", 429); }) }, null);
     await t.c.open();
-    await t.c.startGuest("ts");
+    await t.c.startGuest("ts", "Budi");
     expect(t.c.state().phase).toBe("full");
   });
   it("fetch TypeError → unavailable", async () => {
@@ -141,7 +172,7 @@ describe("controller", () => {
   it("startGuest uses createGuest id as meId", async () => {
     const t = setup({ createGuest: vi.fn(async () => ({ token: "n", conversation_id: "c1", id: "g9" })) }, null);
     await t.c.open();
-    await t.c.startGuest("ts");
+    await t.c.startGuest("ts", "Budi");
     expect(t.c.state().meId).toBe("g9");
   });
   it("non-rate-limited error with client_msg_id drops outbox item", async () => {
