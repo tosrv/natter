@@ -21,6 +21,8 @@ import (
 // and about guests ended via DELETE /api/me.
 type Notifier interface {
 	NotifyConversationDeleted(peers []store.DeletedConversation, deletedUser uuid.UUID)
+	// NotifyConversationCleared tells userID's own connection that convID was cleared.
+	NotifyConversationCleared(userID, convID uuid.UUID)
 	chat.GuestNotifier
 }
 
@@ -69,6 +71,7 @@ func NewRouter(d Deps) *gin.Engine {
 	authed.POST("/blocks", h.block)
 	authed.DELETE("/blocks/:user_id", h.unblock)
 	authed.GET("/blocks", h.blocks)
+	authed.DELETE("/conversations/:id", h.clearConversation)
 	authed.GET("/conversations/:id/messages", h.messages)
 	if d.WS != nil {
 		authed.GET("/ws", d.WS)

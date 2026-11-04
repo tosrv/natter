@@ -90,7 +90,7 @@ func TestEndGuestWithMessagesDeactivates(t *testing.T) {
 	if _, err := s.UserBySession(ctx, tok); !errors.Is(err, store.ErrNotFound) {
 		t.Fatalf("session still valid: %v", err)
 	}
-	msgs, err := s.ListMessages(ctx, conv, 0, 0, 50)
+	msgs, err := s.ListMessages(ctx, conv, dev.ID, 0, 0, 50)
 	if err != nil || len(msgs) != 2 {
 		t.Fatalf("msgs=%d err=%v", len(msgs), err)
 	}

@@ -273,11 +273,16 @@ type fakeNotifier struct {
 	guestCalls int
 	outcome    store.EndGuestOutcome
 	ended      []store.EndedConversation
+	cleared    [][2]uuid.UUID
 }
 
 func (f *fakeNotifier) NotifyGuestEnded(o store.EndGuestOutcome, c []store.EndedConversation, u uuid.UUID) {
 	f.outcome, f.ended, f.user = o, c, u
 	f.guestCalls++
+}
+
+func (f *fakeNotifier) NotifyConversationCleared(u, c uuid.UUID) {
+	f.cleared = append(f.cleared, [2]uuid.UUID{u, c})
 }
 
 func (f *fakeNotifier) NotifyConversationDeleted(p []store.DeletedConversation, u uuid.UUID) {
@@ -459,5 +464,83 @@ func TestEndGuestAndClearAlreadyEnded(t *testing.T) {
 	}
 	if n.guestCalls != 0 || n.calls != 0 {
 		t.Fatalf("notifier called %+v", n)
+	}
+}
+
+func TestClearConversationAPI(t *testing.T) {
+	e, n := setupN(t)
+	ctx := context.Background()
+	a, atok := e.user(t, "a", "a@x.com", "alice")
+	b, btok := e.user(t, "b", "b@x.com", "bobby")
+	_, ctok := e.user(t, "c", "c@x.com", "carol")
+	conv, err := e.svc.OpenConversation(ctx, a, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := e.svc.Send(ctx, b, conv, uuid.New(), "hi"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.st.MarkRead(ctx, conv, a.ID, 1); err != nil {
+		t.Fatal(err)
+	}
+	path := "/api/conversations/" + conv.String()
+	if w := e.do("DELETE", path, ctok, ""); w.Code != 404 || errCode(t, w) != "not_found" {
+		t.Fatalf("outsider %d %s", w.Code, w.Body)
+	}
+	if len(n.cleared) != 0 {
+		t.Fatal("notified on failure")
+	}
+	if w := e.do("DELETE", path, atok, ""); w.Code != 204 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	if len(n.cleared) != 1 || n.cleared[0] != [2]uuid.UUID{a.ID, conv} {
+		t.Fatalf("cleared=%v", n.cleared)
+	}
+	if w := e.do("GET", "/api/conversations", atok, ""); strings.Contains(w.Body.String(), conv.String()) {
+		t.Fatalf("still listed: %s", w.Body)
+	}
+	w := e.do("GET", "/api/conversations", btok, "")
+	if !strings.Contains(w.Body.String(), conv.String()) || !strings.Contains(w.Body.String(), `"peer_last_read_seq":1`) {
+		t.Fatalf("B view: %s", w.Body)
+	}
+}
+
+func TestClearGuestConversationAPI(t *testing.T) {
+	e, _ := setupN(t)
+	ctx := context.Background()
+	e.user(t, "d", devEmail, "devuser")
+	g, conv, err := e.svc.CreateGuest(ctx, "Guest Test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tok, err := e.st.CreateSession(ctx, g.ID, time.Hour)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w := e.do("DELETE", "/api/conversations/"+conv.String(), tok, ""); w.Code != 204 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+}
+
+func TestClearEndedGuestConversation(t *testing.T) {
+	e, _ := setupN(t)
+	ctx := context.Background()
+	dev, dtok := e.user(t, "d", devEmail, "devuser")
+	g, conv, err := e.svc.CreateGuest(ctx, "Guest Test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := e.svc.Send(ctx, g, conv, uuid.New(), "hi"); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := e.svc.EndGuest(ctx, g.ID); err != nil {
+		t.Fatal(err)
+	}
+	_ = dev
+	if w := e.do("DELETE", "/api/conversations/"+conv.String(), dtok, ""); w.Code != 204 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	if w := e.do("GET", "/api/conversations", dtok, ""); strings.Contains(w.Body.String(), conv.String()) {
+		t.Fatalf("still listed: %s", w.Body)
 	}
 }

@@ -112,7 +112,7 @@ func TestResend(t *testing.T) {
 	if err != nil || !d2 || m2.ID != m1.ID || m2.Seq != 2 {
 		t.Fatalf("resend dup=%v err=%v id eq=%v seq=%d", d2, err, m2.ID == m1.ID, m2.Seq)
 	}
-	msgs, err := s.ListMessages(ctx, c, 1, 0, 50)
+	msgs, err := s.ListMessages(ctx, c, u[0], 1, 0, 50)
 	if err != nil || len(msgs) != 1 || msgs[0].ID != m1.ID || msgs[0].ClientMsgID != cid {
 		t.Fatalf("list after: %v %+v", err, msgs)
 	}
@@ -235,11 +235,11 @@ func TestListMessagesAndConversations(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		s.SendMessage(ctx, c1, u[1], uuid.New(), fmt.Sprint(i+1))
 	}
-	before, err := s.ListMessages(ctx, c1, 0, 8, 3)
+	before, err := s.ListMessages(ctx, c1, u[0], 0, 8, 3)
 	if err != nil || len(before) != 3 || before[0].Seq != 5 || before[2].Seq != 7 {
 		t.Fatalf("before: %v %+v", err, before)
 	}
-	latest, _ := s.ListMessages(ctx, c1, 0, 0, 1000)
+	latest, _ := s.ListMessages(ctx, c1, u[0], 0, 0, 1000)
 	if len(latest) != 10 || latest[0].Seq != 1 {
 		t.Fatalf("latest len=%d", len(latest))
 	}
