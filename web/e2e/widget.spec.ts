@@ -83,8 +83,9 @@ test("guest chats from an embedded widget on another origin", async ({ browser }
   await expect(w.panel).toBeVisible();
   // Guest form: name + contact; Turnstile (test key or stub) yields a token,
   // which enables "Start chat"; then the composer appears.
-  const contact = "e2e@example.com";
-  await w.panel.getByRole("textbox", { name: "Your name" }).fill("E2E Guest");
+  const guestName = `E2E Guest ${run}`;
+  const contact = `e2e-${run}@example.com`;
+  await w.panel.getByRole("textbox", { name: "Your name" }).fill(guestName);
   await w.panel.getByRole("textbox", { name: /Contact \(optional\)/ }).fill(contact);
   const start = w.panel.getByRole("button", { name: "Start chat" });
   await expect(start).toBeEnabled({ timeout: 30_000 });
@@ -96,11 +97,11 @@ test("guest chats from an embedded widget on another origin", async ({ browser }
 
   // Developer sees the message, opens the conversation and replies.
   await expect(dev.getByText(text).first()).toBeVisible();
-  const conv = dev.getByRole("button", { name: new RegExp(text) }).first();
-  await expect(conv).toContainText("E2E Guest");
+  const conv = dev.getByRole("button", { name: new RegExp(guestName) });
+  await expect(conv).toContainText(text);
   await conv.click();
   await expect(dev.locator("p.whitespace-pre-wrap", { hasText: text })).toBeVisible();
-  await expect(dev.locator("p.whitespace-pre-wrap", { hasText: contact }).first()).toBeVisible();
+  await expect(dev.locator("p.whitespace-pre-wrap", { hasText: contact })).toBeVisible();
   await dev.getByPlaceholder("Write a message…").fill(reply);
   await dev.getByRole("button", { name: "Send", exact: true }).click();
 

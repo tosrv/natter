@@ -58,16 +58,17 @@ test("two users chat in realtime, guest contacts the developer", async ({ browse
   // Guest: start dialog (name + contact); contact reaches the developer; no search box.
   const gctx = await browser.newContext();
   const g = await gctx.newPage();
-  const contact = "e2e@example.com";
-  await startGuest(g, { name: "E2E Guest", contact });
+  const contact = `e2e-${run}@example.com`;
+  const guestName = `E2E Guest ${run}`;
+  await startGuest(g, { name: guestName, contact });
   await expect(g.locator("p.whitespace-pre-wrap", { hasText: contact })).toBeVisible();
   await expect(g.getByPlaceholder("Search username…")).toHaveCount(0);
 
   // Developer sees the guest's chosen name in the list and the contact as its first message.
-  const conv = dev.page.getByRole("button", { name: /E2E Guest/ }).first();
+  const conv = dev.page.getByRole("button", { name: new RegExp(guestName) });
   await expect(conv).toBeVisible();
   await conv.click();
-  await expect(dev.page.locator("p.whitespace-pre-wrap", { hasText: contact }).first()).toBeVisible();
+  await expect(dev.page.locator("p.whitespace-pre-wrap", { hasText: contact })).toBeVisible();
 
   for (const c of [dev.ctx, A.ctx, B.ctx, gctx]) await c.close();
 });
