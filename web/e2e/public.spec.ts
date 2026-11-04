@@ -73,6 +73,9 @@ test("blocking: hides both ways, generic error for the blocked side, unblock res
 
 test("landing links to terms and privacy", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1, name: "Conversations, made simple." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "GitHub" }).first()).toHaveAttribute("href", "https://github.com/tosrv/natter");
+  await expect(page.getByText(/FAQ|Frequently asked/)).toHaveCount(0);
   await page.getByRole("link", { name: "Terms of Service" }).first().click();
   await expect(page).toHaveURL(/\/terms$/);
   await expect(page.getByRole("heading", { level: 1, name: "Terms of Service" })).toBeVisible();

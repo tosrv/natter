@@ -9,11 +9,10 @@ import BlockedList from "@/components/BlockedList";
 import DeleteAccountDialog from "@/components/DeleteAccountDialog";
 import { ApiError, deleteAccount, getMe, logout, setDisplayName, setUsername, type Me } from "@/lib/api";
 import { validateDisplayName } from "@/lib/format";
-import { applyTheme, getThemePref, setThemePref, type ThemePref } from "@/lib/theme";
+import ThemeSwitch from "@/components/ThemeSwitch";
 import { errorMessage, setLang, type Lang } from "@/i18n";
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
-const THEMES: ThemePref[] = ["light", "dark", "system"];
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -26,7 +25,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function Segment({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <Button type="button" size="sm" variant={active ? "default" : "outline"} className="rounded-full" aria-pressed={active} onClick={onClick}>
+    <Button type="button" size="sm" variant={active ? "default" : "outline"} aria-pressed={active} onClick={onClick}>
       {children}
     </Button>
   );
@@ -41,7 +40,6 @@ export default function Settings() {
   const [errs, setErrs] = useState<{ display?: string; username?: string; del?: string }>({});
   const [busy, setBusy] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemePref>(getThemePref);
 
   const home = () => nav("/", { replace: true });
   const handle = (e: unknown): string | undefined => {
@@ -126,8 +124,8 @@ export default function Settings() {
                   <label htmlFor="settings-display-name" className="text-sm font-semibold">{t("settings.displayName")}</label>
                   <div className="flex max-w-md gap-2">
                     <Input id="settings-display-name" value={display} onChange={(e) => setDisplay(e.target.value)} autoComplete="off" maxLength={60}
-                      aria-invalid={dnShown || !!errs.display} aria-describedby="settings-display-name-msg" className="rounded-full border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
-                    <Button type="submit" className="rounded-full" disabled={busy || !dn.ok || (dn.ok && dn.value === me.display_name)}>{t("common.save")}</Button>
+                      aria-invalid={dnShown || !!errs.display} aria-describedby="settings-display-name-msg" className="border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
+                    <Button type="submit" disabled={busy || !dn.ok || (dn.ok && dn.value === me.display_name)}>{t("common.save")}</Button>
                   </div>
                   {fieldMsg("settings-display-name-msg", errs.display, dnShown, undefined, errorMessage("display_name_invalid"))}
                 </form>
@@ -135,8 +133,8 @@ export default function Settings() {
                   <label htmlFor="settings-username" className="text-sm font-semibold">{t("settings.username")}</label>
                   <div className="flex max-w-md gap-2">
                     <Input id="settings-username" value={username} onChange={(e) => setUser(e.target.value)} autoCapitalize="none" autoComplete="off" maxLength={20}
-                      disabled={noLeft} aria-invalid={unShown || !!errs.username} aria-describedby="settings-username-msg" className="rounded-full border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
-                    <Button type="submit" className="rounded-full" disabled={busy || noLeft || !USERNAME_RE.test(uname) || uname === me.username}>{t("common.save")}</Button>
+                      disabled={noLeft} aria-invalid={unShown || !!errs.username} aria-describedby="settings-username-msg" className="border border-input bg-transparent focus-visible:ring-0 focus-visible:border-ring" />
+                    <Button type="submit" disabled={busy || noLeft || !USERNAME_RE.test(uname) || uname === me.username}>{t("common.save")}</Button>
                   </div>
                   {fieldMsg("settings-username-msg", errs.username, unShown, t("settings.changesLeft", { count: me.username_changes_left }), errorMessage("username_invalid"))}
                 </form>
@@ -158,28 +156,24 @@ export default function Settings() {
             </Card>
 
             <Card title={t("settings.theme")}>
-              <div className="flex flex-wrap gap-2">
-                {THEMES.map((p) => (
-                  <Segment key={p} active={theme === p} onClick={() => { setThemePref(p); applyTheme(p); setTheme(p); }}>{t(`theme.${p}`)}</Segment>
-                ))}
-              </div>
+              <ThemeSwitch className="w-fit" />
             </Card>
 
             {guest ? (
               <Card title={t("settings.danger")}>
                 <p className="text-sm text-muted-foreground">{t("settings.guestHint")}</p>
-                <Button variant="destructive" className="w-fit rounded-full" disabled={busy} onClick={() => void doDelete(false)}>{t("settings.endSession")}</Button>
+                <Button variant="destructive" className="w-fit" disabled={busy} onClick={() => void doDelete(false)}>{t("settings.endSession")}</Button>
               </Card>
             ) : (
               <>
                 <Card title={t("settings.logout")}>
-                  <Button variant="outline" className="w-fit rounded-full" onClick={() => void doLogout()}>{t("settings.logout")}</Button>
+                  <Button variant="outline" className="w-fit" onClick={() => void doLogout()}>{t("settings.logout")}</Button>
                 </Card>
                 <Card title={t("settings.danger")}>
                   {me.is_developer ? (
                     <p className="text-sm text-muted-foreground">{t("settings.devNote")}</p>
                   ) : (
-                    <Button variant="destructive" className="w-fit rounded-full" onClick={() => { setErrs((s) => ({ ...s, del: undefined })); setDelOpen(true); }}>{t("settings.deleteAccount")}</Button>
+                    <Button variant="destructive" className="w-fit" onClick={() => { setErrs((s) => ({ ...s, del: undefined })); setDelOpen(true); }}>{t("settings.deleteAccount")}</Button>
                   )}
                 </Card>
                 {!me.is_developer && me.username && (

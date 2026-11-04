@@ -26,7 +26,8 @@ test("ended guest keeps its conversation visible to the developer", async ({ bro
   // Guest ends the session from Settings.
   await g.goto("/settings");
   await g.getByRole("button", { name: "End session" }).click();
-  await expect(g.getByRole("button", { name: "Continue as guest" })).toBeVisible();
+  await expect(g.getByRole("heading", { level: 1, name: "Conversations, made simple." })).toBeVisible();
+  await expect(g.getByRole("button", { name: "Continue as guest" }).first()).toBeVisible();
 
   // Conversation is still there, marked ended, and cannot be replied to.
   await dev.reload();

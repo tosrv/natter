@@ -58,8 +58,8 @@ test("revamp: onboarding, search, ticks, settings, delete account", async ({ bro
   // (d) Settings: dark theme persists; language switch; display name change.
   await A.page.getByRole("link", { name: "Settings" }).click();
   await expect(A.page).toHaveURL(/\/settings$/);
-  await A.page.getByRole("button", { name: "Dark", exact: true }).click();
-  await expect(A.page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await A.page.getByRole("radio", { name: "Dark", exact: true }).click();
+  await expect(A.page.getByRole("radio", { name: "Dark", exact: true })).toHaveAttribute("aria-checked", "true");
   await expect(A.page.locator("html")).toHaveClass(/\bdark\b/);
   await A.page.reload();
   await expect(A.page.locator("html")).toHaveClass(/\bdark\b/);
@@ -87,7 +87,8 @@ test("revamp: onboarding, search, ticks, settings, delete account", async ({ bro
   await dlg.getByRole("textbox").fill(aUser);
   await confirm.click();
   await expect(A.page).toHaveURL(/\/$/);
-  await expect(A.page.getByRole("button", { name: "Continue as guest" })).toBeVisible();
+  await expect(A.page.getByRole("heading", { level: 1, name: "Conversations, made simple." })).toBeVisible();
+  await expect(A.page.getByRole("button", { name: "Continue as guest" }).first()).toBeVisible();
 
   await expect(B.page.getByText("This conversation was deleted.")).toBeVisible();
   await expect(B.page.getByText("Select a conversation.")).toBeVisible();
@@ -115,6 +116,63 @@ test("revamp: guest starts from the dialog and sees limited settings", async ({ 
   await expect(g.getByRole("button", { name: "Delete account" })).toHaveCount(0);
 
   await g.getByRole("button", { name: "End session" }).click();
-  await expect(g.getByRole("button", { name: "Continue as guest" })).toBeVisible();
+  await expect(g.getByRole("heading", { level: 1, name: "Conversations, made simple." })).toBeVisible();
+  await expect(g.getByRole("button", { name: "Continue as guest" }).first()).toBeVisible();
   await ctx.close();
+});
+
+test("dark theme shows dark product shot", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript(() => { try { localStorage.setItem("natter.lang", "en"); localStorage.removeItem("natter.theme"); } catch { /* */ } });
+  await page.goto("/");
+  const hero = page.locator("#top");
+  const before = await hero.boundingBox();
+  await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll<HTMLImageElement>("#top img[loading=eager]")).filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r; }))));
+  expect(await hero.boundingBox()).toEqual(before);
+  await page.getByRole("radio", { name: "Dark" }).first().click();
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator('#top picture:has(source[srcset*="desktop-dark"]) img')).toBeVisible();
+  await expect(page.locator('#top picture:has(source[srcset*="desktop-light"]) img')).toBeHidden();
+});
+
+test("dark theme chosen on the landing persists across reload", async ({ page }) => {
+  await page.addInitScript(() => { try { if (!sessionStorage.getItem("seeded")) { sessionStorage.setItem("seeded", "1"); localStorage.setItem("natter.lang", "en"); localStorage.removeItem("natter.theme"); } } catch { /* */ } });
+  await page.goto("/");
+  await page.getByRole("radio", { name: "Dark" }).first().click();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  await page.reload();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  await expect(page.getByRole("radio", { name: "Dark" }).first()).toHaveAttribute("aria-checked", "true");
+});
+
+test("keyboard: skip link, theme switch, Sign in, hero CTAs are reachable with focus", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue as guest" }).first().waitFor();
+  const targets = [
+    page.getByRole("link", { name: "Skip to content" }),
+    page.locator("header").locator('[role=radio][aria-checked=true]'),
+    page.getByRole("link", { name: "Sign in", exact: true }),
+    page.locator("#top").getByRole("link", { name: "Sign in with Google" }),
+    page.locator("#top").getByRole("button", { name: "Continue as guest" }),
+  ];
+  await page.locator("body").press("Tab");
+  for (const [i, target] of targets.entries()) {
+    for (let n = 0; n < 12 && !(await target.evaluate((el) => el === document.activeElement).catch(() => false)); n++) {
+      expect(i === 0 ? n : 0, "skip link must be the first tab stop").toBe(0);
+      await page.keyboard.press("Tab");
+    }
+    await expect(target).toBeFocused();
+  }
+});
+
+test("mobile nav keeps theme and language visible; menu only holds section links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const header = page.locator("header");
+  await expect(header.getByRole("radiogroup")).toBeVisible();
+  await expect(header.getByRole("button", { name: "Language: EN" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await header.getByRole("button", { name: "Menu" }).click();
+  await expect(page.getByRole("menuitem")).toHaveCount(3);
 });

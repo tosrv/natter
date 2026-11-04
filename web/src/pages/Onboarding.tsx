@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import LanguageToggle from "@/components/LanguageToggle";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSwitch from "@/components/ThemeSwitch";
 import { ApiError, getMe, setDisplayName, setUsername } from "@/lib/api";
 import { validateDisplayName } from "@/lib/format";
 import { errorMessage } from "@/i18n";
@@ -60,11 +60,12 @@ export default function Onboarding() {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary/15 via-background to-background p-6">
-      <div className="absolute right-3 top-3 flex items-center gap-1"><ThemeToggle /><LanguageToggle /></div>
+      <div className="absolute right-3 top-3 flex items-center gap-1"><ThemeSwitch /><LanguageToggle /></div>
       <form onSubmit={submit} className="flex w-full max-w-sm flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm">
         <h1 className="text-2xl font-extrabold">{t("onboarding.heading")}</h1>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="display-name" className="text-sm font-semibold">{t("onboarding.displayName")}</label>
+          {/* eslint-disable-next-line jsx-a11y/no-autofocus -- intentional: the only field on the onboarding step */}
           <Input id="display-name" value={display} onChange={(e) => setDisplay(e.target.value)} autoFocus autoComplete="off"
             maxLength={40} placeholder={t("onboarding.displayNamePlaceholder")} aria-invalid={dnShown || !!errs.display}
             aria-describedby="display-name-msg" className="rounded-full" />
@@ -83,7 +84,7 @@ export default function Onboarding() {
             {errs.username ?? (unShown ? errorMessage("username_invalid") : t("onboarding.hint"))}
           </p>
         </div>
-        <Button type="submit" size="lg" className="rounded-full" disabled={busy || !valid}>{t("onboarding.submit")}</Button>
+        <Button type="submit" size="lg" className="" disabled={busy || !valid}>{t("onboarding.submit")}</Button>
       </form>
     </main>
   );

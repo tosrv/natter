@@ -1,24 +1,34 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Toaster } from "@/components/ui/sonner";
 import Landing from "@/pages/Landing";
-import Onboarding from "@/pages/Onboarding";
-import Terms from "@/pages/Terms";
-import Privacy from "@/pages/Privacy";
-import Chat from "@/pages/Chat";
-import Settings from "@/pages/Settings";
+
+const Onboarding = lazy(() => import("@/pages/Onboarding"));
+const Terms = lazy(() => import("@/pages/Terms"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
+const Chat = lazy(() => import("@/pages/Chat"));
+const Settings = lazy(() => import("@/pages/Settings"));
+
+function RouteFallback() {
+  const { t } = useTranslation();
+  return <p className="p-6 text-muted-foreground">{t("common.loading")}</p>;
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
       <Toaster />
     </BrowserRouter>
   );

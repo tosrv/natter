@@ -10,3 +10,4 @@ dist/
 .extra-ca.pem
 web/test-results/
 web/playwright-report/
+.superdesign/

@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "preview": "vite preview",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.2",
@@ -28,16 +29,23 @@
     "tailwindcss-animate": "1.0.7"
   },
   "devDependencies": {
+    "@eslint/js": "9.39.5",
     "@playwright/test": "1.63.0",
     "@types/node": "22.10.1",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.3.4",
     "autoprefixer": "10.4.20",
+    "eslint": "9.39.5",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
     "jsdom": "25.0.1",
     "postcss": "8.4.49",
+    "sharp": "0.35.5",
     "tailwindcss": "3.4.17",
     "typescript": "5.6.3",
+    "typescript-eslint": "8.72.1",
     "vite": "5.4.11",
     "vitest": "2.1.8"
   }

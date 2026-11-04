@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import LanguageToggle from "@/components/LanguageToggle";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeSwitch from "@/components/ThemeSwitch";
 
 type LegalSection = { h: string; p: string[] };
 
@@ -17,12 +17,12 @@ export default function LegalPage({ ns }: { ns: "terms" | "privacy" }) {
           <Link to="/" className="flex items-center gap-2 text-lg font-extrabold text-primary">
             <MessageCircle className="size-5" aria-hidden /> {t("app.name")}
           </Link>
-          <div className="flex items-center gap-1"><ThemeToggle /><LanguageToggle /></div>
+          <div className="flex items-center gap-1"><ThemeSwitch /><LanguageToggle /></div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 md:py-16">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm font-semibold text-primary"><ArrowLeft className="h-4 w-4" aria-hidden />{t("common.back")}</Link>
+        <Link to="/" className="inline-flex items-center gap-1 text-sm font-semibold text-primary-text"><ArrowLeft className="h-4 w-4" aria-hidden />{t("common.back")}</Link>
         <article className="mt-6">
           <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl">{t(`${ns}.title`)}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{t(`${ns}.updated`)}</p>
