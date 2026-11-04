@@ -52,7 +52,7 @@ func (a *Auth) GoogleCallback(c *gin.Context) {
 		WriteError(c, err)
 		return
 	}
-	if a.startSession(c, u, googleTTL) {
+	if _, ok := a.startSession(c, u, googleTTL); ok {
 		c.Redirect(http.StatusFound, "/")
 	}
 }

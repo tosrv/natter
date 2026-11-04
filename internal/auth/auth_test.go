@@ -31,12 +31,15 @@ type env struct {
 	r   *gin.Engine
 }
 
-func setup(t *testing.T) *env {
+func setup(t *testing.T) *env { return setupOrigins(t, nil) }
+
+func setupOrigins(t *testing.T, origins []string) *env {
 	t.Helper()
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	cfg := config.Config{DeveloperEmail: devEmail, TrustedProxy: "127.0.0.1",
-		GoogleClientID: "cid", GoogleClientSecret: "sec", OAuthRedirectURL: "http://app/api/auth/google/callback"}
+		GoogleClientID: "cid", GoogleClientSecret: "sec", OAuthRedirectURL: "http://app/api/auth/google/callback",
+		AllowedOrigins: origins}
 	a := auth.New(st, svc, cfg, ratelimit.New(5, time.Hour, nil))
 	r := gin.New()
 	r.GET("/api/auth/google/login", a.GoogleLogin)
@@ -466,5 +469,68 @@ func TestEndedGuestCookieRejected(t *testing.T) {
 	}
 	if old, err := e.st.GetUser(ctx, g.ID); err != nil || old.DeactivatedAt == nil {
 		t.Fatalf("old guest %+v %v", old, err)
+	}
+}
+
+func guestWithOrigin(e *env, origin string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest("POST", "/api/auth/guest", nil)
+	req.RemoteAddr = "10.2.2.2:1000"
+	if origin != "" {
+		req.Header.Set("Origin", origin)
+	}
+	return do(e.r, req)
+}
+
+func guestBody(t *testing.T, w *httptest.ResponseRecorder) map[string]any {
+	t.Helper()
+	if w.Code != 201 {
+		t.Fatalf("status %d %s", w.Code, w.Body)
+	}
+	var body map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	return body
+}
+
+func TestGuestTokenAllowedOrigin(t *testing.T) {
+	e := setupOrigins(t, []string{"https://port.example"})
+	devUser(t, e)
+	w := guestWithOrigin(e, "https://port.example")
+	body := guestBody(t, w)
+	tok, _ := body["token"].(string)
+	if tok == "" {
+		t.Fatalf("no token: %v", body)
+	}
+	u, err := e.st.UserBySession(context.Background(), tok)
+	if err != nil || u.ID.String() != body["id"] {
+		t.Fatalf("token user %+v %v, want %v", u, err, body["id"])
+	}
+	if sessionCookie(t, w).Value != tok {
+		t.Fatal("cookie not set to same session")
+	}
+}
+
+func TestGuestTokenSameOrigin(t *testing.T) {
+	e := setupOrigins(t, []string{"https://port.example", "http://example.com"})
+	devUser(t, e)
+	if _, ok := guestBody(t, guestWithOrigin(e, "http://example.com"))["token"]; ok {
+		t.Fatal("token returned for same origin")
+	}
+}
+
+func TestGuestTokenForeignOrigin(t *testing.T) {
+	e := setupOrigins(t, []string{"https://port.example"})
+	devUser(t, e)
+	if _, ok := guestBody(t, guestWithOrigin(e, "https://evil.example"))["token"]; ok {
+		t.Fatal("token returned for foreign origin")
+	}
+}
+
+func TestGuestTokenNoOrigin(t *testing.T) {
+	e := setupOrigins(t, []string{"https://port.example"})
+	devUser(t, e)
+	if _, ok := guestBody(t, guestWithOrigin(e, ""))["token"]; ok {
+		t.Fatal("token returned without origin")
 	}
 }

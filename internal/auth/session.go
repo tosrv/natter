@@ -140,14 +140,14 @@ func (a *Auth) setCookie(c *gin.Context, name, value string, maxAge int) {
 	})
 }
 
-func (a *Auth) startSession(c *gin.Context, u store.User, ttl time.Duration) bool {
+func (a *Auth) startSession(c *gin.Context, u store.User, ttl time.Duration) (string, bool) {
 	tok, err := a.st.CreateSession(c.Request.Context(), u.ID, ttl)
 	if err != nil {
 		WriteError(c, err)
-		return false
+		return "", false
 	}
 	a.setCookie(c, SessionCookie, tok, int(ttl/time.Second))
-	return true
+	return tok, true
 }
 
 // ClearSession expires the session cookie.

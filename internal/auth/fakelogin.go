@@ -36,7 +36,7 @@ func (a *Auth) FakeLogin(c *gin.Context) {
 			return
 		}
 	}
-	if a.startSession(c, u, googleTTL) {
+	if _, ok := a.startSession(c, u, googleTTL); ok {
 		c.JSON(http.StatusOK, gin.H{"id": u.ID, "username": u.Username})
 	}
 }
