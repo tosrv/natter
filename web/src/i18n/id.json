@@ -11,67 +11,87 @@
     "retry": "Coba lagi"
   },
   "landing": {
-    "google": "Masuk dengan Google",
     "guest": "Lanjut sebagai tamu",
-    "info": "Kebijakan Privasi",
-    "guestFailed": "Tidak dapat memulai sesi tamu.",
-    "bubbleIn": "Hai! Mau ngobrol?",
-    "bubbleOut": "Boleh, cukup pakai username.",
-    "headline": "Chat pribadi, tanpa nomor HP",
-    "sub": "Temukan teman lewat username dan ngobrol secara realtime. Masuk dengan Google, atau langsung coba sebagai tamu.",
-    "guestNote": "Tanpa akun · data sementara",
-    "bubble3": "Wah, segampang itu?",
-    "bubble4": "Iya. Pilih username, langsung jalan.",
-    "typing": "mengetik…",
-    "online": "online",
-    "rights": "Hak cipta dilindungi.",
-    "howTitle": "Cara kerjanya",
-    "s1t": "Masuk",
-    "s1d": "Pakai akun Google, atau mulai sebagai tamu dengan satu klik.",
-    "s2t": "Pilih username",
-    "s2d": "Pilih username unik dan nama tampilan supaya teman bisa menemukanmu.",
-    "s3t": "Mulai ngobrol",
-    "s3d": "Cari username lalu kirim pesan pertamamu seketika.",
-    "featTitle": "Semua yang kamu perlu, tanpa yang tidak perlu",
-    "ft1": "Cari lewat username",
-    "fd1": "Tanpa nomor HP atau daftar kontak. Cukup bagikan username.",
-    "ft2": "Realtime",
-    "fd2": "Pesan langsung sampai lewat koneksi live.",
-    "ft3": "Tanda dibaca",
-    "fd3": "Lihat kapan pesan terkirim dan kapan dibaca.",
-    "ft4": "Indikator mengetik",
-    "fd4": "Tahu saat lawan bicara sedang membalas.",
-    "ft5": "Terang & gelap",
-    "fd5": "Ikuti tema sistem, atau pilih sendiri.",
-    "ft6": "Inggris & Indonesia",
-    "fd6": "Ganti bahasa kapan saja.",
-    "trustTitle": "Jujur soal datamu",
-    "trustSub": "natter adalah proyek sederhana. Begini persisnya datamu diperlakukan.",
-    "tr1": "Tidak terenkripsi end-to-end. Admin server bisa membaca pesan.",
-    "tr2": "Percakapan dihapus setelah 1 bulan tidak aktif.",
-    "tr3": "Akun tamu dinonaktifkan 30 menit setelah pesan terakhirnya; percakapannya disimpan hingga 1 bulan.",
-    "faqTitle": "Pertanyaan yang sering diajukan",
-    "q1": "Apakah natter gratis?",
-    "a1": "Ya. Masuk dengan Google atau lanjut sebagai tamu tanpa biaya.",
-    "q2": "Apa yang bisa dilakukan tamu?",
-    "a2": "Tamu mendapat akun sementara untuk langsung ngobrol. Akun ini berakhir otomatis dan tidak bisa dipakai lagi, jadi masuk dengan Google kalau ingin terus memakai chat-mu.",
-    "q3": "Bisakah saya menghapus akun?",
-    "a3": "Bisa. Buka Pengaturan lalu hapus akun kapan saja.",
-    "q4": "Apakah pesan saya terenkripsi?",
-    "a4": "Tidak end-to-end. Jangan bagikan informasi sensitif lewat natter.",
-    "ctaTitle": "Siap ngobrol?",
-    "ctaSub": "Mulainya kurang dari satu menit.",
-    "ctaGuest": "Coba sebagai tamu",
-    "navHow": "Cara kerja",
-    "navFeat": "Fitur",
-    "navData": "Privasi",
-    "navFaq": "FAQ",
     "consent": "Dengan melanjutkan, kamu menyetujui <terms>{{terms}}</terms> dan <privacy>{{privacy}}</privacy>.",
     "terms": "Syarat Layanan",
     "privacy": "Kebijakan Privasi",
+    "rights": "Hak cipta dilindungi.",
     "captchaLoadFailed": "Verifikasi tidak dapat dimuat. Periksa koneksimu lalu muat ulang halaman.",
-    "captchaVerify": "Selesaikan verifikasi untuk lanjut sebagai tamu.",
-    "configFailed": "Pengaturan masuk sebagai tamu tidak dapat dimuat. Muat ulang halaman untuk mencoba lagi."
+    "configFailed": "Pengaturan masuk sebagai tamu tidak dapat dimuat. Muat ulang halaman untuk mencoba lagi.",
+    "nav": {
+      "product": "Produk",
+      "how": "Cara kerja",
+      "privacy": "Privasi",
+      "signIn": "Masuk",
+      "menu": "Menu",
+      "skip": "Lewati ke konten"
+    },
+    "hero": {
+      "title": "Ngobrol, jadi sederhana.",
+      "sub": "Messenger pribadi 1:1. Masuk dengan Google, atau lanjut sebagai tamu. Tanpa nomor HP.",
+      "google": "Masuk dengan Google",
+      "guest": "Lanjut sebagai tamu",
+      "guestNote": "Sesi tamu berakhir setelah 30 menit tidak aktif.",
+      "shotAlt": "Pratinjau chat natter"
+    },
+    "intro": {
+      "title": "Natter is Matter.",
+      "body": "natter menghapus hambatan untuk memulai obrolan. Tanpa nomor HP, tanpa pendaftaran rumit, tanpa kerumitan. Pilih username dan mulai ngobrol."
+    },
+    "features": {
+      "title": "Yang ada di dalamnya",
+      "search": {
+        "t": "Cari username",
+        "d": "Temukan orang lewat username-nya."
+      },
+      "realtime": {
+        "t": "Pesan real-time",
+        "d": "Terkirim seketika lewat koneksi langsung."
+      },
+      "receipts": {
+        "t": "Tanda terkirim & dibaca",
+        "d": "Tahu kapan pesan sampai dan dibaca."
+      },
+      "typing": {
+        "t": "Indikator mengetik",
+        "d": "Lihat saat lawan bicara sedang membalas."
+      },
+      "controls": {
+        "t": "Kendali di tanganmu",
+        "d": "Blokir orang, hapus chat, atau hapus akun."
+      }
+    },
+    "how": {
+      "title": "Cara kerjanya",
+      "s1": {
+        "t": "Masuk",
+        "d": "Dengan Google, atau sebagai tamu (nama + kontak opsional)."
+      },
+      "s2": {
+        "t": "Pilih username",
+        "d": "Tentukan username dan nama tampilan."
+      },
+      "s3": {
+        "t": "Ngobrol",
+        "d": "Cari seseorang dan kirim pesan pertamamu."
+      }
+    },
+    "philosophy": "Lebih sedikit bising. Lebih banyak obrolan.",
+    "trust": {
+      "title": "Privasi & kepercayaan",
+      "sub": "Jujur soal bagaimana datamu dikelola.",
+      "e2e": {
+        "t": "Tidak terenkripsi end-to-end.",
+        "d": "Admin server dapat membaca pesan — jangan bagikan informasi sensitif."
+      },
+      "retention": "Percakapan dihapus setelah 1 bulan tanpa aktivitas.",
+      "guests": "Akun tamu berakhir setelah 30 menit tidak aktif; percakapannya disimpan hingga 1 bulan.",
+      "oss": "Open source dengan lisensi MIT."
+    },
+    "cta": {
+      "title": "Siap mulai?"
+    },
+    "github": "GitHub"
   },
   "onboarding": {
     "title": "Pilih username",

@@ -52,7 +52,8 @@ test("screenshots", async ({ browser }) => {
       await anon.addInitScript((t) => { try { localStorage.setItem("natter.theme", t); localStorage.setItem("natter.lang", "en"); } catch { /* */ } }, theme);
       const lp = await anon.newPage();
       await lp.goto("/");
-      await expect(lp.getByRole("button", { name: "Continue as guest" })).toBeVisible();
+      await expect(lp.getByRole("heading", { level: 1, name: "Conversations, made simple." })).toBeVisible();
+      await expect(lp.getByRole("button", { name: "Continue as guest" }).first()).toBeVisible();
       await lp.waitForTimeout(300);
       await lp.screenshot({ path: path.join(OUT, `landing-${theme}-${vp}.png`) });
       await anon.close();

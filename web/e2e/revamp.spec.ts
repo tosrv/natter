@@ -87,7 +87,8 @@ test("revamp: onboarding, search, ticks, settings, delete account", async ({ bro
   await dlg.getByRole("textbox").fill(aUser);
   await confirm.click();
   await expect(A.page).toHaveURL(/\/$/);
-  await expect(A.page.getByRole("button", { name: "Continue as guest" })).toBeVisible();
+  await expect(A.page.getByRole("heading", { level: 1, name: "Conversations, made simple." })).toBeVisible();
+  await expect(A.page.getByRole("button", { name: "Continue as guest" }).first()).toBeVisible();
 
   await expect(B.page.getByText("This conversation was deleted.")).toBeVisible();
   await expect(B.page.getByText("Select a conversation.")).toBeVisible();
@@ -115,6 +116,7 @@ test("revamp: guest starts from the dialog and sees limited settings", async ({ 
   await expect(g.getByRole("button", { name: "Delete account" })).toHaveCount(0);
 
   await g.getByRole("button", { name: "End session" }).click();
-  await expect(g.getByRole("button", { name: "Continue as guest" })).toBeVisible();
+  await expect(g.getByRole("heading", { level: 1, name: "Conversations, made simple." })).toBeVisible();
+  await expect(g.getByRole("button", { name: "Continue as guest" }).first()).toBeVisible();
   await ctx.close();
 });

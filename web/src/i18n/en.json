@@ -11,67 +11,87 @@
     "retry": "Retry"
   },
   "landing": {
-    "google": "Login with Google",
     "guest": "Continue as guest",
-    "info": "Privacy Policy",
-    "guestFailed": "Could not start a guest session.",
-    "bubbleIn": "Hey! Want to chat?",
-    "bubbleOut": "Sure, just a username away.",
-    "headline": "Private chat, no phone number needed",
-    "sub": "Find friends by username and chat in realtime. Sign in with Google, or try it right away as a guest.",
-    "guestNote": "No account · temporary data",
-    "bubble3": "Nice, it's that easy?",
-    "bubble4": "Yep. Pick a username and go.",
-    "typing": "typing…",
-    "online": "online",
-    "rights": "All rights reserved.",
-    "howTitle": "How it works",
-    "s1t": "Sign in",
-    "s1d": "Use your Google account, or start as a guest in one click.",
-    "s2t": "Pick a username",
-    "s2d": "Choose a unique username and display name so friends can find you.",
-    "s3t": "Start chatting",
-    "s3d": "Search a username and send your first message instantly.",
-    "featTitle": "Everything you need, nothing you don't",
-    "ft1": "Username search",
-    "fd1": "No phone number or contact list. Share only your username.",
-    "ft2": "Realtime",
-    "fd2": "Messages arrive instantly over a live connection.",
-    "ft3": "Read receipts",
-    "fd3": "See when your message is sent and when it's read.",
-    "ft4": "Typing indicator",
-    "fd4": "Know when the other person is replying.",
-    "ft5": "Light & dark",
-    "fd5": "Follows your system theme, or pick one yourself.",
-    "ft6": "English & Indonesian",
-    "fd6": "Switch language any time.",
-    "trustTitle": "Honest about your data",
-    "trustSub": "natter is a simple project. Here's exactly how your data is handled.",
-    "tr1": "Not end-to-end encrypted. Server administrators can read messages.",
-    "tr2": "Conversations are deleted after 1 month of inactivity.",
-    "tr3": "Guest accounts are deactivated 30 minutes after their last message; their conversation is kept up to 1 month.",
-    "faqTitle": "Frequently asked questions",
-    "q1": "Is natter free?",
-    "a1": "Yes. Sign in with Google or continue as a guest at no cost.",
-    "q2": "What can a guest do?",
-    "a2": "Guests get a temporary account to chat right away. It ends automatically and cannot be used again, so sign in with Google if you want to keep using your chats.",
-    "q3": "Can I delete my account?",
-    "a3": "Yes. Open Settings and delete your account at any time.",
-    "q4": "Are my messages encrypted?",
-    "a4": "Not end-to-end. Don't share sensitive information over natter.",
-    "ctaTitle": "Ready to chat?",
-    "ctaSub": "It takes less than a minute to get started.",
-    "ctaGuest": "Try as guest",
-    "navHow": "How it works",
-    "navFeat": "Features",
-    "navData": "Privacy",
-    "navFaq": "FAQ",
     "consent": "By continuing, you agree to our <terms>{{terms}}</terms> and <privacy>{{privacy}}</privacy>.",
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
+    "rights": "All rights reserved.",
     "captchaLoadFailed": "Could not load the verification check. Check your connection and reload the page.",
-    "captchaVerify": "Complete the verification to continue as a guest.",
-    "configFailed": "Could not load guest sign-in settings. Reload the page to try again."
+    "configFailed": "Could not load guest sign-in settings. Reload the page to try again.",
+    "nav": {
+      "product": "Product",
+      "how": "How it works",
+      "privacy": "Privacy",
+      "signIn": "Sign in",
+      "menu": "Menu",
+      "skip": "Skip to content"
+    },
+    "hero": {
+      "title": "Conversations, made simple.",
+      "sub": "A personal 1:1 messenger. Sign in with Google, or continue as a guest. No phone number needed.",
+      "google": "Sign in with Google",
+      "guest": "Continue as guest",
+      "guestNote": "Guest sessions end after 30 minutes of inactivity.",
+      "shotAlt": "natter chat preview"
+    },
+    "intro": {
+      "title": "Natter is Matter.",
+      "body": "natter removes the friction from starting a conversation. No phone numbers, no complex onboarding, no clutter. Pick a username and start talking."
+    },
+    "features": {
+      "title": "What's inside",
+      "search": {
+        "t": "Username search",
+        "d": "Find people by their handle."
+      },
+      "realtime": {
+        "t": "Real-time messages",
+        "d": "Delivered instantly over a live connection."
+      },
+      "receipts": {
+        "t": "Sent & read receipts",
+        "d": "Know when a message arrives and is read."
+      },
+      "typing": {
+        "t": "Typing indicator",
+        "d": "See when someone is replying."
+      },
+      "controls": {
+        "t": "Your controls",
+        "d": "Block people, delete chats, or delete your account."
+      }
+    },
+    "how": {
+      "title": "How it works",
+      "s1": {
+        "t": "Sign in",
+        "d": "With Google, or as a guest (name + optional contact)."
+      },
+      "s2": {
+        "t": "Pick a username",
+        "d": "Choose your handle and display name."
+      },
+      "s3": {
+        "t": "Chat",
+        "d": "Search someone and send your first message."
+      }
+    },
+    "philosophy": "Less noise. More conversation.",
+    "trust": {
+      "title": "Privacy & trust",
+      "sub": "Honest about how your data is handled.",
+      "e2e": {
+        "t": "Not end-to-end encrypted.",
+        "d": "Server administrators can read messages — don't share sensitive information."
+      },
+      "retention": "Conversations are deleted after 1 month without activity.",
+      "guests": "Guest accounts end after 30 minutes of inactivity; their conversation is kept up to 1 month.",
+      "oss": "Open source under the MIT license."
+    },
+    "cta": {
+      "title": "Ready to start?"
+    },
+    "github": "GitHub"
   },
   "onboarding": {
     "title": "Choose a username",
