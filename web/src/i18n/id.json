@@ -83,6 +83,13 @@
     "displayNamePlaceholder": "Namamu",
     "displayNameHint": "1–40 karakter. Huruf, angka, spasi, dan . - ' _"
   },
+  "guestStart": {
+    "name": "Nama kamu",
+    "contact": "Kontak (opsional) — email, WhatsApp…",
+    "start": "Mulai chat",
+    "cancel": "Batal",
+    "nameError": "Pakai 1–40 huruf, angka, spasi, atau . - ' _"
+  },
   "chat": {
     "title": "Obrolan",
     "logout": "Keluar",
@@ -102,10 +109,6 @@
     "newMessage": "Pesan baru dari {{name}}",
     "back": "Kembali",
     "connecting": "Menyambung ulang…",
-    "contactTitle": "Bagaimana developer bisa menghubungi Anda?",
-    "contactHint": "Jawaban Anda disimpan bersama percakapan ini hingga 1 bulan agar developer bisa menghubungi Anda.",
-    "contactPlaceholder": "Email, telepon, atau lainnya",
-    "skip": "Lewati",
     "loadFailed": "Gagal memuat obrolan.",
     "sendFailed": "Pesan gagal dikirim (terlalu sering). Coba lagi nanti.",
     "conversationDeleted": "Percakapan ini telah dihapus.",

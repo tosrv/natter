@@ -64,8 +64,8 @@ export const listMessages = (id: string, p: { after_seq?: number; before_seq?: n
   const s = qs.toString();
   return request<{ messages: Message[] }>("GET", `/conversations/${id}/messages${s ? "?" + s : ""}`);
 };
-export const createGuest = (turnstile_token?: string) =>
-  request<Guest>("POST", "/auth/guest", turnstile_token ? { turnstile_token } : undefined);
+export const createGuest = (display_name: string, turnstile_token?: string) =>
+  request<Guest>("POST", "/auth/guest", turnstile_token ? { display_name, turnstile_token } : { display_name });
 export const getConfig = () => request<{ turnstile_site_key: string }>("GET", "/config");
 export const logout = () => request<void>("POST", "/auth/logout");
 export const setDisplayName = (display_name: string) => request<Me>("PUT", "/me/display-name", { display_name });

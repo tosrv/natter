@@ -7,7 +7,6 @@ import MessageList from "@/components/MessageList";
 import ChatHeader from "@/components/ChatHeader";
 import Composer from "@/components/Composer";
 import UserSearch from "@/components/UserSearch";
-import GuestContactDialog from "@/components/GuestContactDialog";
 import { peerName, useChat } from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 
@@ -92,10 +91,6 @@ export default function Chat() {
           )}
         </section>
       </div>
-      {isGuest && (
-        <GuestContactDialog open={c.contactOpen} onClose={() => c.setContactOpen(false)}
-          onSubmit={(a) => { if (c.activeId) c.send(c.activeId, a); }} />
-      )}
     </main>
   );
 }
