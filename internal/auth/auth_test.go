@@ -46,6 +46,7 @@ func setupOrigins(t *testing.T, origins []string) *env {
 	r.GET("/api/auth/google/callback", a.GoogleCallback)
 	r.POST("/api/auth/guest", a.Guest)
 	r.POST("/api/auth/logout", a.Middleware(), a.Logout)
+	r.GET("/api/me", a.Middleware(), func(c *gin.Context) { c.String(200, auth.CurrentUser(c).DisplayName) })
 	whoami := func(c *gin.Context) {
 		c.String(200, auth.CurrentUser(c).ID.String())
 	}
@@ -202,9 +203,68 @@ func TestCallbackCreatesSession(t *testing.T) {
 }
 
 func guest(e *env, ip string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest("POST", "/api/auth/guest", nil)
+	return guestNamed(e, ip, `{"display_name":"Budi"}`)
+}
+
+func guestNamed(e *env, ip, body string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest("POST", "/api/auth/guest", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
 	req.RemoteAddr = ip + ":1000"
 	return do(e.r, req)
+}
+
+func meName(t *testing.T, e *env, w *httptest.ResponseRecorder) string {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/api/me", nil)
+	req.AddCookie(sessionCookie(t, w))
+	r := do(e.r, req)
+	if r.Code != 200 {
+		t.Fatalf("me %d %s", r.Code, r.Body)
+	}
+	return r.Body.String()
+}
+
+func TestGuestDisplayNameStored(t *testing.T) {
+	e := setup(t)
+	devUser(t, e)
+	w := guestNamed(e, "10.5.5.1", `{"display_name":"Budi"}`)
+	if w.Code != 201 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	if got := meName(t, e, w); got != "Budi" {
+		t.Fatalf("display name %q", got)
+	}
+}
+
+func TestGuestDisplayNameNormalized(t *testing.T) {
+	e := setup(t)
+	devUser(t, e)
+	w := guestNamed(e, "10.5.5.2", `{"display_name":"  Budi   S  "}`)
+	if w.Code != 201 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	if got := meName(t, e, w); got != "Budi S" {
+		t.Fatalf("display name %q", got)
+	}
+}
+
+func TestGuestDisplayNameInvalid(t *testing.T) {
+	e := setup(t)
+	devUser(t, e)
+	for _, n := range []string{"x<y", strings.Repeat("a", 41)} {
+		wantErr(t, guestNamed(e, "10.5.5.3", `{"display_name":"`+n+`"}`), 400, "display_name_invalid")
+	}
+}
+
+func TestGuestInvalidNameNoRateLimit(t *testing.T) {
+	e := setup(t) // guest limiter: 5/hour
+	devUser(t, e)
+	for i := 0; i < 6; i++ {
+		wantErr(t, guestNamed(e, "10.5.5.4", `{"display_name":"x<y"}`), 400, "display_name_invalid")
+	}
+	if w := guestNamed(e, "10.5.5.4", `{"display_name":"Budi"}`); w.Code != 201 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
 }
 
 func TestGuestRateLimit(t *testing.T) {
@@ -456,7 +516,7 @@ func TestEndedGuestCookieRejected(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/whoami", nil)
 	req.AddCookie(sess)
 	wantErr(t, do(e.r, req), 401, "unauthorized")
-	req = httptest.NewRequest("POST", "/api/auth/guest", nil)
+	req = httptest.NewRequest("POST", "/api/auth/guest", strings.NewReader(`{"display_name":"Budi"}`))
 	req.RemoteAddr = "10.4.4.4:1000"
 	req.AddCookie(sess)
 	w := do(e.r, req)
@@ -475,7 +535,7 @@ func TestEndedGuestCookieRejected(t *testing.T) {
 }
 
 func guestWithOrigin(e *env, origin string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest("POST", "/api/auth/guest", nil)
+	req := httptest.NewRequest("POST", "/api/auth/guest", strings.NewReader(`{"display_name":"Budi"}`))
 	req.RemoteAddr = "10.2.2.2:1000"
 	if origin != "" {
 		req.Header.Set("Origin", origin)

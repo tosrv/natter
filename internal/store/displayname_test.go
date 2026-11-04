@@ -25,7 +25,7 @@ func TestMigration0002Constraints(t *testing.T) {
 		t.Fatalf("40 chars should be ok: %v", err)
 	}
 	dev := mkUser(t, s, "dev")
-	g, _, err := s.CreateGuest(ctx, dev.ID)
+	g, _, err := s.CreateGuest(ctx, dev.ID, "Budi")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,9 +35,8 @@ func TestMigration0002Constraints(t *testing.T) {
 	if !regexp.MustCompile(`^guest-[0-9a-f]{4}$`).MatchString(*g.Username) {
 		t.Fatalf("username %q", *g.Username)
 	}
-	want := "Guest " + strings.ToUpper((*g.Username)[len("guest-"):])
-	if g.DisplayName != want {
-		t.Fatalf("display name %q want %q", g.DisplayName, want)
+	if g.DisplayName != "Budi" {
+		t.Fatalf("display name %q want Budi", g.DisplayName)
 	}
 	if dev.DisplayName != "User" {
 		t.Fatalf("empty displayName should store User, got %q", dev.DisplayName)

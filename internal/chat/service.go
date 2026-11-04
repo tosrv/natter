@@ -40,8 +40,13 @@ func (s *Service) LoginGoogle(ctx context.Context, sub, email, name string) (sto
 }
 
 // CreateGuest creates a guest and its conversation with the developer.
-// The developer is looked up first so no slot is consumed if absent.
-func (s *Service) CreateGuest(ctx context.Context) (store.User, uuid.UUID, error) {
+// The name is validated and the developer looked up first so no slot is
+// consumed on failure.
+func (s *Service) CreateGuest(ctx context.Context, displayName string) (store.User, uuid.UUID, error) {
+	name, err := ValidateDisplayName(displayName)
+	if err != nil {
+		return store.User{}, uuid.Nil, err
+	}
 	dev, err := s.st.GetDeveloper(ctx)
 	if err != nil {
 		if mapErr(err) == ErrNotFound {
@@ -49,7 +54,7 @@ func (s *Service) CreateGuest(ctx context.Context) (store.User, uuid.UUID, error
 		}
 		return store.User{}, uuid.Nil, err
 	}
-	u, conv, err := s.st.CreateGuest(ctx, dev.ID)
+	u, conv, err := s.st.CreateGuest(ctx, dev.ID, name)
 	return u, conv, mapErr(err)
 }
 

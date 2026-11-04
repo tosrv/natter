@@ -56,7 +56,7 @@ func TestCleanupGuests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g, conv, err := s.CreateGuest(ctx, dev.ID)
+	g, conv, err := s.CreateGuest(ctx, dev.ID, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,14 +118,14 @@ func TestCleanupGuestsDeactivates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	talker, conv, err := s.CreateGuest(ctx, dev.ID)
+	talker, conv, err := s.CreateGuest(ctx, dev.ID, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, _, err := s.SendMessage(ctx, conv, talker.ID, uuid.New(), "hi"); err != nil {
 		t.Fatal(err)
 	}
-	silent, sconv, err := s.CreateGuest(ctx, dev.ID)
+	silent, sconv, err := s.CreateGuest(ctx, dev.ID, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

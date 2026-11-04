@@ -3,6 +3,7 @@ package store_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -19,7 +20,7 @@ func guestSetup(t *testing.T, s *store.Store) (store.User, store.User, uuid.UUID
 	if err != nil {
 		t.Fatal(err)
 	}
-	g, conv, err := s.CreateGuest(ctx, dev.ID)
+	g, conv, err := s.CreateGuest(ctx, dev.ID, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +148,7 @@ func TestEndGuestTwice(t *testing.T) {
 
 func guestSetupExtra(t *testing.T, s *store.Store, devID uuid.UUID) (store.User, store.User, uuid.UUID) {
 	t.Helper()
-	g, conv, err := s.CreateGuest(context.Background(), devID)
+	g, conv, err := s.CreateGuest(context.Background(), devID, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -365,5 +366,13 @@ func TestDeleteAccountRejectsGuest(t *testing.T) {
 	}
 	if n := usedSlots(t, s); n != before { // before-1 (EndGuest) +1 (google)
 		t.Fatalf("used=%d want %d", n, before)
+	}
+}
+
+func TestCreateGuestStoresName(t *testing.T) {
+	s := storetest.New(t)
+	_, g, _ := guestSetup(t, s)
+	if g.DisplayName != "Guest Test" || g.Username == nil || !strings.HasPrefix(*g.Username, "guest-") {
+		t.Fatalf("%+v", g)
 	}
 }

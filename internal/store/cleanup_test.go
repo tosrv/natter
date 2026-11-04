@@ -18,7 +18,7 @@ func TestExpiredGuests(t *testing.T) {
 		t.Fatal(err)
 	}
 	mk := func() (store.User, uuid.UUID) {
-		g, conv, err := s.CreateGuest(ctx, dev.ID)
+		g, conv, err := s.CreateGuest(ctx, dev.ID, "Guest Test")
 		if err != nil {
 			t.Fatal(err)
 		}

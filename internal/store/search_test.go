@@ -97,7 +97,7 @@ func TestSearchPrefix(t *testing.T) {
 		ids[sub] = u.ID
 	}
 	dev := mkUser(t, s, "dev")
-	if _, _, err := s.CreateGuest(ctx, dev.ID); err != nil {
+	if _, _, err := s.CreateGuest(ctx, dev.ID, "Guest Test"); err != nil {
 		t.Fatal(err)
 	}
 	names2 := func(r []store.UserBrief) []string {

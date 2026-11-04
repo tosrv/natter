@@ -53,7 +53,7 @@ func TestSetDisplayName(t *testing.T) {
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	googleUser(t, svc, "d", devEmail, "dev")
-	g, _, err := svc.CreateGuest(ctx)
+	g, _, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

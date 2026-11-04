@@ -90,7 +90,7 @@ func TestGuestCannotBlock(t *testing.T) {
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	dev := googleUser(t, svc, "d", devEmail, "dev")
-	g, _, err := svc.CreateGuest(ctx)
+	g, _, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestDeveloperBlocksGuest(t *testing.T) {
 	st := storetest.New(t)
 	svc := chat.New(st, devEmail)
 	dev := googleUser(t, svc, "d", devEmail, "dev")
-	g, conv, err := svc.CreateGuest(ctx)
+	g, conv, err := svc.CreateGuest(ctx, "Guest Test")
 	if err != nil {
 		t.Fatal(err)
 	}

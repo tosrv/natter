@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -135,7 +134,7 @@ func createConversationTx(ctx context.Context, tx pgx.Tx, a, b uuid.UUID) (uuid.
 
 // CreateGuest creates a guest user (taking a slot) and its conversation with
 // the developer.
-func (s *Store) CreateGuest(ctx context.Context, developerID uuid.UUID) (User, uuid.UUID, error) {
+func (s *Store) CreateGuest(ctx context.Context, developerID uuid.UUID, displayName string) (User, uuid.UUID, error) {
 	for attempt := 0; attempt < 5; attempt++ {
 		var (
 			u    User
@@ -153,7 +152,7 @@ func (s *Store) CreateGuest(ctx context.Context, developerID uuid.UUID) (User, u
 			var err error
 			u, err = scanUser(tx.QueryRow(ctx,
 				`INSERT INTO users (kind, username, display_name) VALUES ('guest',$1,$2) RETURNING `+userCols,
-				"guest-"+suffix, "Guest "+strings.ToUpper(suffix)))
+				"guest-"+suffix, displayName))
 			if err != nil {
 				return err
 			}
