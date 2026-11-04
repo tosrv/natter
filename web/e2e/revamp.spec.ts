@@ -127,10 +127,10 @@ test("dark theme shows dark product shot", async ({ page }) => {
   await page.goto("/");
   const hero = page.locator("#top");
   const before = await hero.boundingBox();
-  await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll<HTMLImageElement>("#top img")).filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r; }))));
+  await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll<HTMLImageElement>("#top img[loading=eager]")).filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r; }))));
   expect(await hero.boundingBox()).toEqual(before);
   await page.getByRole("radio", { name: "Dark" }).first().click();
   await expect(page.locator("html")).toHaveClass(/dark/);
-  await expect(page.locator('#top img[src*="desktop-dark"]')).toBeVisible();
-  await expect(page.locator('#top img[src*="desktop-light"]')).toBeHidden();
+  await expect(page.locator('#top picture:has(source[srcset*="desktop-dark"]) img')).toBeVisible();
+  await expect(page.locator('#top picture:has(source[srcset*="desktop-light"]) img')).toBeHidden();
 });

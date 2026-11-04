@@ -13,6 +13,8 @@ async function user(browser: Browser, sub: string, username: string, display_nam
   const ctx = await browser.newContext();
   const res = await ctx.request.post("/api/test/login", { data: { sub, email: `${sub}@e2e.test`, username, display_name } });
   expect(res.ok()).toBeTruthy();
+  const me = await (await ctx.request.get("/api/me")).json();
+  expect(me.username, "username taken? run PRODUCT_SHOTS against a fresh DB").toBe(username);
   return ctx;
 }
 
@@ -81,7 +83,7 @@ test.describe("product", () => {
   test("product shots", async ({ browser }) => {
     test.setTimeout(240_000);
     const RAW = path.resolve(process.cwd(), "shots-raw");
-    const dimas = `dimas_${run}`, alya = `alya_${run}`, raka = `raka_${run}`;
+    const dimas = "dimas", alya = "alya", raka = "raka"; // clean names: run against a fresh DB
     const dctx = await user(browser, `ps-d-${run}`, dimas, "Dimas Pratama");
     const actx = await user(browser, `ps-a-${run}`, alya, "Alya");
     const kctx = await user(browser, `ps-k-${run}`, raka, "Raka");
@@ -119,7 +121,7 @@ test.describe("product", () => {
     }, convId);
     await d.close();
 
-    const SIZES = { desktop: { width: 1440, height: 900 }, mobile: { width: 390, height: 844 } } as const;
+    const SIZES = { desktop: { width: 1440, height: 760 }, mobile: { width: 390, height: 844 } } as const;
     for (const theme of THEMES) {
       for (const [vp, size] of Object.entries(SIZES)) {
         const ctx = await browser.newContext({ viewport: size, deviceScaleFactor: 2, storageState: await dctx.storageState() });
@@ -132,10 +134,6 @@ test.describe("product", () => {
         expect(await p.evaluate(async () => { await document.fonts.ready; return document.fonts.check('16px "Geist"'); })).toBe(true);
         await p.waitForTimeout(300);
         await p.screenshot({ path: path.join(RAW, `${vp}-${theme}.png`) });
-        if (vp === "desktop") {
-          const box = (await p.locator("main section").first().boundingBox())!;
-          await p.screenshot({ path: path.join(RAW, `receipts-${theme}.png`), clip: box });
-        }
         await ctx.close();
       }
     }

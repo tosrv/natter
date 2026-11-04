@@ -61,16 +61,13 @@ export default function Landing() {
       </a>
       <Nav />
       <main id="main" className="flex-1">
-        <Hero {...cta} productShot={<>
-          <ProductShot variant="desktop" priority className="hidden md:block" />
-          <ProductShot variant="mobile" priority className="mx-auto max-w-[390px] md:hidden" />
-        </>}>
+        <Hero {...cta} productShot={<ProductShot variant="hero" priority className="mx-auto max-w-[390px] md:max-w-none" />}>
           {err && <p role="alert" className="mt-6 rounded-lg border border-destructive bg-card p-3 text-sm text-destructive">{errorMessage(err)}</p>}
           {configFailed && <p role="alert" className="mt-4 text-xs text-destructive">{t("landing.configFailed")}</p>}
           <LegalNote className="mt-2 text-xs text-muted-foreground" />
         </Hero>
         <ProductIntro />
-        <Features shot={<ProductShot variant="receipts" className="rounded-xl shadow-sm" />} />
+        <Features shot={<ProductShot variant="receipts" className="mx-auto max-w-[390px] rounded-xl shadow-sm" />} />
         <HowItWorks />
         <Philosophy />
         <Privacy />

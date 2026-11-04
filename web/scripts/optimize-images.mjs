@@ -14,7 +14,8 @@ fs.mkdirSync(OUT, { recursive: true });
 const VARIANTS = {
   desktop: { width: 1440 },
   mobile: { width: 390 },
-  receipts: { width: 996, crop: { left: 0, top: 0, width: 1992, height: 960 } },
+  // Header (typing…) + all bubbles with ✓/✓✓ from the phone capture.
+  receipts: { width: 390, from: "mobile", crop: { left: 0, top: 0, width: 780, height: 1120 } },
 };
 
 async function emit(src, name, w) {
@@ -24,9 +25,9 @@ async function emit(src, name, w) {
   await base.clone().png({ compressionLevel: 9, palette: true, quality: 90 }).toFile(path.join(OUT, `${name}.png`));
 }
 
-for (const [v, { width, crop }] of Object.entries(VARIANTS)) {
+for (const [v, { width, crop, from }] of Object.entries(VARIANTS)) {
   for (const theme of ["light", "dark"]) {
-    let buf = fs.readFileSync(path.join(RAW, `${v}-${theme}.png`));
+    let buf = fs.readFileSync(path.join(RAW, `${from ?? v}-${theme}.png`));
     if (crop) buf = await sharp(buf).extract(crop).toBuffer();
     await emit(buf, `${v}-${theme}`, width);
     await emit(buf, `${v}-${theme}@2x`, width * 2);

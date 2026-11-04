@@ -27,9 +27,18 @@ describe("ProductShot", () => {
       expect(Number(img.getAttribute("width"))).toBeGreaterThan(0);
       expect(Number(img.getAttribute("height"))).toBeGreaterThan(0);
       expect(img.getAttribute("alt")).toBeTruthy();
-      expect(img.getAttribute("loading")).toBe("eager");
-      expect(img.getAttribute("fetchpriority")).toBe("high");
     }
+    const [light, dark] = [...pics].map((p) => p.querySelector("img")!);
+    expect(light.getAttribute("loading")).toBe("eager");
+    expect(light.getAttribute("fetchpriority")).toBe("high");
+    expect(dark.getAttribute("loading")).toBe("lazy");
+    expect(dark.hasAttribute("fetchpriority")).toBe(false);
+  });
+  it("hero art-directs desktop and mobile sources by media query", () => {
+    const pic = render(<ProductShot variant="hero" priority />).querySelector("picture")!;
+    const media = [...pic.querySelectorAll("source")].map((s) => `${s.getAttribute("type")} ${s.getAttribute("media")} ${s.getAttribute("srcset")?.split(" ")[0]}`);
+    expect(media).toContain("image/avif (min-width: 768px) /product/desktop-light.avif");
+    expect(media).toContain("image/avif (max-width: 767px) /product/mobile-light.avif");
   });
   it("lazy loads without priority", () => {
     const img = render(<ProductShot variant="receipts" />).querySelector("img")!;
