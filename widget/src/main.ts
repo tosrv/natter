@@ -18,9 +18,21 @@ class PmessChat extends HTMLElement {
     try {
       const server = (this.getAttribute("server") || defaultServer).replace(/\/+$/, "");
       const root = (this.root = this.attachShadow({ mode: "open" }));
-      const style = document.createElement("style");
-      style.textContent = css;
-      root.appendChild(style);
+      // Constructable stylesheet: not subject to host `style-src`. Fallback to <style> if unsupported.
+      let adopted = false;
+      try {
+        if (typeof CSSStyleSheet !== "undefined" && "adoptedStyleSheets" in root) {
+          const sheet = new CSSStyleSheet();
+          sheet.replaceSync(css);
+          root.adoptedStyleSheets = [sheet];
+          adopted = true;
+        }
+      } catch { /* fall back below */ }
+      if (!adopted) {
+        const style = document.createElement("style");
+        style.textContent = css;
+        root.appendChild(style);
+      }
       const color = this.getAttribute("color");
       if (color) this.style.setProperty("--pm-color", color);
       const session = createSession(server);

@@ -37,6 +37,8 @@ If the host site sends a Content-Security-Policy, allow:
 - `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com`
 - `frame-src https://challenges.cloudflare.com`
 
+Styles are applied with constructable stylesheets (`adoptedStyleSheets`), so no `style-src` change is needed on modern browsers. Older browsers without support fall back to an inline `<style>` element, which needs `style-src 'unsafe-inline'`.
+
 ## Limitations
 
 - Guest only: no Google login in the widget.

@@ -59,7 +59,7 @@ To let a website embed `<pmess-chat>` (see [`widget/README.md`](../widget/README
 1. Add `https://<site>` to `ALLOWED_ORIGINS` in the VPS `.env` (comma-separated), then run `docker compose up -d` to restart the app with the new env.
 2. Cloudflare dashboard → **Turnstile** → the pmess widget → add the site's hostname.
 3. Verify the script is served cross-origin: `curl -I https://chat.rahmattomy.com/widget.js` must show `Cross-Origin-Resource-Policy: cross-origin`.
-4. If the host site has a Content-Security-Policy, it must allow `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com` and `frame-src https://challenges.cloudflare.com`.
+4. If the host site has a Content-Security-Policy, it must allow `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com` and `frame-src https://challenges.cloudflare.com`. Styles use constructable stylesheets, so no `style-src` change is needed on modern browsers; older browsers fall back to an inline `<style>` element, which needs `style-src 'unsafe-inline'`.
 
 ## Security headers
 

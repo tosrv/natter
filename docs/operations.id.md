@@ -59,7 +59,7 @@ Agar sebuah situs bisa menyematkan `<pmess-chat>` (lihat [`widget/README.md`](..
 1. Tambah `https://<situs>` ke `ALLOWED_ORIGINS` di `.env` VPS (dipisah koma), lalu jalankan `docker compose up -d` agar app restart dengan env baru.
 2. Dashboard Cloudflare → **Turnstile** → widget pmess → tambah hostname situs.
 3. Cek skrip disajikan lintas origin: `curl -I https://chat.rahmattomy.com/widget.js` harus menampilkan `Cross-Origin-Resource-Policy: cross-origin`.
-4. Bila situs host punya Content-Security-Policy, izinkan `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com`, dan `frame-src https://challenges.cloudflare.com`.
+4. Bila situs host punya Content-Security-Policy, izinkan `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com`, dan `frame-src https://challenges.cloudflare.com`. Gaya memakai constructable stylesheet, sehingga `style-src` tidak perlu diubah di browser modern; browser lama memakai elemen `<style>` inline sebagai cadangan, yang membutuhkan `style-src 'unsafe-inline'`.
 
 ## Header keamanan
 

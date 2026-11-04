@@ -52,6 +52,20 @@ describe("socket", () => {
     vi.advanceTimersByTime(1);
     expect(FakeWS.instances).toHaveLength(3);
   });
+  it("retries after the WS constructor throws", () => {
+    let calls = 0;
+    class ThrowOnce extends FakeWS {
+      constructor(url: string, protocols: string[]) {
+        if (calls++ === 0) throw new Error("SecurityError");
+        super(url, protocols);
+      }
+    }
+    mk({ WS: ThrowOnce as unknown as typeof WebSocket });
+    expect(FakeWS.instances).toHaveLength(0);
+    vi.advanceTimersByTime(1000);
+    expect(calls).toBe(2);
+    expect(FakeWS.instances).toHaveLength(1);
+  });
   it("resets backoff after open", () => {
     mk();
     FakeWS.instances[0].drop();

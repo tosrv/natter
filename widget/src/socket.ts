@@ -28,7 +28,8 @@ export function createSocket(opts: SocketOpts): { send(frame: object): boolean; 
     if (closed) return;
     const tok = opts.token();
     if (!tok) { schedule(); return; }
-    const sock = new WS(opts.url, ["pmess.bearer", tok]);
+    let sock: WebSocket;
+    try { sock = new WS(opts.url, ["pmess.bearer", tok]); } catch { schedule(); return; }
     ws = sock;
     sock.onopen = () => { attempt = 0; opts.onOpen(); };
     sock.onmessage = (ev) => {
