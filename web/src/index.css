@@ -11,3 +11,4 @@ body{@apply bg-background text-foreground antialiased font-sans}
   .reveal { opacity: 0; transform: translateY(8px); transition: opacity 250ms ease-out, transform 250ms ease-out; }
   .reveal.is-visible { opacity: 1; transform: none; }
 }
+@media print { .reveal { opacity: 1; transform: none; } }

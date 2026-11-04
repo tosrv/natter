@@ -8,6 +8,8 @@
     "back": "Back",
     "save": "Save",
     "language": "Language",
+    "switchToId": "Switch to Indonesian",
+    "switchToEn": "Switch to English",
     "retry": "Retry"
   },
   "landing": {

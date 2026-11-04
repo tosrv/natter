@@ -171,7 +171,7 @@ test("mobile nav keeps theme and language visible; menu only holds section links
   await page.goto("/");
   const header = page.locator("header");
   await expect(header.getByRole("radiogroup")).toBeVisible();
-  await expect(header.getByRole("button", { name: "Language" })).toBeVisible();
+  await expect(header.getByRole("button", { name: "Language: EN" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await header.getByRole("button", { name: "Menu" }).click();
   await expect(page.getByRole("menuitem")).toHaveCount(3);
