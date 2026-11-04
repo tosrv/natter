@@ -120,7 +120,7 @@ export default function Landing() {
           {steps.map(({ icon: Icon, title, desc }, i) => (
             <li key={title} className="flex flex-col gap-2 rounded-2xl border bg-card p-5">
               <span className="flex items-center gap-2 text-sm font-semibold text-primary-text">
-                <span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-text-foreground">{i + 1}</span>
+                <span className="flex size-7 items-center justify-center rounded-full bg-primary-solid text-primary-foreground">{i + 1}</span>
                 <Icon className="size-4" aria-hidden />
               </span>
               <h3 className="font-bold">{title}</h3>
