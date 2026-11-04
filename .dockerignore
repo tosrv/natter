@@ -8,3 +8,5 @@ web/test-results
 web/playwright-report
 bin
 .extra-ca.pem
+widget/node_modules
+widget/dist

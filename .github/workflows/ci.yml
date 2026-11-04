@@ -45,6 +45,24 @@ jobs:
       - run: npx vitest run
       - run: npm run build
 
+  widget-test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: widget
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: widget/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run size
+
   e2e:
     timeout-minutes: 20
     runs-on: ubuntu-latest
@@ -71,7 +89,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: |
+            web/package-lock.json
+            widget/package-lock.json
       - name: Install web dependencies
         working-directory: web
         run: npm ci
@@ -81,6 +101,12 @@ jobs:
       - name: Build web
         working-directory: web
         run: npm run build
+      - name: Build widget into web/dist
+        working-directory: widget
+        run: |
+          npm ci
+          npm run build
+          cp dist/widget.js ../web/dist/widget.js
       - name: Start server
         env:
           E2E_FAKE_LOGIN: "1"
@@ -88,6 +114,8 @@ jobs:
           DEVELOPER_EMAIL: dev@e2e.test
           STATIC_DIR: web/dist
           LISTEN_ADDR: ":8099"
+          # widget.spec.ts serves its host page from :8081 (cross-origin embed).
+          ALLOWED_ORIGINS: http://localhost:8099,http://localhost:8081
           TURNSTILE_SITE_KEY: 1x00000000000000000000AA
           TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
         run: |
@@ -130,7 +158,7 @@ jobs:
   image:
     timeout-minutes: 30
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [go-test, web-test, e2e, backup-test]
+    needs: [go-test, web-test, widget-test, e2e, backup-test]
     runs-on: ubuntu-latest
     permissions:
       contents: read

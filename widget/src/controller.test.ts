@@ -57,6 +57,24 @@ describe("controller", () => {
     expect(t.tok()).toBeNull();
     expect(t.sockets[0].close).toHaveBeenCalled();
   });
+  it("socket close + me 401 → ended", async () => {
+    const t = setup();
+    await t.c.open();
+    t.api.me.mockImplementation(async () => { throw new ApiError("unauthorized", 401); });
+    t.sockets[0].opts.onClose(1006);
+    await vi.waitFor(() => expect(t.c.state().phase).toBe("ended"));
+    expect(t.tok()).toBeNull();
+    expect(t.sockets[0].close).toHaveBeenCalled();
+  });
+  it("socket close with live session stays in chat", async () => {
+    const t = setup();
+    await t.c.open();
+    t.api.me.mockClear();
+    t.sockets[0].opts.onClose(1006);
+    await vi.waitFor(() => expect(t.api.me).toHaveBeenCalled());
+    expect(t.c.state().phase).toBe("chat");
+    expect(t.c.state().chat.online).toBe(false);
+  });
   it("error peer_ended → ended", async () => {
     const t = setup();
     await t.c.open();

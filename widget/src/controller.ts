@@ -119,7 +119,14 @@ export function createController({ api, session, socketFactory }: Deps) {
         ev({ t: "online", on: true });
         catchUp().then(() => { vs.chat.outbox.forEach(sendItem); markRead(); }, fail);
       },
-      onClose: () => ev({ t: "online", on: false }),
+      onClose: () => {
+        ev({ t: "online", on: false });
+        // The server may have dropped us because the guest session ended, and a
+        // WS handshake 401 is opaque to the browser (close code 1006). Probe over
+        // HTTP on each close (reconnects are backed off, so this stays cheap); a
+        // 401 there moves to "ended" instead of reconnecting forever.
+        api.me().catch((e) => { if ((e as { status?: number }).status === 401) end(); });
+      },
     });
   }
 
