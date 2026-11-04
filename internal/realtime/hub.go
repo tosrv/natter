@@ -97,7 +97,7 @@ func (h *Hub) NotifyConversationDeleted(peers []store.DeletedConversation, delet
 // NotifyConversationCleared tells userID's connection (only) that the
 // conversation was cleared for them. Never blocks.
 func (h *Hub) NotifyConversationCleared(userID, convID uuid.UUID) {
-	h.deliver(userID, Frame{Type: "conversation_deleted", ConversationID: &convID})
+	h.deliver(userID, Frame{Type: "conversation_cleared", ConversationID: &convID})
 }
 
 // NotifyGuestEnded tells each online peer how the guest's conversations

@@ -72,3 +72,18 @@ describe("clearConversationMessages (guest delete)", () => {
     expect(removeConversation(once, "a")).toEqual(once);
   });
 });
+
+describe("guest clear vs deleted", () => {
+  const base: ChatState = { convs: [conv("a")], msgs: { a: [msg("a")] }, activeId: "a" };
+  it("clearing history leaves the outbox untouched", () => {
+    const ob = new Outbox();
+    ob.add("a", "hi");
+    clearConversationMessages(base, "a");
+    expect(ob.pending()).toHaveLength(1);
+  });
+  it("conversation_deleted (removeConversation) still removes the conversation regardless of user kind", () => {
+    const s = removeConversation(base, "a");
+    expect(s.convs).toEqual([]);
+    expect(s.activeId).toBeNull();
+  });
+});

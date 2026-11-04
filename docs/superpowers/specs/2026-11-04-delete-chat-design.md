@@ -30,7 +30,7 @@ Down: `DROP COLUMN cleared_seq`. Tidak ada data yang dihapus; retensi 1 bulan be
 - `DELETE /api/conversations/:id` (auth, Google & tamu):
   - Bukan anggota / tidak ada → 404 `not_found` (pola yang ada).
   - `UPDATE conversation_members SET cleared_seq = c.last_seq FROM conversations c WHERE …` → 204.
-  - Setelah sukses, hub mengirim `{"type":"conversation_deleted","conversation_id":…}` **hanya ke koneksi milik pemanggil**.
+  - Setelah sukses, hub mengirim `{"type":"conversation_cleared","conversation_id":…}` **hanya ke koneksi milik pemanggil**.
 - `GET /api/conversations`: kecualikan baris dengan `c.last_seq <= m.cleared_seq` milik saya.
 - `GET /api/conversations/:id/messages`: selalu tambahkan `seq > cleared_seq` milik pemanggil (berlaku untuk `after_seq`, `before_seq`, dan tanpa parameter).
 - Frame `message` real-time tidak berubah: pesan baru selalu `seq > cleared_seq`.
@@ -43,7 +43,7 @@ Down: `DROP COLUMN cleared_seq`. Tidak ada data yang dihapus; retensi 1 bulan be
 - Sukses:
   - Google: chat dikeluarkan dari daftar dan riwayatnya dikosongkan di state; kembali ke daftar (mobile) / tampilan "pilih percakapan" (desktop).
   - Tamu: percakapan tetap terbuka, riwayat dikosongkan, composer tetap aktif.
-- Frame `conversation_deleted` (sudah ditangani) menghapus chat dari daftar di tab lain; untuk tamu, riwayatnya dikosongkan alih-alih dikeluarkan.
+- Frame `conversation_cleared` (baru; `conversation_deleted` tetap berarti lawan menghapus akun) di tab lain milik pemanggil: Google mengeluarkan chat dari daftar, tamu hanya mengosongkan riwayat, tanpa toast.
 - Gagal → toast pesan error yang ada.
 
 Teks (EN / ID): "Delete chat"/"Hapus chat"; "Delete this chat?"/"Hapus chat ini?"; "This chat is removed from your list. The other person keeps their history."/"Chat ini dihapus dari daftarmu. Lawan bicara tetap menyimpan riwayatnya."; "Delete"/"Hapus"; "Cancel"/"Batal".
@@ -55,7 +55,7 @@ Teks (EN / ID): "Delete chat"/"Hapus chat"; "Delete this chat?"/"Hapus chat ini?
   - Pesan baru dari lawan → muncul lagi di daftar dengan hanya pesan baru.
   - Lawan tetap melihat semua pesan; `last_read_seq`/read receipt tidak terpengaruh.
   - Bukan anggota → 404; tamu bisa menghapus percakapannya.
-  - Frame `conversation_deleted` hanya ke koneksi pemanggil, tidak ke lawan.
+  - Frame `conversation_cleared` hanya ke koneksi pemanggil, tidak ke lawan.
 - **Vitest (web):** handler hapus mengosongkan riwayat & mengeluarkan chat (Google) / mengosongkan riwayat saja (tamu); dialog konfirmasi memanggil API hanya setelah "Hapus".
 - **Playwright:** A hapus chat → hilang dari daftar A; B masih melihat riwayat; B kirim pesan → chat muncul lagi di A hanya dengan pesan baru.
 

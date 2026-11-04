@@ -532,7 +532,7 @@ func TestNotifyConversationCleared(t *testing.T) {
 	cb := e.dial(t, tb)
 	waitRegistered(t, e.hub, b.ID, nil)
 	e.hub.NotifyConversationCleared(a.ID, conv)
-	f := must(t, ca, "conversation_deleted")
+	f := must(t, ca, "conversation_cleared")
 	if f.ConversationID == nil || *f.ConversationID != conv {
 		t.Fatalf("conversation_id = %v, want %v", f.ConversationID, conv)
 	}
