@@ -65,6 +65,7 @@ export default function Onboarding() {
         <h1 className="text-2xl font-extrabold">{t("onboarding.heading")}</h1>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="display-name" className="text-sm font-semibold">{t("onboarding.displayName")}</label>
+          {/* eslint-disable-next-line jsx-a11y/no-autofocus -- intentional: the only field on the onboarding step */}
           <Input id="display-name" value={display} onChange={(e) => setDisplay(e.target.value)} autoFocus autoComplete="off"
             maxLength={40} placeholder={t("onboarding.displayNamePlaceholder")} aria-invalid={dnShown || !!errs.display}
             aria-describedby="display-name-msg" className="rounded-full" />

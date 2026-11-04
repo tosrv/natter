@@ -15,7 +15,9 @@ export default function BlockedList() {
     if (e instanceof ApiError && e.status === 401) { nav("/", { replace: true }); return; }
     toast.error(errorMessage(e instanceof ApiError ? e.code : "internal"));
   };
-  useEffect(() => { listBlocks().then(setItems).catch((e) => { setItems([]); fail(e); }); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { listBlocks().then(setItems).catch((e) => { setItems([]); fail(e); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function unblock(id: string) {
     setBusyId(id);
