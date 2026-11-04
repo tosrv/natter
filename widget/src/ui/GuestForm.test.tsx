@@ -1,7 +1,9 @@
-import { it, expect, vi } from "vitest";
+import { it, expect, vi, afterEach } from "vitest";
 import { render } from "preact";
 import { act } from "preact/test-utils";
 import { GuestForm } from "./GuestForm";
+
+afterEach(() => { delete (window as any).turnstile; });
 
 function mount(startGuest = vi.fn(async () => {}), nameError = false) {
   const div = document.createElement("div");
@@ -36,5 +38,20 @@ it("empty name disables; token enables; click starts guest", async () => {
   await act(async () => { ta.value = "wa 1"; ta.dispatchEvent(new Event("input", { bubbles: true })); });
   await act(async () => { btn(d2).click(); });
   expect(sg2).toHaveBeenCalledWith("TOK", "Budi", "wa 1");
-  delete (window as any).turnstile;
+});
+
+it("nameError shows text; failed submit resets turnstile and clears token", async () => {
+  const reset = vi.fn();
+  (window as any).turnstile = { render: (_e: any, o: any) => { o.callback("TOK"); return "id"; }, reset, remove: vi.fn() };
+  const startGuest = vi.fn(async () => {});
+  const div = document.createElement("div");
+  document.body.appendChild(div);
+  const ctl: any = { startGuest, fail: vi.fn(), state: () => ({ phase: "turnstile" }) };
+  act(() => { render(<GuestForm ctl={ctl} lang="en" siteKey="k" nameError={true} />, div); });
+  await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+  expect(div.querySelector("[role=alert]")!.textContent).toBe("Use 1–40 letters, numbers, spaces or . - ' _");
+  expect(btn(div).disabled).toBe(false);
+  await act(async () => { btn(div).click(); });
+  expect(reset).toHaveBeenCalledWith("id");
+  expect(btn(div).disabled).toBe(true);
 });

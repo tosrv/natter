@@ -20,8 +20,8 @@ const dict = {
     unavailable: "Chat is unavailable.",
     typing: "typing...",
     guestName: "Your name",
-    guestNameError: "Name is not allowed, please choose another.",
-    guestContact: "Contact (optional) - email, WhatsApp...",
+    guestNameError: "Use 1–40 letters, numbers, spaces or . - ' _",
+    guestContact: "Contact (optional) — email, WhatsApp…",
     startChat: "Start chat",
   },
   id: {
@@ -42,9 +42,9 @@ const dict = {
     full: "Sedang penuh, coba lagi nanti.",
     unavailable: "Chat tidak tersedia.",
     typing: "mengetik...",
-    guestName: "Nama Anda",
-    guestNameError: "Nama tidak diperbolehkan, pilih nama lain.",
-    guestContact: "Kontak (opsional) - email, WhatsApp...",
+    guestName: "Nama kamu",
+    guestNameError: "Pakai 1–40 huruf, angka, spasi, atau . - ' _",
+    guestContact: "Kontak (opsional) — email, WhatsApp…",
     startChat: "Mulai chat",
   },
 } as const;
