@@ -124,6 +124,10 @@ cd web && npm test
 
 Local development, all environment variables, E2E tests, deployment, backups and restore are in the **[operations guide](docs/operations.md)**.
 
+## Embeddable widget
+
+Any website can embed a guest chat bubble with two lines (`<script src="https://chat.rahmattomy.com/widget.js" defer></script>` and `<pmess-chat></pmess-chat>`). See [`widget/README.md`](widget/README.md) for attributes, the host-site CSP and operator steps.
+
 ## Security & privacy
 
 - Strict Content-Security-Policy and other security headers on every response

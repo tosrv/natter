@@ -52,6 +52,15 @@ Tombol "Lanjut sebagai tamu" dilindungi Turnstile; verifikasi server dilakukan s
 
 Untuk dev/E2E lokal kosongkan keduanya (captcha mati). Test key Cloudflare yang selalu lolos: site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`. Test Playwright untuk widget hanya jalan dengan `E2E_TURNSTILE=1` dan butuh akses ke `challenges.cloudflare.com` (CI mengaturnya).
 
+## Widget yang disematkan (situs host)
+
+Agar sebuah situs bisa menyematkan `<pmess-chat>` (lihat [`widget/README.md`](../widget/README.md)), untuk setiap situs host:
+
+1. Tambah `https://<situs>` ke `ALLOWED_ORIGINS` di `.env` VPS (dipisah koma), lalu jalankan `docker compose up -d` agar app restart dengan env baru.
+2. Dashboard Cloudflare → **Turnstile** → widget pmess → tambah hostname situs.
+3. Cek skrip disajikan lintas origin: `curl -I https://chat.rahmattomy.com/widget.js` harus menampilkan `Cross-Origin-Resource-Policy: cross-origin`.
+4. Bila situs host punya Content-Security-Policy, izinkan `script-src https://chat.rahmattomy.com https://challenges.cloudflare.com`, `connect-src https://chat.rahmattomy.com wss://chat.rahmattomy.com`, dan `frame-src https://challenges.cloudflare.com`.
+
 ## Header keamanan
 
 Server menambahkan sendiri pada semua respons: `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `X-Frame-Options: DENY`, dan `Strict-Transport-Security: max-age=31536000` hanya bila `COOKIE_SECURE=true`. **Jangan menambahkan header yang sama di Nginx** (`add_header`) agar tidak terduplikasi; kebijakan ada di `internal/api/security.go`.

@@ -124,6 +124,10 @@ cd web && npm test
 
 Mode dev lokal, semua variabel lingkungan, test E2E, deploy, backup, dan restore ada di **[panduan operasional](docs/operations.id.md)**.
 
+## Widget yang bisa disematkan
+
+Situs mana pun bisa menyematkan bubble chat tamu dengan dua baris (`<script src="https://chat.rahmattomy.com/widget.js" defer></script>` dan `<pmess-chat></pmess-chat>`). Atribut, CSP situs host, dan langkah operator ada di [`widget/README.md`](widget/README.md) (bahasa Inggris).
+
 ## Keamanan & privasi
 
 - Content-Security-Policy yang ketat dan header keamanan lain di setiap respons
