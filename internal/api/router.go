@@ -102,7 +102,8 @@ func cors(allowed []string) gin.HandlerFunc {
 	}
 }
 
-// privateSPARoutes are SPA screens served with index.html but kept out of search indexes.
+// privateSPARoutes are SPA screens served with the clean app.html shell (no
+// prerendered landing, canonical or JSON-LD; index.html if app.html is missing) but kept out of search indexes.
 var privateSPARoutes = []string{"/chat", "/settings", "/onboarding"}
 
 // publicRoutes are indexable pages (static files or the SPA root).
@@ -116,8 +117,8 @@ func noindex(c *gin.Context) {
 }
 
 // serveStatic serves files from dir: real files and directory indexes with 200,
-// private SPA routes as index.html with noindex, and anything else as a 404
-// that still carries index.html (so the SPA can render its not-found view).
+// private SPA routes as the app shell with noindex, and anything else as a 404
+// that still carries the app shell (so the SPA can render its not-found view).
 func serveStatic(c *gin.Context, dir string) {
 	p := c.Request.URL.Path
 	if p == "/api" || strings.HasPrefix(p, "/api/") {
@@ -131,6 +132,10 @@ func serveStatic(c *gin.Context, dir string) {
 	}
 	clean := path.Clean("/" + p)
 	index := filepath.Join(dir, "index.html")
+	shell := filepath.Join(dir, "app.html")
+	if st, err := os.Stat(shell); err != nil || !st.Mode().IsRegular() {
+		shell = index
+	}
 	if clean == "/widget.js" {
 		hd := c.Writer.Header()
 		hd.Set("Cross-Origin-Resource-Policy", "cross-origin")
@@ -149,7 +154,7 @@ func serveStatic(c *gin.Context, dir string) {
 			case ".xml":
 				c.Header("Content-Type", "application/xml; charset=utf-8")
 			}
-			if f == index && !slices.Contains(publicRoutes, clean) {
+			if (f == index && !slices.Contains(publicRoutes, clean)) || f == filepath.Join(dir, "app.html") {
 				c.Header("X-Robots-Tag", robotsNoIndexFollow)
 			}
 			c.File(f)
@@ -158,10 +163,10 @@ func serveStatic(c *gin.Context, dir string) {
 	}
 	if slices.Contains(privateSPARoutes, clean) {
 		c.Header("X-Robots-Tag", robotsNoIndexFollow)
-		c.File(index)
+		c.File(shell)
 		return
 	}
-	body, err := os.ReadFile(index)
+	body, err := os.ReadFile(shell)
 	if err != nil {
 		WriteError(c, chat.ErrNotFound)
 		return

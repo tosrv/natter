@@ -16,6 +16,12 @@ if (!template.includes("<!--head-->") || !template.includes('<div id="root"></di
   throw new Error("dist/index.html is missing <!--head--> or <div id=\"root\"></div>");
 }
 
+// Clean SPA shell for private routes and 404s: empty root, neutral head (no canonical, og:url or JSON-LD).
+const esc = (v) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+writeFileSync(join(dist, "app.html"), template.replace("<!--head-->", () =>
+  `<title>natter</title>\n<meta name="description" content="${esc(pageMeta["/"].description)}"/>`));
+console.log("wrote dist/app.html");
+
 const routes = [["/", "index.html"], ["/privacy", "privacy/index.html"], ["/terms", "terms/index.html"]];
 for (const [route, file] of routes) {
   const html = template

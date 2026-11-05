@@ -47,6 +47,7 @@ Diuji pada build produksi lokal (Go + `web/dist`):
 - Bahasa: hydrate dengan EN; bila bahasa tersimpan ID, ganti ke ID **setelah** hydrate (efek di `main.tsx` setelah render pertama) agar tidak terjadi hydration mismatch. Tema tidak memengaruhi markup (kelas `dark` di `<html>` oleh `theme-init.js`).
 - Komponen yang membaca `window`/`localStorage`/`document` saat render (ThemeToggle, LanguageToggle, Landing auth effect) harus aman di server: akses hanya di `useEffect` atau di-guard `typeof window`.
 - Landing tetap mengalihkan user login ke `/chat` di klien (tidak berubah).
+- Sebelum menimpa `dist/index.html`, skrip menulis `dist/app.html`: kerangka SPA bersih (`<div id="root"></div>` kosong, hanya `<title>natter</title>` + description; tanpa canonical, og:url, JSON-LD) untuk route privat dan 404. Prerender berjalan dengan `NODE_ENV=production`.
 
 ## 5. Metadata per halaman
 
@@ -88,6 +89,7 @@ Tanpa rating/ulasan. Blok `application/ld+json` tidak dieksekusi sehingga aman t
 - Path lain → **404** dengan body `index.html` (SPA tetap bisa menampilkan redirect ke `/`) dan `X-Robots-Tag: noindex`.
 - `/api/*` → semua respons diberi `X-Robots-Tag: noindex, nofollow` (middleware grup `/api`).
 - Otorisasi API tidak diubah.
+- Route privat dan body 404 memakai `app.html` (fallback ke `index.html` bila tidak ada); `/app.html` langsung diberi `X-Robots-Tag: noindex, nofollow`.
 
 ## 7. File statis
 

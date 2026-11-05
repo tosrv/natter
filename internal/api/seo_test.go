@@ -13,19 +13,26 @@ const (
 	idxBody     = "<html>spa-index</html>"
 	privacyBody = "<html>privacy-page</html>"
 	termsBody   = "<html>terms-page</html>"
+	appBody     = "<html>app-shell</html>"
 )
 
-func seoEnv(t *testing.T) *env {
+func seoEnv(t *testing.T) *env { return seoEnvWith(t, true) }
+
+func seoEnvWith(t *testing.T, withApp bool) *env {
 	t.Helper()
 	dir := t.TempDir()
-	for p, s := range map[string]string{
+	files := map[string]string{
 		"index.html":         idxBody,
 		"privacy/index.html": privacyBody,
 		"terms/index.html":   termsBody,
 		"robots.txt":         "User-agent: *",
 		"sitemap.xml":        "<urlset/>",
 		"llms.txt":           "# natter",
-	} {
+	}
+	if withApp {
+		files["app.html"] = appBody
+	}
+	for p, s := range files {
 		full := filepath.Join(dir, filepath.FromSlash(p))
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 			t.Fatal(err)
@@ -48,11 +55,12 @@ func TestSEOStatusAndRobotsTag(t *testing.T) {
 		{"/", 200, idxBody, ""},
 		{"/privacy", 200, privacyBody, ""},
 		{"/terms", 200, termsBody, ""},
-		{"/chat", 200, idxBody, "noindex, nofollow"},
-		{"/settings", 200, idxBody, "noindex, nofollow"},
-		{"/onboarding", 200, idxBody, "noindex, nofollow"},
-		{"/nope", 404, idxBody, "noindex"},
-		{"/a/b", 404, idxBody, "noindex"},
+		{"/chat", 200, appBody, "noindex, nofollow"},
+		{"/settings", 200, appBody, "noindex, nofollow"},
+		{"/onboarding", 200, appBody, "noindex, nofollow"},
+		{"/nope", 404, appBody, "noindex"},
+		{"/a/b", 404, appBody, "noindex"},
+		{"/app.html", 200, appBody, "noindex, nofollow"},
 	}
 	for _, c := range cases {
 		w := e.do("GET", c.path, "", "")
@@ -144,5 +152,18 @@ func TestSEONoTraversal(t *testing.T) {
 		if strings.Contains(w.Body.String(), "module ") {
 			t.Errorf("%s leaked: %s", p, w.Body)
 		}
+	}
+}
+
+func TestSEOAppShellFallsBackToIndex(t *testing.T) {
+	e := seoEnvWith(t, false)
+	for path, status := range map[string]int{"/chat": 200, "/nope": 404} {
+		w := e.do("GET", path, "", "")
+		if w.Code != status || !strings.Contains(w.Body.String(), idxBody) {
+			t.Errorf("%s: %d %q", path, w.Code, w.Body)
+		}
+	}
+	if w := e.do("GET", "/", "", ""); w.Code != 200 || w.Header().Get("X-Robots-Tag") != "" {
+		t.Errorf("/: %d robots %q", w.Code, w.Header().Get("X-Robots-Tag"))
 	}
 }
