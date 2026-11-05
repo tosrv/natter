@@ -124,12 +124,13 @@ test("revamp: guest starts from the dialog and sees limited settings", async ({ 
 test("dark theme shows dark product shot", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.addInitScript(() => { try { localStorage.setItem("natter.lang", "en"); localStorage.removeItem("natter.theme"); } catch { /* */ } });
+  await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/");
   const hero = page.locator("#top");
   const before = await hero.boundingBox();
   await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll<HTMLImageElement>("#top img[loading=eager]")).filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r; }))));
   expect(await hero.boundingBox()).toEqual(before);
-  await page.getByRole("radio", { name: "Dark" }).first().click();
+  await page.locator("header").getByRole("button", { name: "Dark", exact: true }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.locator('#top picture:has(source[srcset*="desktop-dark"]) img')).toBeVisible();
   await expect(page.locator('#top picture:has(source[srcset*="desktop-light"]) img')).toBeHidden();
@@ -137,12 +138,14 @@ test("dark theme shows dark product shot", async ({ page }) => {
 
 test("dark theme chosen on the landing persists across reload", async ({ page }) => {
   await page.addInitScript(() => { try { if (!sessionStorage.getItem("seeded")) { sessionStorage.setItem("seeded", "1"); localStorage.setItem("natter.lang", "en"); localStorage.removeItem("natter.theme"); } } catch { /* */ } });
+  await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/");
-  await page.getByRole("radio", { name: "Dark" }).first().click();
+  await page.locator("header").getByRole("button", { name: "Dark", exact: true }).click();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
   await page.reload();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-  await expect(page.getByRole("radio", { name: "Dark" }).first()).toHaveAttribute("aria-checked", "true");
+  // In dark mode the toggle offers switching back to light.
+  await expect(page.locator("header").getByRole("button", { name: "Light", exact: true })).toBeVisible();
 });
 
 test("keyboard: skip link, theme switch, Sign in, hero CTAs are reachable with focus", async ({ page }) => {
@@ -151,7 +154,7 @@ test("keyboard: skip link, theme switch, Sign in, hero CTAs are reachable with f
   await page.getByRole("button", { name: "Continue as guest" }).first().waitFor();
   const targets = [
     page.getByRole("link", { name: "Skip to content" }),
-    page.locator("header").locator('[role=radio][aria-checked=true]'),
+    page.locator("header").getByRole("button", { name: /^(Light|Dark)$/ }),
     page.getByRole("link", { name: "Sign in", exact: true }),
     page.locator("#top").getByRole("link", { name: "Sign in with Google" }),
     page.locator("#top").getByRole("button", { name: "Continue as guest" }),
@@ -170,7 +173,7 @@ test("mobile nav keeps theme and language visible; menu only holds section links
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const header = page.locator("header");
-  await expect(header.getByRole("radiogroup")).toBeVisible();
+  await expect(header.getByRole("button", { name: /^(Light|Dark)$/ })).toBeVisible();
   await expect(header.getByRole("button", { name: "Language: EN" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await header.getByRole("button", { name: "Menu" }).click();
