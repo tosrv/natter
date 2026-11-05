@@ -15,9 +15,12 @@ import Philosophy from "./landing/Philosophy";
 import Privacy from "./landing/Privacy";
 import FinalCta from "./landing/FinalCta";
 import Footer from "./landing/Footer";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageMeta } from "@/seo/meta";
 
 export default function Landing() {
   const { t } = useTranslation();
+  useDocumentTitle(pageMeta["/"].title);
   const nav = useNavigate();
   const [params] = useSearchParams();
   const [err, setErr] = useState<string | null>(params.get("error"));

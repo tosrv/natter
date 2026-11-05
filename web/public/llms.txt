@@ -1,0 +1,36 @@
+# natter
+
+> Natter is Matter. natter is a simple personal 1:1 real-time messenger. Conversations, made simple.
+
+## Features
+
+- Find people by username search
+- Real-time messages over WebSocket
+- Sent and read receipts
+- Typing indicator
+- Block users
+- Delete a chat (for me only)
+- Delete your account
+- Guest mode: enter a name and optional contact to chat with the developer
+- Embeddable guest chat widget
+- Light, dark and system theme
+- English and Indonesian
+
+## Privacy
+
+- Messages are not end-to-end encrypted; server administrators can read messages.
+- Conversations are deleted after 1 month without activity.
+- Guest accounts end after 30 minutes of inactivity; their conversation is kept for up to 1 month.
+
+## Technology
+
+- Backend: Go (Gin), PostgreSQL, WebSocket
+- Frontend: React, TypeScript, Vite, Tailwind CSS
+- Open source under the MIT license
+
+## Links
+
+- [natter](https://chat.rahmattomy.com/)
+- [Privacy Policy](https://chat.rahmattomy.com/privacy)
+- [Terms of Service](https://chat.rahmattomy.com/terms)
+- [Source code on GitHub](https://github.com/tosrv/natter)

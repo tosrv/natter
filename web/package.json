@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && NODE_ENV=production vite build --ssr src/entry-prerender.tsx --outDir dist-ssr && NODE_ENV=production node scripts/prerender.mjs",
     "test": "vitest run",
     "preview": "vite preview",
     "e2e": "playwright test",

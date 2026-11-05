@@ -1,12 +1,14 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Toaster } from "@/components/ui/sonner";
+// Public, prerendered pages are imported eagerly: renderToString cannot wait for lazy(),
+// and the first client render must match the prerendered markup for hydration.
 import Landing from "@/pages/Landing";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 
 const Onboarding = lazy(() => import("@/pages/Onboarding"));
-const Terms = lazy(() => import("@/pages/Terms"));
-const Privacy = lazy(() => import("@/pages/Privacy"));
 const Chat = lazy(() => import("@/pages/Chat"));
 const Settings = lazy(() => import("@/pages/Settings"));
 
@@ -15,9 +17,11 @@ function RouteFallback() {
   return <p className="p-6 text-muted-foreground">{t("common.loading")}</p>;
 }
 
-export default function App() {
+/** Router-agnostic tree, shared by the browser (BrowserRouter) and the prerenderer (StaticRouter). */
+/** `children` render inside the Suspense boundary, so their effects run only once the routes have hydrated. */
+export function AppRoutes({ children }: { children?: ReactNode }) {
   return (
-    <BrowserRouter>
+    <>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -28,8 +32,13 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        {children}
       </Suspense>
       <Toaster />
-    </BrowserRouter>
+    </>
   );
+}
+
+export default function App({ children }: { children?: ReactNode }) {
+  return <BrowserRouter><AppRoutes>{children}</AppRoutes></BrowserRouter>;
 }

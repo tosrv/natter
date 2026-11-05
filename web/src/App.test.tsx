@@ -27,9 +27,6 @@ async function renderAt(path: string) {
   });
 }
 
-const waitFor = async (cond: () => boolean) => {
-  for (let i = 0; i < 100 && !cond(); i++) await act(async () => { await new Promise((r) => setTimeout(r, 20)); });
-};
 
 describe("App routes", () => {
   it("renders the landing page eagerly at /", async () => {
@@ -38,11 +35,10 @@ describe("App routes", () => {
     expect(host.textContent).not.toContain(i18n.t("common.loading"));
   });
 
-  it("shows the Suspense fallback then the lazy Terms page at /terms", async () => {
+  it("renders the prerendered Terms page eagerly at /terms (no Suspense fallback)", () => {
     window.history.pushState({}, "", "/terms");
     act(() => { root.render(<App />); });
-    expect(host.querySelector("p.text-muted-foreground")?.textContent).toBe(i18n.t("common.loading"));
-    await waitFor(() => host.querySelector("h1") !== null);
     expect(host.querySelector("h1")?.textContent).toBe(i18n.t("terms.title"));
+    expect(host.textContent).not.toContain(i18n.t("common.loading"));
   });
 });

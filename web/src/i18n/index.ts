@@ -18,7 +18,6 @@ export function detectLang(): Lang {
 export function setLang(l: Lang) {
   try { localStorage.setItem(KEY, l); } catch { /* ignore */ }
   void i18n.changeLanguage(l);
-  document.documentElement.lang = l;
 }
 
 void i18n.use(initReactI18next).init({
@@ -27,8 +26,10 @@ void i18n.use(initReactI18next).init({
   fallbackLng: "en",
   interpolation: { escapeValue: false },
 });
-document.documentElement.lang = i18n.language;
-i18n.on("languageChanged", (l) => { document.documentElement.lang = l; });
+if (typeof document !== "undefined") {
+  document.documentElement.lang = i18n.language;
+  i18n.on("languageChanged", (l) => { document.documentElement.lang = l; });
+}
 
 export function errorMessage(code: string): string {
   return i18n.exists(`errors.${code}`) ? i18n.t(`errors.${code}`) : i18n.t("errors.unknown");

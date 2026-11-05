@@ -51,6 +51,7 @@ func NewRouter(d Deps) *gin.Engine {
 	h := &handlers{chat: d.Chat, limiter: d.SearchLimiter, auth: d.Auth, notifier: d.Notifier}
 
 	api := r.Group("/api")
+	api.Use(noindex)
 	api.GET("/config", ConfigHandler(d.TurnstileSiteKey))
 	api.GET("/auth/google/login", d.Auth.GoogleLogin)
 	api.GET("/auth/google/callback", d.Auth.GoogleCallback)
@@ -77,24 +78,7 @@ func NewRouter(d Deps) *gin.Engine {
 		authed.GET("/ws", d.WS)
 	}
 
-	r.NoRoute(func(c *gin.Context) {
-		p := c.Request.URL.Path
-		if p == "/api" || strings.HasPrefix(p, "/api/") || d.StaticDir == "" ||
-			(c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead) {
-			WriteError(c, chat.ErrNotFound)
-			return
-		}
-		f := filepath.Join(d.StaticDir, filepath.FromSlash(path.Clean("/"+p)))
-		if st, err := os.Stat(f); err != nil || st.IsDir() {
-			f = filepath.Join(d.StaticDir, "index.html")
-		}
-		if p == "/widget.js" {
-			hd := c.Writer.Header()
-			hd.Set("Cross-Origin-Resource-Policy", "cross-origin")
-			hd.Set("Cache-Control", "public, max-age=300")
-		}
-		c.File(f)
-	})
+	r.NoRoute(func(c *gin.Context) { serveStatic(c, d.StaticDir) })
 	return r
 }
 
@@ -116,4 +100,77 @@ func cors(allowed []string) gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+// privateSPARoutes are SPA screens served with the clean app.html shell (no
+// prerendered landing, canonical or JSON-LD; index.html if app.html is missing) but kept out of search indexes.
+var privateSPARoutes = []string{"/chat", "/settings", "/onboarding"}
+
+// publicRoutes are indexable pages (static files or the SPA root).
+var publicRoutes = []string{"/", "/privacy", "/terms"}
+
+const robotsNoIndexFollow = "noindex, nofollow"
+
+func noindex(c *gin.Context) {
+	c.Header("X-Robots-Tag", robotsNoIndexFollow)
+	c.Next()
+}
+
+// serveStatic serves files from dir: real files and directory indexes with 200,
+// private SPA routes as the app shell with noindex, and anything else as a 404
+// that still carries the app shell (so the SPA can render its not-found view).
+func serveStatic(c *gin.Context, dir string) {
+	p := c.Request.URL.Path
+	if p == "/api" || strings.HasPrefix(p, "/api/") {
+		c.Header("X-Robots-Tag", robotsNoIndexFollow)
+		WriteError(c, chat.ErrNotFound)
+		return
+	}
+	if dir == "" || (c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead) {
+		WriteError(c, chat.ErrNotFound)
+		return
+	}
+	clean := path.Clean("/" + p)
+	index := filepath.Join(dir, "index.html")
+	shell := filepath.Join(dir, "app.html")
+	if st, err := os.Stat(shell); err != nil || !st.Mode().IsRegular() {
+		shell = index
+	}
+	if clean == "/widget.js" {
+		hd := c.Writer.Header()
+		hd.Set("Cross-Origin-Resource-Policy", "cross-origin")
+		hd.Set("Cache-Control", "public, max-age=300")
+	}
+	f := filepath.Join(dir, filepath.FromSlash(clean))
+	if st, err := os.Stat(f); err == nil {
+		if st.IsDir() {
+			f = filepath.Join(f, "index.html")
+			st, err = os.Stat(f)
+		}
+		if err == nil && st.Mode().IsRegular() {
+			switch filepath.Ext(f) {
+			case ".txt":
+				c.Header("Content-Type", "text/plain; charset=utf-8")
+			case ".xml":
+				c.Header("Content-Type", "application/xml; charset=utf-8")
+			}
+			if (f == index && !slices.Contains(publicRoutes, clean)) || f == filepath.Join(dir, "app.html") {
+				c.Header("X-Robots-Tag", robotsNoIndexFollow)
+			}
+			c.File(f)
+			return
+		}
+	}
+	if slices.Contains(privateSPARoutes, clean) {
+		c.Header("X-Robots-Tag", robotsNoIndexFollow)
+		c.File(shell)
+		return
+	}
+	body, err := os.ReadFile(shell)
+	if err != nil {
+		WriteError(c, chat.ErrNotFound)
+		return
+	}
+	c.Header("X-Robots-Tag", "noindex")
+	c.Data(http.StatusNotFound, "text/html; charset=utf-8", body)
 }
