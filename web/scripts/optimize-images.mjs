@@ -4,8 +4,9 @@
 import sharp from "sharp";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RAW = path.join(root, "shots-raw");
 const OUT = path.join(root, "public/product");
 fs.mkdirSync(OUT, { recursive: true });

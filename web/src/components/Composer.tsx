@@ -32,7 +32,7 @@ export default function Composer({ onSend, onTyping }: { onSend: (body: string) 
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }} />
         {len > MAX_BODY && <p className="text-right text-xs text-destructive">{len}/{MAX_BODY}</p>}
       </div>
-      <Button type="submit" size="icon" className="shrink-0" disabled={disabled} aria-label={t("chat.send")} title={t("chat.send")}>
+      <Button type="submit" size="icon" className="shrink-0 rounded-full" disabled={disabled} aria-label={t("chat.send")} title={t("chat.send")}>
         <ArrowUp className="h-4 w-4" aria-hidden />
       </Button>
     </form>

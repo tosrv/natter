@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import ThemeSwitch from "@/components/ThemeSwitch";
+import ThemeToggle from "@/components/ThemeToggle";
 import LanguageToggle from "@/components/LanguageToggle";
 import Wordmark from "@/components/Wordmark";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export default function Nav() {
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
           <div className="flex items-center gap-1 sm:border-r sm:pr-3">
-            <ThemeSwitch />
+            <ThemeToggle />
             <LanguageToggle />
           </div>
           <Button asChild size="sm"><a href={GOOGLE_LOGIN}>{t("landing.nav.signIn")}</a></Button>
