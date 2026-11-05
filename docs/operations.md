@@ -217,6 +217,10 @@ Compose uses the fixed subnet `172.28.0.0/16` (gateway `172.28.0.1`). If it clas
 3. **Alert Contacts**: add your email; notify after 2 consecutive failures and on recovery.
 4. Test it once: `docker compose stop app`, wait for the email (up to ~10 minutes), then `docker compose start app` and confirm the recovery email arrives.
 
+## Search engine registration
+
+After the first production deploy, submit `https://chat.rahmattomy.com/sitemap.xml` manually in Google Search Console and Bing Webmaster Tools (verify the domain first). This is a one-time manual step. Note that `robots.txt` is advisory only; API authentication (401 without a session) and the `X-Robots-Tag` headers are the real protection. See [seo.md](seo.md).
+
 ## Privacy
 
 - Messages are **not** end-to-end encrypted; a server admin can read them in the database.

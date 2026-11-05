@@ -217,6 +217,10 @@ Compose memakai subnet tetap `172.28.0.0/16` (gateway `172.28.0.1`). Bila bentro
 3. **Alert Contacts**: tambahkan email Anda; atur notifikasi setelah 2 kali gagal berturut-turut dan saat pulih.
 4. Uji sekali: `docker compose stop app`, tunggu email (maks ~10 menit), lalu `docker compose start app` dan pastikan email pulih masuk.
 
+## Pendaftaran mesin pencari
+
+Setelah deploy produksi pertama, kirim `https://chat.rahmattomy.com/sitemap.xml` secara manual di Google Search Console dan Bing Webmaster Tools (verifikasi domain lebih dulu). Ini langkah manual satu kali. `robots.txt` hanya bersifat anjuran; perlindungan sebenarnya adalah autentikasi API (401 tanpa sesi) dan header `X-Robots-Tag`. Lihat [seo.md](seo.md).
+
 ## Privasi
 
 - Pesan **tidak** dienkripsi end-to-end; admin server dapat membacanya lewat database.
