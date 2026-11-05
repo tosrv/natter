@@ -30,3 +30,28 @@ export function applyTheme(p: ThemePref): void {
   listener();
   mq.addEventListener("change", listener);
 }
+
+// --- Hydration-safe subscriptions (server/hydration snapshot never depends on the theme) ---
+const prefListeners = new Set<() => void>();
+
+/** Persists the pref and notifies useThemePref subscribers. */
+export function choosePref(p: ThemePref): void {
+  setThemePref(p);
+  applyTheme(p);
+  prefListeners.forEach((l) => l());
+}
+
+export function subscribePref(cb: () => void): () => void {
+  prefListeners.add(cb);
+  return () => { prefListeners.delete(cb); };
+}
+
+/** Subscribes to the `dark` class on <html> (set by theme-init.js / applyTheme). */
+export function subscribeDark(cb: () => void): () => void {
+  if (typeof MutationObserver === "undefined") return () => {};
+  const mo = new MutationObserver(cb);
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => mo.disconnect();
+}
+
+export const isDarkNow = () => document.documentElement.classList.contains("dark");

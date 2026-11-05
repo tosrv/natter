@@ -1,19 +1,16 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { applyTheme, setThemePref } from "@/lib/theme";
+import { choosePref } from "@/lib/theme";
+import { useIsDark } from "@/hooks/useTheme";
 
 /** Single borderless button that flips between light and dark (no "system" option). */
 export default function ThemeToggle({ className }: { className?: string }) {
   const { t } = useTranslation();
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+  const dark = useIsDark();
 
   function toggle() {
-    const next = dark ? "light" : "dark";
-    setThemePref(next);
-    applyTheme(next);
-    setDark(!dark);
+    choosePref(dark ? "light" : "dark");
   }
 
   const label = t(dark ? "theme.light" : "theme.dark");

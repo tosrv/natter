@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { applyTheme, getThemePref, setThemePref, type ThemePref } from "@/lib/theme";
+import { choosePref, type ThemePref } from "@/lib/theme";
+import { useThemePref } from "@/hooks/useTheme";
 
 const OPTIONS: { pref: ThemePref; Icon: typeof Sun }[] = [
   { pref: "light", Icon: Sun },
@@ -12,12 +12,10 @@ const OPTIONS: { pref: ThemePref; Icon: typeof Sun }[] = [
 
 export default function ThemeSwitch({ className }: { className?: string }) {
   const { t } = useTranslation();
-  const [pref, setPref] = useState<ThemePref>(getThemePref);
+  const pref = useThemePref();
 
   function choose(p: ThemePref) {
-    setThemePref(p);
-    applyTheme(p);
-    setPref(p);
+    choosePref(p);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, i: number) {

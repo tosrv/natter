@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useIsDark } from "@/hooks/useTheme";
 
 type Shot = { w: number; h: number };
 const SHOTS = {
@@ -19,10 +20,8 @@ export type ProductShotVariant = keyof typeof SHOTS | "hero";
 const DESKTOP_MQ = "(min-width: 768px)";
 const MOBILE_MQ = "(max-width: 767px)";
 
-const isDark = () => typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-
 export default function ProductShot({ variant, priority, className }: { variant: ProductShotVariant; priority?: boolean; className?: string }) {
-  const dark = isDark();
+  const dark = useIsDark();
   const pic = (theme: "light" | "dark") => {
     // The theme not currently shown is lazy so it does not download until the user switches.
     const active = theme === (dark ? "dark" : "light");
