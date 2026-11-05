@@ -256,7 +256,7 @@ func TestCORSAndStatic(t *testing.T) {
 	if w = e.do("GET", "/app.js", "", ""); w.Code != 200 || w.Body.String() != "js" {
 		t.Fatalf("%d %s", w.Code, w.Body)
 	}
-	if w = e.do("GET", "/chat/123", "", ""); w.Code != 200 || !strings.Contains(w.Body.String(), "spa") {
+	if w = e.do("GET", "/chat/123", "", ""); w.Code != 404 || !strings.Contains(w.Body.String(), "spa") {
 		t.Fatalf("%d %s", w.Code, w.Body)
 	}
 	if w = e.do("GET", "/api/zzz", "", ""); w.Code != 404 || errCode(t, w) != "not_found" {
